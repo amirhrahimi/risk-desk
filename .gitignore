@@ -1,0 +1,13 @@
+# MetaTrader build artefacts
+*.ex4
+*.ex5
+*.log
+
+# Local machine paths
+build/paths.local.ps1
+
+# OS / editor
+Thumbs.db
+.DS_Store
+.vscode/
+*.bak
