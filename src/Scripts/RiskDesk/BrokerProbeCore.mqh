@@ -401,6 +401,12 @@ void ProbeRun()
   {
    CLogger::Configure(LOGLEVEL_INFO, true, "BrokerProbe");
    RD_LOG_INFO("BrokerProbe " + RD_VERSION + " (" + RD_PLATFORM + ") started on " + _Symbol);
+   int waited = 0;
+   if(!CAccountSpec::WaitReady(15000, waited))
+      RD_LOG_WARN("BrokerProbe: account data still incomplete after " + IntegerToString(waited) + " ms (not connected, or trading not allowed)");
+   else
+      if(waited > 0)
+         RD_LOG_INFO("BrokerProbe: waited " + IntegerToString(waited) + " ms for the account data after login");
 
    SAccountSpec a;
    SResult ar;

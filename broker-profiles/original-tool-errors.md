@@ -17,9 +17,9 @@ Do not paste passwords or real-account numbers. Demo logins are fine.
 - What happened on the chart:
 - Experts tab:
 ```
-(paste)
+nothing happens it apears to be an internal error on the original tool. let's forget about that we are building something new.
 ```
 - Journal tab:
 ```
-(paste)
+empty. as I said it maybe an internal error.
 ```

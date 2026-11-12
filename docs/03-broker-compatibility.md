@@ -28,6 +28,7 @@ Open the Toolbox (Ctrl+T) → **Experts** and **Journal** tabs, click Buy on IC 
 ### BC-01 Symbol identity
 - Trade only the chart symbol (`_Symbol`) or symbols taken from the terminal's own position/order lists. Never construct trading symbol names.
 - For currency-conversion lookups (MT4 fallback, BC-05), find the pair by **properties**, not names: scan `SymbolsTotal(false)` for a symbol whose `SYMBOL_CURRENCY_BASE` / `SYMBOL_CURRENCY_PROFIT` match the two currencies and whose trade mode is not disabled; prefer one already in Market Watch; `SymbolSelect(name, true)` it before reading prices. Cache the result per currency pair.
+- Look among **forex calculation-mode** symbols first (direct, inverted, then two legs) and use other symbol kinds only when no forex route exists: index and stock CFDs can report currencies that make them look like a currency pair (observed: IC Markets EU MT5, an index CFD matched "USD→EUR" with rate 20003.5; ADR-020). Some servers label FX pairs with wrong currencies (IG MT4: EURUSD reported as USD/USD); then no route exists and the MT4 cross-check is skipped.
 
 ### BC-02 Read specs at runtime, sanity-check them
 - Read `SSymbolSpec` on init, refresh every 60 s and before every trade request.
@@ -53,7 +54,7 @@ Implemented in `Platform/Money.mqh` → `LossPerLot(sym, side, entry, sl, out lo
 - **MT4 primary:** `ticks × MODE_TICKVALUE` (via `SymbolInfoDouble(sym, SYMBOL_TRADE_TICK_VALUE)`).
 - **MT4 cross-check:** `expected = tickSize × contractSize × Rate(profitCcy → accountCcy)` (Rate via BC-01 lookup, mid price). If `|tickValue − expected| / expected > 5 %`, log a warning once per symbol, show "Tick value mismatch" in the status bar, and use the **larger** of the two (smaller lot = conservative). If `expected` cannot be computed, use tickValue.
 - If the result is ≤ 0, NaN, or unavailable: retry once after `SymbolSelect` of the conversion pair; if still invalid → refuse: "Cannot value a price move on <symbol> (no conversion rate)".
-- Add `InpCommissionPerLot` (round turn, account currency) to the loss per lot.
+- Add `InpCommissionPerLot` (round turn, account currency) to the loss per lot. This is done once, by `CRiskMath::LotsFromRisk` (`lossPerLotAll`); `LossPerLot` itself values the price move only (ADR-019).
 
 ### BC-06 MT5 filling policy (market orders and closes)
 - Read `SYMBOL_FILLING_MODE` (bit flags). Test it with `SYMBOL_FILLING_FOK` (1) and `SYMBOL_FILLING_IOC` (2). **Never** test it with `ORDER_FILLING_FOK/IOC/RETURN`: those are enum values (0/1/2), not flags; mixing them up is a classic cause of 10030.
@@ -143,7 +144,7 @@ RiskDesk does **not** require MetaTrader's One-Click Trading (the original did).
 
 ### BC-16 Identification of tool trades
 - Identify by magic number (`InpMagic`). Comments are informational only: brokers may truncate or replace them.
-- MT4 partial close creates a new ticket for the remainder that keeps the magic; always re-list positions after a partial close.
+- MT4 partial close usually creates a new ticket for the remainder that keeps the magic, but some servers keep the original ticket open with the smaller volume (observed: IG MT4). Check both; always re-list positions after a partial close.
 
 ### BC-17 Market closed and stale quotes
 - If the last tick is older than `InpStaleQuoteSec` (300 s), show an amber hint "No quotes for 5 min – market may be closed". Do not block; the server decides.
@@ -160,6 +161,23 @@ RiskDesk does **not** require MetaTrader's One-Click Trading (the original did).
 | IG | MT4 (original works here); MT5 offered in some regions | Large CFD contract sizes on indices; spread-betting accounts (UK) quote per point; trust `OrderCalcProfit`/tick value and check the probe |
 | IC Markets EU | MT4, MT5 | ESMA leverage caps (BC-09); Raw accounts charge commission → set `InpCommissionPerLot`; MT5 filling-mode rejections are a commonly reported EA failure (BC-06) |
 | Dukascopy (Europe / Bank) | MT4, MT5 | Market execution; hedging allowed on MT4; max 1,000 orders; many CFDs with min lot ≥ 1 and step ≥ 0.1 (BC-04); per-instrument max net exposure (BC-09); EU leverage e.g. 20–30:1 FX, 2:1 crypto; account currencies include EUR/CHF/GBP/PLN (BC-05) |
+
+### Observed on the owner's demo accounts (BrokerProbe + GatewaySmoke, 2026-11-12)
+
+Reports: `broker-profiles/probe_*_20261112.txt`, `smoke_*_20261112.txt`. GatewaySmoke: 19 runs (EURUSD, XAUUSD, US30-type index, a whole-contract index on Dukascopy), 228 steps, 0 failures, every request accepted on the first send.
+
+| Account | Observed | Handled by |
+|---|---|---|
+| A1 IG MT4 (USD, 1:200) | Instant execution. FX pairs are CFD calc mode with base/profit/margin all USD (EURUSD = USD/USD), so currency-property lookups find no FX pair. Stops level 40 pts EURUSD, 200 pts XAUUSD, 150 pts US30; US30 contract 10. A partial close keeps the original ticket. | BC-01 (no route → tick value only, correct on a USD account), BC-07, BC-16 |
+| A2 IC Markets EU MT4 (USD, 1:30) | US30/USTEC min lot 1 / step 1. Partial close → new ticket. Stops/freeze 0. | BC-04, BC-16 |
+| A3 IC Markets EU MT5 (EUR, 1:30) | Filling flags IOC only; FOK and RETURN answer 10030 (cause H1). An index CFD reports currencies matching USD→EUR. US30 min lot 0.1. | BC-06 ladder starts at IOC from the flags; BC-01 forex-first lookup |
+| A4 Dukascopy MT4 (EUR, 1:100) | Index CFDs report the tick value in the index currency, not EUR: USA30.IDX 11 %, AUS.IDX 62 % above contract × rate (cause H3). AUS.IDX trades whole contracts (min 1 / step 1), USA30.IDX min 0.1. One request occasionally takes 7–11 s to be answered (single send, no retry). | BC-05 cross-check warns and uses the larger loss (lots up to 38 % smaller than the risk allows; kept on purpose, Q21) |
+| A5 Dukascopy MT5 (EUR, 1:100) | Filling flags IOC only. Closes answer DONE without a deal ticket or price. | BC-06; deal found through the order in the position history (ADR-020) |
+| A6 MetaQuotes-Demo MT5 netting (EUR) | Filling flags FOK only. Tick value of stock CFDs not converted (10.9 % off) and XAUUSD tick value 0.1 EUR vs ≈ 0.9 (88.9 % off); OrderCalcProfit is right in both cases. US30/US500 trade disabled. | BC-05 MT5 primary = OrderCalcProfit (ADR-003); BC-15 |
+
+So a fixed filling policy fails on at least one of A3/A5/A6, and a tick-value-only valuation is wrong on A4 (MT4) and A6 (MT5).
+
+Targeted runs, all as expected: T-22 (A3, filling forced to FOK: M01 refused "Filling policy rejected (tried FOK) [Unsupported filling mode]", nothing executed), T-23 (A4 and A5, `InpPendingExpiryHours=24`: placed with SPECIFIED expiry, kept on modify), BC-11 ModifyAfter forced (A2 and A3: SL/TP attached right after the open and verified). Not reachable on these servers and left to the P8 test hooks: a filling-ladder fallback after a real rejection (no server reports wrong flags), the R7 close-on-SL-failure path (T-29) and the ambiguous-result path (T-35).
 
 ## 4. BrokerProbe → what to look at
 For each account the probe report (08-testing §3) must let a developer answer, per symbol: filling flags, expiration flags, execution mode, order-mode flags, tick size vs point, tick value vs computed expectation, volume min/step/max/limit, stops/freeze level, margin for 1 lot, and account margin mode/currency/leverage. Any surprise becomes a new line in §3 and, if needed, a new BC rule.

@@ -1,0 +1,120 @@
+
+# RiskDesk GatewaySmoke 0.2.0 - 2026.11.12 11:32:58 - EURUSD
+[run]
+  platform:        MT4, terminal build 1492
+  account:         A4 on Dukascopy-demo-1 (Dukascopy Bank SA), demo, currency EUR, leverage 1:100, margin mode hedging (MT4: every trade is its own ticket), balance 10000.00, equity 10000.00, order limit 1000
+  symbol:          EURUSD: digits 5, point 0.00001, tick size 0.00001, tick value 0.90113633 EUR (profit 0.90113633, loss 0.90113633), contract 100000, volume min 0.01 / step 0.01 / max 1000 / limit 0, stops level 0 pts, freeze level 0 pts, trade full (4), exec market (2), calc forex (0), currencies EUR/USD margin EUR, filling n/a (MT4), expiration n/a (MT4), orders n/a (MT4)
+  settings:        magic 772299, fill FILLPOL_AUTO, stops STOPS_AUTO, retries 3, delay 300 ms, slippage 20 pts, expiry 0 h
+  test:            0.02 lot, SL/TP distance 0.00333 (333 pts), risk at SL about €6.00 (0.06 %)
+[results]
+  ID   STEP                          RESULT  MS     DETAIL
+  S00  preflight                     PASS    31     demo, permissions, spec and quote OK; hedging
+  M01  open buy with SL/TP           PASS    219    #34539728 0.02 lot @1.10973 sends=1
+  M02  verify buy SL/TP              PASS    0      sl 1.10638 tp 1.11306 vol 0.02 magic 772299
+  M03  modify SL                     PASS    219    sl 1.10773 tp 1.11306
+  M04  partial close                 PASS    157    closed 0.01, rest 0.01 #34539729 (new ticket), P/L -€0.09
+  M05  close the rest                PASS    718    0.01 lot @1.10971 P/L -€0.09
+  M06  open sell with SL/TP          PASS    219    #34539730 0.02 lot @1.10968 sends=1
+  M06v verify sell SL/TP             PASS    0      sl 1.11306 tp 1.10638 vol 0.02 magic 772299
+  M07  close sell                    PASS    750    0.02 lot @1.10971 P/L -€0.19
+  P01  place buy limit               PASS    141    #34539731 0.02 lot @1.10305 time=GTC sends=1 sl 1.09972 tp 1.10638
+  P02  modify price/SL/TP            PASS    203    @1.10138 sl 1.09805 tp 1.10471
+  P03  delete                        PASS    641    #34539731 deleted
+[summary]
+  PASS 12, FAIL 0, SKIP 0
+
+# RiskDesk GatewaySmoke 0.2.0 - 2026.11.12 11:33:35 - XAUUSD
+[run]
+  platform:        MT4, terminal build 1492
+  account:         A4 on Dukascopy-demo-1 (Dukascopy Bank SA), demo, currency EUR, leverage 1:100, margin mode hedging (MT4: every trade is its own ticket), balance 9999.63, equity 9999.63, order limit 1000
+  symbol:          XAUUSD: digits 3, point 0.001, tick size 0.001, tick value 0.09011526 EUR (profit 0.09011526, loss 0.09011526), contract 100, volume min 0.01 / step 0.01 / max 1000 / limit 0, stops level 0 pts, freeze level 0 pts, trade full (4), exec market (2), calc forex (0), currencies XAU/USD margin XAU, filling n/a (MT4), expiration n/a (MT4), orders n/a (MT4)
+  settings:        magic 772299, fill FILLPOL_AUTO, stops STOPS_AUTO, retries 3, delay 300 ms, slippage 20 pts, expiry 0 h
+  test:            0.02 lot, SL/TP distance 11.846 (11846 pts), risk at SL about €21.35 (0.21 %)
+[results]
+  ID   STEP                          RESULT  MS     DETAIL
+  S00  preflight                     PASS    31     demo, permissions, spec and quote OK; hedging
+  M01  open buy with SL/TP           PASS    219    #34539732 0.02 lot @3948.516 sends=1
+  M02  verify buy SL/TP              PASS    0      sl 3936.109 tp 3960.362 vol 0.02 magic 772299
+  M03  modify SL                     PASS    141    sl 3941.408 tp 3960.362
+  M04  partial close                 PASS    187    closed 0.01, rest 0.01 #34539733 (new ticket), P/L -€0.88
+  M05  close the rest                PASS    781    0.01 lot @3948.140 P/L -€0.69
+  M06  open sell with SL/TP          PASS    235    #34539734 0.02 lot @3948.140 sends=1
+  M06v verify sell SL/TP             PASS    0      sl 3960.477 tp 3936.294 vol 0.02 magic 772299
+  M07  close sell                    PASS    719    0.02 lot @3948.619 P/L -€1.57
+  P01  place buy limit               PASS    7234   #34539735 0.02 lot @3924.925 time=GTC sends=1 sl 3913.079 tp 3936.771
+  P02  modify price/SL/TP            PASS    157    @3919.002 sl 3907.156 tp 3930.848
+  P03  delete                        PASS    640    #34539735 deleted
+[summary]
+  PASS 12, FAIL 0, SKIP 0
+
+# RiskDesk GatewaySmoke 0.2.0 - 2026.11.12 11:34:06 - USA30.IDX
+[run]
+  platform:        MT4, terminal build 1492
+  account:         A4 on Dukascopy-demo-1 (Dukascopy Bank SA), demo, currency EUR, leverage 1:100, margin mode hedging (MT4: every trade is its own ticket), balance 9996.49, equity 9996.49, order limit 1000
+  symbol:          USA30.IDX: digits 2, point 0.01, tick size 0.001, tick value 0.001 EUR (profit 0.001, loss 0.001), contract 1, volume min 0.1 / step 0.1 / max 1000 / limit 0, stops level 0 pts, freeze level 0 pts, trade full (4), exec market (2), calc cfd (1), currencies USD/USD margin USD, filling n/a (MT4), expiration n/a (MT4), orders n/a (MT4)
+  settings:        magic 772299, fill FILLPOL_AUTO, stops STOPS_AUTO, retries 3, delay 300 ms, slippage 20 pts, expiry 0 h
+  warning:         Tick value mismatch on USA30.IDX: broker 157.65 EUR, contract x rate 142.06 EUR (11 %) - using the more conservative
+  test:            0.2 lot, SL/TP distance 157.65 (15765 pts), risk at SL about €31.53 (0.32 %)
+[results]
+  ID   STEP                          RESULT  MS     DETAIL
+  S00  preflight                     PASS    32     demo, permissions, spec and quote OK; hedging
+  M01  open buy with SL/TP           PASS    235    #34539736 0.2 lot @52551.10 sends=1
+  M02  verify buy SL/TP              PASS    0      sl 52391.45 tp 52708.75 vol 0.2 magic 772299
+  M03  modify SL                     PASS    141    sl 52456.51 tp 52708.75
+  M04  partial close                 PASS    234    closed 0.1, rest 0.1 #34539737 (new ticket), P/L -€0.65
+  M05  close the rest                PASS    750    0.1 lot @52547.14 P/L -€0.83
+  M06  open sell with SL/TP          PASS    266    #34539738 0.2 lot @52548.15 sends=1
+  M06v verify sell SL/TP             PASS    0      sl 52708.78 tp 52391.48 vol 0.2 magic 772299
+  M07  close sell                    PASS    734    0.2 lot @52550.68 P/L -€1.40
+  P01  place buy limit               PASS    125    #34539739 0.2 lot @52234.81 time=GTC sends=1 sl 52077.16 tp 52392.46
+  P02  modify price/SL/TP            PASS    125    @52155.98 sl 51998.33 tp 52313.63
+  P03  delete                        PASS    625    #34539739 deleted
+[summary]
+  PASS 12, FAIL 0, SKIP 0
+
+# RiskDesk GatewaySmoke 0.2.0 - 2026.11.12 11:34:36 - AUS.IDX
+[run]
+  platform:        MT4, terminal build 1492
+  account:         A4 on Dukascopy-demo-1 (Dukascopy Bank SA), demo, currency EUR, leverage 1:100, margin mode hedging (MT4: every trade is its own ticket), balance 9993.61, equity 9993.61, order limit 1000
+  symbol:          AUS.IDX: digits 3, point 0.001, tick size 0.001, tick value 0.001 EUR (profit 0.001, loss 0.001), contract 1, volume min 1 / step 1 / max 1000 / limit 0, stops level 0 pts, freeze level 0 pts, trade full (4), exec market (2), calc cfd (1), currencies AUD/AUD margin AUD, filling n/a (MT4), expiration n/a (MT4), orders n/a (MT4)
+  settings:        magic 772299, fill FILLPOL_AUTO, stops STOPS_AUTO, retries 3, delay 300 ms, slippage 20 pts, expiry 0 h
+  warning:         Tick value mismatch on AUS.IDX: broker 27.49 EUR, contract x rate 16.93 EUR (62.4 %) - using the more conservative
+  test:            2 lot, SL/TP distance 27.489 (27489 pts), risk at SL about €54.98 (0.55 %)
+[results]
+  ID   STEP                          RESULT  MS     DETAIL
+  S00  preflight                     PASS    47     demo, permissions, spec and quote OK; hedging
+  M01  open buy with SL/TP           PASS    156    #34539740 2 lot @9162.939 sends=1
+  M02  verify buy SL/TP              PASS    0      sl 9130.868 tp 9190.428 vol 2 magic 772299
+  M03  modify SL                     PASS    125    sl 9146.445 tp 9190.428
+  M04  partial close                 PASS    125    closed 1, rest 1 #34539741 (new ticket), P/L -€3.39
+  M05  close the rest                PASS    687    1 lot @9158.357 P/L -€3.38
+  M06  open sell with SL/TP          PASS    171    #34539743 2 lot @9158.357 sends=1
+  M06v verify sell SL/TP             PASS    0      sl 9190.428 tp 9130.868 vol 2 magic 772299
+  M07  close sell                    PASS    813    2 lot @9162.939 P/L -€6.77
+  P01  place buy limit               PASS    109    #34539744 2 lot @9107.961 time=GTC sends=1 sl 9080.472 tp 9135.450
+  P02  modify price/SL/TP            PASS    141    @9094.216 sl 9066.727 tp 9121.705
+  P03  delete                        PASS    672    #34539744 deleted
+[summary]
+  PASS 12, FAIL 0, SKIP 0
+
+# RiskDesk GatewaySmoke 0.2.0 - 2026.11.12 12:03:26 - EURUSD
+[run]
+  platform:        MT4, terminal build 1492
+  account:         A4 on Dukascopy-demo-1 (Dukascopy Bank SA), demo, currency EUR, leverage 1:100, margin mode hedging (MT4: every trade is its own ticket), balance 9980.07, equity 9980.07, order limit 1000
+  symbol:          EURUSD: digits 5, point 0.00001, tick size 0.00001, tick value 0.90112821 EUR (profit 0.90112821, loss 0.90112821), contract 100000, volume min 0.01 / step 0.01 / max 1000 / limit 0, stops level 0 pts, freeze level 0 pts, trade full (4), exec market (2), calc forex (0), currencies EUR/USD margin EUR, filling n/a (MT4), expiration n/a (MT4), orders n/a (MT4)
+  settings:        magic 772299, fill FILLPOL_AUTO, stops STOPS_AUTO, retries 3, delay 300 ms, slippage 20 pts, expiry 24 h
+  test:            0.02 lot, SL/TP distance 0.00333 (333 pts), risk at SL about €6.00 (0.06 %)
+[results]
+  ID   STEP                          RESULT  MS     DETAIL
+  S00  preflight                     PASS    32     demo, permissions, spec and quote OK; hedging
+  M01  open buy with SL/TP           PASS    218    #34539778 0.02 lot @1.10973 sends=1
+  M02  verify buy SL/TP              PASS    0      sl 1.10639 tp 1.11306 vol 0.02 magic 772299
+  M03  modify SL                     PASS    110    sl 1.10773 tp 1.11306
+  M04  partial close                 PASS    313    closed 0.01, rest 0.01 #34539779 (new ticket), P/L -€0.07
+  M05  close the rest                PASS    11375  0.01 lot @1.10973 P/L -€0.07
+  M06  open sell with SL/TP          SKIP    0      InpTestSell=false
+  P01  place buy limit               PASS    157    #34539780 0.02 lot @1.10309 time=SPECIFIED sends=1 sl 1.09976 tp 1.10642
+  P02  modify price/SL/TP            PASS    156    @1.10142 sl 1.09809 tp 1.10475
+  P03  delete                        PASS    657    #34539780 deleted
+[summary]
+  PASS 9, FAIL 0, SKIP 1

@@ -1,0 +1,2056 @@
+# RiskDesk BrokerProbe 0.2.0, report format 1, MT4
+# Generated 2026.11.12 10:30:04 local time on the chart of EURUSD.
+# Nothing was executed: no order was sent. MT5 checks use OrderCheck, which only validates a request.
+# Money values are in the account currency (EUR) unless stated otherwise.
+
+[terminal]
+  name:                    MetaTrader 4
+  company:                 MetaQuotes Software Corp.
+  build:                   1492
+  platform:                MT4
+  dpi:                     120
+  connected:               true
+  trade_allowed:           true  (Algo/AutoTrading toolbar button)
+  mql_trade_allowed:       true  (this script's 'Allow algo trading')
+  community:               false
+  data_path:               <redacted>
+
+[time]
+  local:                   2026.11.12 10:30:04
+  server_last_quote:       2026.11.12 11:30:03
+  gmt:                     2026.11.12 09:30:04
+  server_minus_gmt:        2.00 h  (from the last quote time; not exact when the market is closed)
+
+[account]
+  login:                   A4
+  server:                  Dukascopy-demo-1
+  company:                 Dukascopy Bank SA
+  currency:                EUR
+  currency_digits:         2
+  leverage:                1:100
+  trade_mode:              demo
+  margin_mode:             hedging (MT4: every trade is its own ticket)
+  limit_orders:            1000
+  trade_allowed:           true
+  trade_expert:            true
+  balance:                 10000.00
+  equity:                  10000.00
+  margin_free:             10000.00
+  margin_so_mode:          percent
+  margin_so_call:          100
+  margin_so_so:            50
+  free_margin_mode:        1  (0 floating P/L ignored, 1 profit and loss counted, 2 profit only, 3 loss only)
+  stopout_mode:            percent
+  stopout_level:           50
+  riskdesk_can_trade:      yes
+
+[test symbols]
+# Candidates for the test matrix (08-testing section 4), best first; found by currencies or by keywords in name/description.
+  EURUSD:                  EURUSD (market watch)
+  USDJPY:                  USDJPY (market watch)
+  EURGBP (cross):          EURGBP (market watch)
+  XAUUSD:                  XAUUSD (not in market watch)
+  US30:                    USA30.IDX (not in market watch)
+  Nasdaq 100:              none found
+  BTCUSD:                  BTCUSD (not in market watch), BCHUSD (not in market watch)
+  whole-contract CFD:      AUS.IDX (not in market watch), BUND.TR (not in market watch), CHE.IDX (not in market watch)
+
+[symbol EURUSD]
+  path:                    Forex\EURUSD
+  description:             Euro vs US Dollar
+  in_market_watch:         true
+  currency_base:           EUR
+  currency_profit:         USD
+  currency_margin:         EUR
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              0.9013 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              4 pts
+  spread_float:            true
+  swap_long:               -17.99287
+  swap_short:              7.89784
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     1.10945
+  ask:                     1.10949
+  tick_time:               2026.11.12 11:30:01
+  tick_age_sec:            2
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        0.9013 EUR
+    MODE_TICKSIZE:         0.00001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   1000 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=90.1348 expected_from_contract=90.1331 (rate via EURUSD (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=90.1348 expected_from_contract=90.1331 (rate via EURUSD (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    10 EUR  (0.01 lot)
+    margin_1lot_buy:       1000 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9990 EUR  (free margin left after a 0.01 lot buy at 1.10949)
+
+[symbol USDCHF]
+  path:                    Forex\USDCHF
+  description:             US Dollar vs Swiss Franc
+  in_market_watch:         true
+  currency_base:           USD
+  currency_profit:         CHF
+  currency_margin:         USD
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              1.0834 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              10 pts
+  spread_float:            true
+  swap_long:               23.87727
+  swap_short:              -31.67954
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     0.83194
+  ask:                     0.83204
+  tick_time:               2026.11.12 11:30:02
+  tick_age_sec:            1
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        1.0834 EUR
+    MODE_TICKSIZE:         0.00001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   901.33 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=108.34 expected_from_contract=108.3347 (rate via EURCHF (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=108.34 expected_from_contract=108.3347 (rate via EURCHF (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    9.0133 EUR  (0.01 lot)
+    margin_1lot_buy:       901.33 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9990.9867 EUR  (free margin left after a 0.01 lot buy at 0.83204)
+
+[symbol GBPUSD]
+  path:                    Forex\GBPUSD
+  description:             Great Britain Pound vs US Dollar
+  in_market_watch:         true
+  currency_base:           GBP
+  currency_profit:         USD
+  currency_margin:         GBP
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              0.9013 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              4 pts
+  spread_float:            true
+  swap_long:               -8.53501
+  swap_short:              -4.6238
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     1.32753
+  ask:                     1.32757
+  tick_time:               2026.11.12 11:30:01
+  tick_age_sec:            2
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        0.9013 EUR
+    MODE_TICKSIZE:         0.00001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   1196.57 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=90.1348 expected_from_contract=90.1331 (rate via EURUSD (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=90.1348 expected_from_contract=90.1331 (rate via EURUSD (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    11.9657 EUR  (0.01 lot)
+    margin_1lot_buy:       1196.57 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9988.0343 EUR  (free margin left after a 0.01 lot buy at 1.32757)
+
+[symbol USDJPY]
+  path:                    Forex\USDJPY
+  description:             US Dollar vs Japanese Yen
+  in_market_watch:         true
+  currency_base:           USD
+  currency_profit:         JPY
+  currency_margin:         USD
+  digits:                  3
+  point:                   0.001
+  tick_size:               0.001
+  tick_size_in_points:     1
+  tick_value:              0.5645 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              3 pts
+  spread_float:            true
+  swap_long:               29.6136914
+  swap_short:              -43.9680924
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     159.684
+  ask:                     159.687
+  tick_time:               2026.11.12 11:30:02
+  tick_age_sec:            1
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        0.5645 EUR
+    MODE_TICKSIZE:         0.001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   901.33 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=56.4462 expected_from_contract=56.4446 (rate via EURJPY (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=56.4462 expected_from_contract=56.4446 (rate via EURJPY (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    9.0133 EUR  (0.01 lot)
+    margin_1lot_buy:       901.33 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9990.9867 EUR  (free margin left after a 0.01 lot buy at 159.687)
+
+[symbol USDCAD]
+  path:                    Forex\USDCAD
+  description:             US Dollar vs Canadian Dollar
+  in_market_watch:         true
+  currency_base:           USD
+  currency_profit:         CAD
+  currency_margin:         USD
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              0.6326 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              13 pts
+  spread_float:            true
+  swap_long:               3.74854
+  swap_short:              -9.57991
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     1.42504
+  ask:                     1.42517
+  tick_time:               2026.11.12 11:30:00
+  tick_age_sec:            3
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        0.6326 EUR
+    MODE_TICKSIZE:         0.00001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   901.33 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=63.2571 expected_from_contract=63.2539 (rate via EURCAD (inverted)) mismatch_pct=0.01
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=63.2571 expected_from_contract=63.2539 (rate via EURCAD (inverted)) mismatch_pct=0.01
+    margin_min_lot_buy:    9.0133 EUR  (0.01 lot)
+    margin_1lot_buy:       901.33 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9990.9867 EUR  (free margin left after a 0.01 lot buy at 1.42517)
+
+[symbol AUDUSD]
+  path:                    Forex\AUDUSD
+  description:             Australian Dollar vs US Dollar
+  in_market_watch:         true
+  currency_base:           AUD
+  currency_profit:         USD
+  currency_margin:         AUD
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              0.9013 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              7 pts
+  spread_float:            true
+  swap_long:               -0.56853
+  swap_short:              -7.89762
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     0.68261
+  ask:                     0.68268
+  tick_time:               2026.11.12 11:30:00
+  tick_age_sec:            3
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        0.9013 EUR
+    MODE_TICKSIZE:         0.00001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   615.29 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=90.1348 expected_from_contract=90.1331 (rate via EURUSD (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=90.1348 expected_from_contract=90.1331 (rate via EURUSD (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    6.1529 EUR  (0.01 lot)
+    margin_1lot_buy:       615.29 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9993.8471 EUR  (free margin left after a 0.01 lot buy at 0.68268)
+
+[symbol EURGBP]
+  path:                    Forex\EURGBP
+  description:             Euro vs Great Britain Pound 
+  in_market_watch:         true
+  currency_base:           EUR
+  currency_profit:         GBP
+  currency_margin:         EUR
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              1.1966 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              4 pts
+  spread_float:            true
+  swap_long:               -12.59844
+  swap_short:              4.34671
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     0.83570
+  ask:                     0.83574
+  tick_time:               2026.11.12 11:29:59
+  tick_age_sec:            4
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        1.1966 EUR
+    MODE_TICKSIZE:         0.00001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   1000 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=119.6602 expected_from_contract=119.6573 (rate via EURGBP (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=119.6602 expected_from_contract=119.6573 (rate via EURGBP (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    10 EUR  (0.01 lot)
+    margin_1lot_buy:       1000 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9990 EUR  (free margin left after a 0.01 lot buy at 0.83574)
+
+[symbol EURAUD]
+  path:                    Forex\EURAUD
+  description:             Euro vs Australian Dollar
+  in_market_watch:         true
+  currency_base:           EUR
+  currency_profit:         AUD
+  currency_margin:         EUR
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              0.6153 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              18 pts
+  spread_float:            true
+  swap_long:               -37.5533
+  swap_short:              17.50601
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     1.62516
+  ask:                     1.62534
+  tick_time:               2026.11.12 11:30:01
+  tick_age_sec:            2
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        0.6153 EUR
+    MODE_TICKSIZE:         0.00001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   1000 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=61.5324 expected_from_contract=61.529 (rate via EURAUD (inverted)) mismatch_pct=0.01
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=61.5324 expected_from_contract=61.529 (rate via EURAUD (inverted)) mismatch_pct=0.01
+    margin_min_lot_buy:    10 EUR  (0.01 lot)
+    margin_1lot_buy:       1000 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9990 EUR  (free margin left after a 0.01 lot buy at 1.62534)
+
+[symbol EURCHF]
+  path:                    Forex\EURCHF
+  description:             Euro vs Swiss Franc
+  in_market_watch:         true
+  currency_base:           EUR
+  currency_profit:         CHF
+  currency_margin:         EUR
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              1.0834 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              9 pts
+  spread_float:            true
+  swap_long:               15.97293
+  swap_short:              -24.68368
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     0.92302
+  ask:                     0.92311
+  tick_time:               2026.11.12 11:30:02
+  tick_age_sec:            1
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        1.0834 EUR
+    MODE_TICKSIZE:         0.00001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   1000 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=108.34 expected_from_contract=108.3347 (rate via EURCHF (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=108.34 expected_from_contract=108.3347 (rate via EURCHF (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    10 EUR  (0.01 lot)
+    margin_1lot_buy:       1000 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9990 EUR  (free margin left after a 0.01 lot buy at 0.92311)
+
+[symbol EURJPY]
+  path:                    Forex\EURJPY
+  description:             Euro vs Japanese Yen
+  in_market_watch:         true
+  currency_base:           EUR
+  currency_profit:         JPY
+  currency_margin:         EUR
+  digits:                  3
+  point:                   0.001
+  tick_size:               0.001
+  tick_size_in_points:     1
+  tick_value:              0.5645 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              10 pts
+  spread_float:            true
+  swap_long:               12.5112657
+  swap_short:              -28.5371709
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     177.160
+  ask:                     177.170
+  tick_time:               2026.11.12 11:30:02
+  tick_age_sec:            1
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        0.5645 EUR
+    MODE_TICKSIZE:         0.001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   1000 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=56.4462 expected_from_contract=56.4446 (rate via EURJPY (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=56.4462 expected_from_contract=56.4446 (rate via EURJPY (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    10 EUR  (0.01 lot)
+    margin_1lot_buy:       1000 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9990 EUR  (free margin left after a 0.01 lot buy at 177.170)
+
+[symbol GBPCHF]
+  path:                    Forex\GBPCHF
+  description:             Great Britain Pound vs Swiss Franc
+  in_market_watch:         true
+  currency_base:           GBP
+  currency_profit:         CHF
+  currency_margin:         GBP
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              1.0834 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              13 pts
+  spread_float:            true
+  swap_long:               30.01879
+  swap_short:              -40.87975
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     1.10445
+  ask:                     1.10458
+  tick_time:               2026.11.12 11:30:01
+  tick_age_sec:            2
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        1.0834 EUR
+    MODE_TICKSIZE:         0.00001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   1196.57 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=108.34 expected_from_contract=108.3347 (rate via EURCHF (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=108.34 expected_from_contract=108.3347 (rate via EURCHF (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    11.9657 EUR  (0.01 lot)
+    margin_1lot_buy:       1196.57 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9988.0343 EUR  (free margin left after a 0.01 lot buy at 1.10458)
+
+[symbol CADJPY]
+  path:                    Forex\CADJPY
+  description:             Canadian Dollar vs Japanese Yen
+  in_market_watch:         true
+  currency_base:           CAD
+  currency_profit:         JPY
+  currency_margin:         CAD
+  digits:                  3
+  point:                   0.001
+  tick_size:               0.001
+  tick_size_in_points:     1
+  tick_value:              0.5645 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              11 pts
+  spread_float:            true
+  swap_long:               3.2659669
+  swap_short:              -17.0615724
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     112.059
+  ask:                     112.070
+  tick_time:               2026.11.12 11:30:03
+  tick_age_sec:            0
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        0.5645 EUR
+    MODE_TICKSIZE:         0.001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   632.54 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=56.4462 expected_from_contract=56.4446 (rate via EURJPY (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=56.4462 expected_from_contract=56.4446 (rate via EURJPY (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    6.3254 EUR  (0.01 lot)
+    margin_1lot_buy:       632.54 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9993.6746 EUR  (free margin left after a 0.01 lot buy at 112.070)
+
+[symbol GBPJPY]
+  path:                    Forex\GBPJPY
+  description:             Great Britain Pound vs Japanese Yen
+  in_market_watch:         true
+  currency_base:           GBP
+  currency_profit:         JPY
+  currency_margin:         GBP
+  digits:                  3
+  point:                   0.001
+  tick_size:               0.001
+  tick_size_in_points:     1
+  tick_value:              0.5645 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              15 pts
+  spread_float:            true
+  swap_long:               35.5365169
+  swap_short:              -56.4313788
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     211.983
+  ask:                     211.998
+  tick_time:               2026.11.12 11:30:03
+  tick_age_sec:            0
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        0.5645 EUR
+    MODE_TICKSIZE:         0.001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   1196.57 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=56.4462 expected_from_contract=56.4446 (rate via EURJPY (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=56.4462 expected_from_contract=56.4446 (rate via EURJPY (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    11.9657 EUR  (0.01 lot)
+    margin_1lot_buy:       1196.57 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9988.0343 EUR  (free margin left after a 0.01 lot buy at 211.998)
+
+[symbol AUDNZD]
+  path:                    Forex\AUDNZD
+  description:             Australian Dollar vs New Zealand Dollar
+  in_market_watch:         true
+  currency_base:           AUD
+  currency_profit:         NZD
+  currency_margin:         AUD
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              0.5014 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              18 pts
+  spread_float:            true
+  swap_long:               10.01928
+  swap_short:              -27.64306
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     1.22720
+  ask:                     1.22738
+  tick_time:               2026.11.12 11:30:01
+  tick_age_sec:            2
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        0.5014 EUR
+    MODE_TICKSIZE:         0.00001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   615.29 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=50.1366 expected_from_contract=50.1334 (rate via EURNZD (inverted)) mismatch_pct=0.01
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=50.1366 expected_from_contract=50.1334 (rate via EURNZD (inverted)) mismatch_pct=0.01
+    margin_min_lot_buy:    6.1529 EUR  (0.01 lot)
+    margin_1lot_buy:       615.29 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9993.8471 EUR  (free margin left after a 0.01 lot buy at 1.22738)
+
+[symbol AUDCAD]
+  path:                    Forex\AUDCAD
+  description:             Australian Dollar vs Canadian Dollar
+  in_market_watch:         true
+  currency_base:           AUD
+  currency_profit:         CAD
+  currency_margin:         AUD
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              0.6326 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              17 pts
+  spread_float:            true
+  swap_long:               12.9246
+  swap_short:              -24.93729
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     0.97265
+  ask:                     0.97282
+  tick_time:               2026.11.12 11:30:00
+  tick_age_sec:            3
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        0.6326 EUR
+    MODE_TICKSIZE:         0.00001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   615.29 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=63.2571 expected_from_contract=63.2539 (rate via EURCAD (inverted)) mismatch_pct=0.01
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=63.2571 expected_from_contract=63.2539 (rate via EURCAD (inverted)) mismatch_pct=0.01
+    margin_min_lot_buy:    6.1529 EUR  (0.01 lot)
+    margin_1lot_buy:       615.29 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9993.8471 EUR  (free margin left after a 0.01 lot buy at 0.97282)
+
+[symbol AUDCHF]
+  path:                    Forex\AUDCHF
+  description:             Australian Dollar vs Swiss Franc
+  in_market_watch:         true
+  currency_base:           AUD
+  currency_profit:         CHF
+  currency_margin:         AUD
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              1.0834 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              13 pts
+  spread_float:            true
+  swap_long:               18.60392
+  swap_short:              -25.5923
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     0.56789
+  ask:                     0.56802
+  tick_time:               2026.11.12 11:30:01
+  tick_age_sec:            2
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        1.0834 EUR
+    MODE_TICKSIZE:         0.00001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   615.29 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=108.34 expected_from_contract=108.3347 (rate via EURCHF (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=108.34 expected_from_contract=108.3347 (rate via EURCHF (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    6.1529 EUR  (0.01 lot)
+    margin_1lot_buy:       615.29 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9993.8471 EUR  (free margin left after a 0.01 lot buy at 0.56802)
+
+[symbol AUDJPY]
+  path:                    Forex\AUDJPY
+  description:             Australian Dollar vs Japanese Yen
+  in_market_watch:         true
+  currency_base:           AUD
+  currency_profit:         JPY
+  currency_margin:         AUD
+  digits:                  3
+  point:                   0.001
+  tick_size:               0.001
+  tick_size_in_points:     1
+  tick_value:              0.5645 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              6 pts
+  spread_float:            true
+  swap_long:               24.3565241
+  swap_short:              -37.7970872
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     109.005
+  ask:                     109.011
+  tick_time:               2026.11.12 11:30:01
+  tick_age_sec:            2
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        0.5645 EUR
+    MODE_TICKSIZE:         0.001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   615.29 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=56.4462 expected_from_contract=56.4446 (rate via EURJPY (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=56.4462 expected_from_contract=56.4446 (rate via EURJPY (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    6.1529 EUR  (0.01 lot)
+    margin_1lot_buy:       615.29 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9993.8471 EUR  (free margin left after a 0.01 lot buy at 109.011)
+
+[symbol CHFJPY]
+  path:                    Forex\CHFJPY
+  description:             Swiss Frank vs Japanese Yen
+  in_market_watch:         true
+  currency_base:           CHF
+  currency_profit:         JPY
+  currency_margin:         CHF
+  digits:                  3
+  point:                   0.001
+  tick_size:               0.001
+  tick_size_in_points:     1
+  tick_value:              0.5645 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              23 pts
+  spread_float:            true
+  swap_long:               -29.2466346
+  swap_short:              11.0662942
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     191.921
+  ask:                     191.944
+  tick_time:               2026.11.12 11:30:01
+  tick_age_sec:            2
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        0.5645 EUR
+    MODE_TICKSIZE:         0.001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   1083.35 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=56.4462 expected_from_contract=56.4446 (rate via EURJPY (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=56.4462 expected_from_contract=56.4446 (rate via EURJPY (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    10.8335 EUR  (0.01 lot)
+    margin_1lot_buy:       1083.35 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9989.1665 EUR  (free margin left after a 0.01 lot buy at 191.944)
+
+[symbol EURNZD]
+  path:                    Forex\EURNZD
+  description:             Euro vs New Zealand Dollar
+  in_market_watch:         true
+  currency_base:           EUR
+  currency_profit:         NZD
+  currency_margin:         EUR
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              0.5014 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              26 pts
+  spread_float:            true
+  swap_long:               -17.44108
+  swap_short:              -11.21895
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     1.99455
+  ask:                     1.99481
+  tick_time:               2026.11.12 11:30:02
+  tick_age_sec:            1
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        0.5014 EUR
+    MODE_TICKSIZE:         0.00001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   1000 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=50.1366 expected_from_contract=50.1334 (rate via EURNZD (inverted)) mismatch_pct=0.01
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=50.1366 expected_from_contract=50.1334 (rate via EURNZD (inverted)) mismatch_pct=0.01
+    margin_min_lot_buy:    10 EUR  (0.01 lot)
+    margin_1lot_buy:       1000 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9990 EUR  (free margin left after a 0.01 lot buy at 1.99481)
+
+[symbol EURCAD]
+  path:                    Forex\EURCAD
+  description:             Euro vs Canadian Dollar
+  in_market_watch:         true
+  currency_base:           EUR
+  currency_profit:         CAD
+  currency_margin:         EUR
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              0.6326 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              16 pts
+  spread_float:            true
+  swap_long:               -5.81159
+  swap_short:              -13.72352
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     1.58085
+  ask:                     1.58101
+  tick_time:               2026.11.12 11:30:01
+  tick_age_sec:            2
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        0.6326 EUR
+    MODE_TICKSIZE:         0.00001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   1000 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=63.2571 expected_from_contract=63.2539 (rate via EURCAD (inverted)) mismatch_pct=0.01
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=63.2571 expected_from_contract=63.2539 (rate via EURCAD (inverted)) mismatch_pct=0.01
+    margin_min_lot_buy:    10 EUR  (0.01 lot)
+    margin_1lot_buy:       1000 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9990 EUR  (free margin left after a 0.01 lot buy at 1.58101)
+
+[symbol CADCHF]
+  path:                    Forex\CADCHF
+  description:             Canadian Dollar vs Swiss Franc
+  in_market_watch:         true
+  currency_base:           CAD
+  currency_profit:         CHF
+  currency_margin:         CAD
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              1.0834 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              15 pts
+  spread_float:            true
+  swap_long:               7.79496
+  swap_short:              -14.96521
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     0.58380
+  ask:                     0.58395
+  tick_time:               2026.11.12 11:30:01
+  tick_age_sec:            2
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        1.0834 EUR
+    MODE_TICKSIZE:         0.00001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   632.54 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=108.34 expected_from_contract=108.3347 (rate via EURCHF (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=108.34 expected_from_contract=108.3347 (rate via EURCHF (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    6.3254 EUR  (0.01 lot)
+    margin_1lot_buy:       632.54 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9993.6746 EUR  (free margin left after a 0.01 lot buy at 0.58395)
+
+[symbol NZDJPY]
+  path:                    Forex\NZDJPY
+  description:             New Zealand Dollar vs Japanese Yen
+  in_market_watch:         true
+  currency_base:           NZD
+  currency_profit:         JPY
+  currency_margin:         NZD
+  digits:                  3
+  point:                   0.001
+  tick_size:               0.001
+  tick_size_in_points:     1
+  tick_value:              0.5645 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              7 pts
+  spread_float:            true
+  swap_long:               5.2912786
+  swap_short:              -18.085873
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     88.816
+  ask:                     88.823
+  tick_time:               2026.11.12 11:30:03
+  tick_age_sec:            0
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        0.5645 EUR
+    MODE_TICKSIZE:         0.001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   501.33 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=56.4462 expected_from_contract=56.4446 (rate via EURJPY (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=56.4462 expected_from_contract=56.4446 (rate via EURJPY (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    5.0133 EUR  (0.01 lot)
+    margin_1lot_buy:       501.33 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9994.9867 EUR  (free margin left after a 0.01 lot buy at 88.823)
+
+[symbol NZDUSD]
+  path:                    Forex\NZDUSD
+  description:             New Zealand Dollar vs US Dollar
+  in_market_watch:         true
+  currency_base:           NZD
+  currency_profit:         USD
+  currency_margin:         NZD
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              0.9013 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              9 pts
+  spread_float:            true
+  swap_long:               -9.65302
+  swap_short:              1.59203
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     0.55617
+  ask:                     0.55626
+  tick_time:               2026.11.12 11:29:59
+  tick_age_sec:            4
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100000
+    MODE_TICKVALUE:        0.9013 EUR
+    MODE_TICKSIZE:         0.00001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   501.33 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=90.1348 expected_from_contract=90.1331 (rate via EURUSD (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=90.1348 expected_from_contract=90.1331 (rate via EURUSD (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    5.0133 EUR  (0.01 lot)
+    margin_1lot_buy:       501.33 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9994.9867 EUR  (free margin left after a 0.01 lot buy at 0.55626)
+
+[symbol XAUUSD]
+  path:                    Gold\XAUUSD
+  description:             US Dollar vs Spot Gold
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           XAU
+  currency_profit:         USD
+  currency_margin:         XAU
+  digits:                  3
+  point:                   0.001
+  tick_size:               0.001
+  tick_size_in_points:     1
+  tick_value:              0.0901 EUR
+  contract_size:           100
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              556 pts
+  spread_float:            true
+  swap_long:               -1826.3448554
+  swap_short:              914.8055771
+  sessions_today:          01:00-24:00 (Thursday, server time)
+  bid:                     3937.745
+  ask:                     3938.301
+  tick_time:               2026.11.12 11:30:03
+  tick_age_sec:            0
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          100
+    MODE_TICKVALUE:        0.0901 EUR
+    MODE_TICKSIZE:         0.001
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   7098.93 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=9.0135 expected_from_contract=9.0133 (rate via EURUSD (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=9.0135 expected_from_contract=9.0133 (rate via EURUSD (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    70.9893 EUR  (0.01 lot)
+    margin_1lot_buy:       7098.93 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9929.0107 EUR  (free margin left after a 0.01 lot buy at 3938.301)
+
+[symbol USA30.IDX]
+  path:                    US 30 IDX\USA30.IDX
+  description:             US 30 Index
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           USD
+  currency_profit:         USD
+  currency_margin:         USD
+  digits:                  2
+  point:                   0.01
+  tick_size:               0.001
+  tick_size_in_points:     0.1  (tick size != point: prices must be multiples of the tick size, BC-03)
+  tick_value:              0.001 EUR
+  contract_size:           1
+  volume_min:              0.1
+  volume_max:              1000
+  volume_step:             0.1
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfd (1)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              200 pts
+  spread_float:            true
+  swap_long:               0
+  swap_short:              0
+  sessions_today:          01:00-23:15 (Thursday, server time)
+  bid:                     52520.20
+  ask:                     52522.20
+  tick_time:               2026.11.12 11:30:03
+  tick_age_sec:            0
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          1
+    MODE_TICKVALUE:        0.001 EUR
+    MODE_TICKSIZE:         0.001
+    MODE_MINLOT:           0.1
+    MODE_LOTSTEP:          0.1
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   946.8 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   1  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   4  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=0.1 expected_from_contract=0.0901 (rate via EURUSD (inverted)) mismatch_pct=10.95
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=0.1 expected_from_contract=0.0901 (rate via EURUSD (inverted)) mismatch_pct=10.95
+    margin_min_lot_buy:    94.68 EUR  (0.1 lot)
+    margin_1lot_buy:       946.8 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9905.3202 EUR  (free margin left after a 0.1 lot buy at 52522.20)
+
+[symbol BTCUSD]
+  path:                    Bitcoin\BTCUSD
+  description:             Bitcoin vs US Dollar
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           BTC
+  currency_profit:         USD
+  currency_margin:         BTC
+  digits:                  1
+  point:                   0.1
+  tick_size:               0.1
+  tick_size_in_points:     1
+  tick_value:              0.0901 EUR
+  contract_size:           1
+  volume_min:              0.01
+  volume_max:              1000
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              500 pts
+  spread_float:            true
+  swap_long:               -383.02153506
+  swap_short:              0
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     73332.7
+  ask:                     73382.7
+  tick_time:               2026.11.12 11:30:03
+  tick_age_sec:            0
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          1
+    MODE_TICKVALUE:        0.0901 EUR
+    MODE_TICKSIZE:         0.1
+    MODE_MINLOT:           0.01
+    MODE_LOTSTEP:          0.01
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   13223.92 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 10 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=9.0135 expected_from_contract=9.0133 (rate via EURUSD (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=9.0135 expected_from_contract=9.0133 (rate via EURUSD (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    132.2392 EUR  (0.01 lot)
+    margin_1lot_buy:       13223.92 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9867.7608 EUR  (free margin left after a 0.01 lot buy at 73382.7)
+
+[symbol BCHUSD]
+  path:                    BCHUSD, DSHUSD\BCHUSD
+  description:             Bitcoin Cash vs US Dollar
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           BCH
+  currency_profit:         USD
+  currency_margin:         BCH
+  digits:                  1
+  point:                   0.1
+  tick_size:               0.1
+  tick_size_in_points:     1
+  tick_value:              0.0901 EUR
+  contract_size:           1
+  volume_min:              1
+  volume_max:              1000
+  volume_step:             1
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              30 pts
+  spread_float:            true
+  swap_long:               -1.20679885
+  swap_short:              0
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     226.1
+  ask:                     229.1
+  tick_time:               2026.11.12 11:29:57
+  tick_age_sec:            6
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          1
+    MODE_TICKVALUE:        0.0901 EUR
+    MODE_TICKSIZE:         0.1
+    MODE_MINLOT:           1
+    MODE_LOTSTEP:          1
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   41.03 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   0  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   0  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 10 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=9.0135 expected_from_contract=9.0133 (rate via EURUSD (inverted)) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=9.0135 expected_from_contract=9.0133 (rate via EURUSD (inverted)) mismatch_pct=0.00
+    margin_min_lot_buy:    41.03 EUR  (1 lot)
+    margin_1lot_buy:       41.03 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9958.9714 EUR  (free margin left after a 1 lot buy at 229.1)
+
+[symbol AUS.IDX]
+  path:                    Indexes\AUS.IDX
+  description:             Australia 200 Index
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           AUD
+  currency_profit:         AUD
+  currency_margin:         AUD
+  digits:                  3
+  point:                   0.001
+  tick_size:               0.001
+  tick_size_in_points:     1
+  tick_value:              0.001 EUR
+  contract_size:           1
+  volume_min:              1
+  volume_max:              1000
+  volume_step:             1
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfd (1)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              4582 pts
+  spread_float:            true
+  swap_long:               -1345.1995711
+  swap_short:              398.6045907
+  sessions_today:          00:50-07:30, 08:10-22:00 (Thursday, server time)
+  bid:                     9158.857
+  ask:                     9163.439
+  tick_time:               2026.11.12 11:29:52
+  tick_age_sec:            11
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          1
+    MODE_TICKVALUE:        0.001 EUR
+    MODE_TICKSIZE:         0.001
+    MODE_MINLOT:           1
+    MODE_LOTSTEP:          1
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   112.76 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   1  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   4  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=0.1 expected_from_contract=0.0615 (rate via EURAUD (inverted)) mismatch_pct=62.52
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=0.1 expected_from_contract=0.0615 (rate via EURAUD (inverted)) mismatch_pct=62.52
+    margin_min_lot_buy:    112.76 EUR  (1 lot)
+    margin_1lot_buy:       112.76 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9887.2366 EUR  (free margin left after a 1 lot buy at 9163.439)
+
+[symbol BUND.TR]
+  path:                    Bonds, VOL IDX\BUND.TR
+  description:             Euro Bund
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           EUR
+  currency_profit:         EUR
+  currency_margin:         EUR
+  digits:                  3
+  point:                   0.001
+  tick_size:               0.001
+  tick_size_in_points:     1
+  tick_value:              0.001 EUR
+  contract_size:           1
+  volume_min:              10
+  volume_max:              1000000
+  volume_step:             1
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfd (1)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              20 pts
+  spread_float:            true
+  swap_long:               -2.3839564
+  swap_short:              -1.7033515
+  sessions_today:          09:00-23:00 (Thursday, server time)
+  bid:                     122.714
+  ask:                     122.734
+  tick_time:               2026.11.12 11:30:00
+  tick_age_sec:            3
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          1
+    MODE_TICKVALUE:        0.001 EUR
+    MODE_TICKSIZE:         0.001
+    MODE_MINLOT:           10
+    MODE_LOTSTEP:          1
+    MODE_MAXLOT:           1000000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   4.09 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   1  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   4  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=0.1 expected_from_contract=0.1 (rate via same currency) mismatch_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=0.1 expected_from_contract=0.1 (rate via same currency) mismatch_pct=0.00
+    margin_min_lot_buy:    40.9 EUR  (10 lot)
+    margin_1lot_buy:       4.09 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9959.0891 EUR  (free margin left after a 10 lot buy at 122.734)
+
+[symbol CHE.IDX]
+  path:                    Indexes\CHE.IDX
+  description:             Switzerland 20 Index
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           CHF
+  currency_profit:         CHF
+  currency_margin:         CHF
+  digits:                  2
+  point:                   0.01
+  tick_size:               0.001
+  tick_size_in_points:     0.1  (tick size != point: prices must be multiples of the tick size, BC-03)
+  tick_value:              0.001 EUR
+  contract_size:           1
+  volume_min:              1
+  volume_max:              1000
+  volume_step:             1
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfd (1)
+  filling_flags:           n/a (MT4)
+  expiration_flags:        n/a (MT4)
+  order_mode_flags:        n/a (MT4)
+  spread_now:              330 pts
+  spread_float:            true
+  swap_long:               -79.6782714
+  swap_short:              -79.6782714
+  sessions_today:          09:00-23:00 (Thursday, server time)
+  bid:                     15172.98
+  ask:                     15176.28
+  tick_time:               2026.11.12 11:30:01
+  tick_age_sec:            2
+  spec_check:              OK - Symbol spec OK
+  mt4 marketinfo:
+    MODE_LOTSIZE:          1
+    MODE_TICKVALUE:        0.001 EUR
+    MODE_TICKSIZE:         0.001
+    MODE_MINLOT:           1
+    MODE_LOTSTEP:          1
+    MODE_MAXLOT:           1000
+    MODE_STOPLEVEL:        0
+    MODE_FREEZELEVEL:      0
+    MODE_MARGINREQUIRED:   328.82 EUR  (free margin for 1 lot)
+    MODE_MARGININIT:       0
+    MODE_MARGINMAINTENANCE: 0
+    MODE_MARGINHEDGED:     0
+    MODE_PROFITCALCMODE:   1  (0 forex, 1 CFD, 2 futures)
+    MODE_MARGINCALCMODE:   4  (0 forex, 1 CFD, 2 futures, 3 CFD on index)
+    MODE_SWAPTYPE:         0  (0 points, 1 base ccy, 2 interest, 3 margin ccy)
+    MODE_TRADEALLOWED:     1
+    raw_tick_value_profit: 0  (not used on MT4)
+    raw_tick_value_loss:   0  (not used on MT4)
+    raw_volume_limit:      0  (not used on MT4)
+    raw_filling_flags:     0  (not used on MT4)
+    raw_expiration_flags:  0  (not used on MT4)
+  calc:
+    move:                  100 ticks = 0.1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=n/a tickvalue_formula=0.1 expected_from_contract=0.1083 (rate via EURCHF (inverted)) mismatch_pct=7.69
+    loss_100ticks_sell:    OrderCalcProfit=n/a tickvalue_formula=0.1 expected_from_contract=0.1083 (rate via EURCHF (inverted)) mismatch_pct=7.69
+    margin_min_lot_buy:    328.82 EUR  (1 lot)
+    margin_1lot_buy:       328.82 EUR  (1 lot)
+  checks:
+    order_check:           n/a (MT4 has no OrderCheck; the server's answer is only known when an order is sent: GatewaySmoke, phase P2)
+    free_margin_after_min_lot_buy: 9671.1764 EUR  (free margin left after a 1 lot buy at 15176.28)
+
+[conversion]
+  USD>EUR via EURUSD (inverted) rate 0.90133127
+  CHF>EUR via EURCHF (inverted) rate 1.08334733
+  JPY>EUR via EURJPY (inverted) rate 0.00564446
+  CAD>EUR via EURCAD (inverted) rate 0.63253908
+  GBP>EUR via EURGBP (inverted) rate 1.19657301
+  AUD>EUR via EURAUD (inverted) rate 0.61528996
+  NZD>EUR via EURNZD (inverted) rate 0.50133355
+
+[summary]
+  symbols_probed:          30
+  symbols_without_quote:   0
+  items_to_check:          6
+  - USA30.IDX: tick value differs from contract x rate by 10.9 % (loss_100ticks_buy, calc mode cfd (1); BC-05)
+  - USA30.IDX: tick value differs from contract x rate by 10.9 % (loss_100ticks_sell, calc mode cfd (1); BC-05)
+  - AUS.IDX: tick value differs from contract x rate by 62.5 % (loss_100ticks_buy, calc mode cfd (1); BC-05)
+  - AUS.IDX: tick value differs from contract x rate by 62.5 % (loss_100ticks_sell, calc mode cfd (1); BC-05)
+  - CHE.IDX: tick value differs from contract x rate by 7.7 % (loss_100ticks_buy, calc mode cfd (1); BC-05)
+  - CHE.IDX: tick value differs from contract x rate by 7.7 % (loss_100ticks_sell, calc mode cfd (1); BC-05)

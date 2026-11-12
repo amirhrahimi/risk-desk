@@ -1,0 +1,1825 @@
+# RiskDesk BrokerProbe 0.2.0, report format 1, MT5
+# Generated 2026.11.12 10:33:22 local time on the chart of EURUSD.
+# Nothing was executed: no order was sent. MT5 checks use OrderCheck, which only validates a request.
+# Money values are in the account currency (EUR) unless stated otherwise.
+
+[terminal]
+  name:                    MetaTrader 5
+  company:                 MetaQuotes Ltd.
+  build:                   6311
+  platform:                MT5
+  dpi:                     120
+  connected:               true
+  trade_allowed:           true  (Algo/AutoTrading toolbar button)
+  mql_trade_allowed:       true  (this script's 'Allow algo trading')
+  community:               false
+  data_path:               <redacted>
+
+[time]
+  local:                   2026.11.12 10:33:22
+  server_last_quote:       2026.11.12 11:33:22
+  gmt:                     2026.11.12 09:33:22
+  server_minus_gmt:        2.00 h  (from the last quote time; not exact when the market is closed)
+
+[account]
+  login:                   A3
+  server:                  ICMarketsEU-Demo
+  company:                 IC Markets (EU) Ltd
+  currency:                EUR
+  currency_digits:         2
+  leverage:                1:30
+  trade_mode:              demo
+  margin_mode:             hedging
+  limit_orders:            200
+  trade_allowed:           true
+  trade_expert:            true
+  balance:                 4987.08
+  equity:                  4987.08
+  margin_free:             4987.08
+  margin_so_mode:          percent
+  margin_so_call:          100
+  margin_so_so:            50
+  fifo_close:              false
+  server_time_estimate:    2026.11.12 11:33:22
+  riskdesk_can_trade:      yes
+
+[test symbols]
+# Candidates for the test matrix (08-testing section 4), best first; found by currencies or by keywords in name/description.
+  EURUSD:                  EURUSD (market watch)
+  USDJPY:                  USDJPY (market watch), JP225 (not in market watch), JGB10Y_Z6 (not in market watch)
+  EURGBP (cross):          EURGBP (not in market watch)
+  XAUUSD:                  XAUUSD (market watch), XAUUSD.eu.custom (not in market watch), XAUEUR (not in market watch)
+  US30:                    US30 (market watch), DOW.NYSE (not in market watch), DOW.NYSE-24 (not in market watch)
+  Nasdaq 100:              USTEC (not in market watch), NDX1.ETR (not in market watch), SNDX.NAS (not in market watch)
+  BTCUSD:                  BTCUSD (not in market watch), ABTC.NAS (not in market watch), ABTC.NAS-24 (not in market watch)
+  whole-contract CFD:      CA60 (not in market watch), SE30 (not in market watch), SA40 (not in market watch)
+
+[symbol EURUSD]
+  path:                    Forex\Majors\EURUSD
+  description:             Euro vs US Dollar
+  in_market_watch:         true
+  currency_base:           EUR
+  currency_profit:         USD
+  currency_margin:         EUR
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              0.9015 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              200
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              0 pts
+  spread_float:            true
+  swap_long:               -7.997
+  swap_short:              1.32
+  sessions_today:          00:01-23:59 (Thursday, server time)
+  bid:                     1.10929
+  ask:                     1.10929
+  tick_time:               2026.11.12 11:33:20
+  tick_age_sec:            2
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.9015 EUR
+    tick_value_loss:       0.9015 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        100000
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 1, maintenance 1
+    margin_rate_sell:      initial 1, maintenance 1
+    swap_mode:             SYMBOL_SWAP_MODE_POINTS
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=90.23 tickvalue_formula=90.1478 expected_from_contract=90.1478 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.09
+    loss_100ticks_sell:    OrderCalcProfit=90.07 tickvalue_formula=90.1478 expected_from_contract=90.1478 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.09
+    margin_min_lot_buy:    33.33 EUR  (0.01 lot)
+    margin_1lot_buy:       3333.33 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=33.33
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       1.09819  (ask 1.10929)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol GBPUSD]
+  path:                    Forex\Majors\GBPUSD
+  description:             Great Britain Pound vs US Dollar
+  in_market_watch:         true
+  currency_base:           GBP
+  currency_profit:         USD
+  currency_margin:         GBP
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              0.9015 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              200
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              1 pts
+  spread_float:            true
+  swap_long:               -3.817
+  swap_short:              -4.194
+  sessions_today:          00:01-23:59 (Thursday, server time)
+  bid:                     1.32743
+  ask:                     1.32744
+  tick_time:               2026.11.12 11:33:20
+  tick_age_sec:            2
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.9015 EUR
+    tick_value_loss:       0.9015 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        100000
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 1, maintenance 1
+    margin_rate_sell:      initial 1, maintenance 1
+    swap_mode:             SYMBOL_SWAP_MODE_POINTS
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=90.15 tickvalue_formula=90.1478 expected_from_contract=90.1478 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=90.15 tickvalue_formula=90.1478 expected_from_contract=90.1478 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.00
+    margin_min_lot_buy:    39.89 EUR  (0.01 lot)
+    margin_1lot_buy:       3988.96 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=39.89
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       1.31416  (ask 1.32744)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol USDCHF]
+  path:                    Forex\Majors\USDCHF
+  description:             US Dollar vs Swiss Franc
+  in_market_watch:         true
+  currency_base:           USD
+  currency_profit:         CHF
+  currency_margin:         USD
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              1.0832 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              200
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              1 pts
+  spread_float:            true
+  swap_long:               6.066
+  swap_short:              -12.966
+  sessions_today:          00:01-23:59 (Thursday, server time)
+  bid:                     0.83219
+  ask:                     0.83220
+  tick_time:               2026.11.12 11:33:18
+  tick_age_sec:            4
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     1.0832 EUR
+    tick_value_loss:       1.0833 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        100000
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 1, maintenance 1
+    margin_rate_sell:      initial 1, maintenance 1
+    swap_mode:             SYMBOL_SWAP_MODE_POINTS
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=108.33 tickvalue_formula=108.3295 expected_from_contract=108.3265 (rate via EURCHF (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=108.32 tickvalue_formula=108.3295 expected_from_contract=108.3265 (rate via EURCHF (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.01
+    margin_min_lot_buy:    30.05 EUR  (0.01 lot)
+    margin_1lot_buy:       3004.93 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=30.05
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       0.82387  (ask 0.83220)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol USDJPY]
+  path:                    Forex\Majors\USDJPY
+  description:             US Dollar vs Japanese Yen
+  in_market_watch:         true
+  currency_base:           USD
+  currency_profit:         JPY
+  currency_margin:         USD
+  digits:                  3
+  point:                   0.001
+  tick_size:               0.001
+  tick_size_in_points:     1
+  tick_value:              0.5644 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              200
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              1 pts
+  spread_float:            true
+  swap_long:               8.064
+  swap_short:              -16.845
+  sessions_today:          00:01-23:59 (Thursday, server time)
+  bid:                     159.709
+  ask:                     159.710
+  tick_time:               2026.11.12 11:33:21
+  tick_age_sec:            1
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.5644 EUR
+    tick_value_loss:       0.5645 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        100000
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 1, maintenance 1
+    margin_rate_sell:      initial 1, maintenance 1
+    swap_mode:             SYMBOL_SWAP_MODE_POINTS
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 0.1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=56.45 tickvalue_formula=56.4452 expected_from_contract=56.445 (rate via EURJPY (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.01
+    loss_100ticks_sell:    OrderCalcProfit=56.44 tickvalue_formula=56.4452 expected_from_contract=56.445 (rate via EURJPY (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.01
+    margin_min_lot_buy:    30.05 EUR  (0.01 lot)
+    margin_1lot_buy:       3004.93 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=30.05
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       158.112  (ask 159.710)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol USDCNH]
+  path:                    Forex\Exotics\USDCNH
+  description:             US Dollar vs Chinese Renminbi
+  in_market_watch:         true
+  currency_base:           USD
+  currency_profit:         CNH
+  currency_margin:         USD
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              0.1352 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              50
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex_no_leverage (5)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              22 pts
+  spread_float:            true
+  swap_long:               30.27
+  swap_short:              -73.296
+  sessions_today:          00:01-23:59 (Thursday, server time)
+  bid:                     6.66951
+  ask:                     6.66973
+  tick_time:               2026.11.12 11:33:21
+  tick_age_sec:            1
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.1352 EUR
+    tick_value_loss:       0.1352 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        100000
+    margin_maintenance:    0
+    margin_hedged:         100000
+    margin_rate_buy:       initial 0.05, maintenance 0.05
+    margin_rate_sell:      initial 0.05, maintenance 0.05
+    swap_mode:             SYMBOL_SWAP_MODE_POINTS
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=13.52 tickvalue_formula=13.5164 expected_from_contract=13.5162 (rate via USDCNH (inverted) x EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.03
+    loss_100ticks_sell:    OrderCalcProfit=13.51 tickvalue_formula=13.5164 expected_from_contract=13.5162 (rate via USDCNH (inverted) x EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.05
+    margin_min_lot_buy:    45.07 EUR  (0.01 lot)
+    margin_1lot_buy:       4507.39 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=45.07
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       6.60303  (ask 6.66973)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol AUDUSD]
+  path:                    Forex\Majors\AUDUSD
+  description:             Australian Dollar vs US Dollar
+  in_market_watch:         true
+  currency_base:           AUD
+  currency_profit:         USD
+  currency_margin:         AUD
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              0.9015 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              200
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              1 pts
+  spread_float:            true
+  swap_long:               1.083
+  swap_short:              -2.343
+  sessions_today:          00:01-23:59 (Thursday, server time)
+  bid:                     0.68296
+  ask:                     0.68297
+  tick_time:               2026.11.12 11:33:21
+  tick_age_sec:            1
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.9015 EUR
+    tick_value_loss:       0.9015 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        100000
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 1.5, maintenance 1.5
+    margin_rate_sell:      initial 1.5, maintenance 1.5
+    swap_mode:             SYMBOL_SWAP_MODE_POINTS
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=90.15 tickvalue_formula=90.1478 expected_from_contract=90.1478 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=90.15 tickvalue_formula=90.1478 expected_from_contract=90.1478 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.00
+    margin_min_lot_buy:    30.78 EUR  (0.01 lot)
+    margin_1lot_buy:       3078.41 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=30.78
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       0.67614  (ask 0.68297)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol NZDUSD]
+  path:                    Forex\Minors\NZDUSD
+  description:             New Zealand Dollar vs US Dollar
+  in_market_watch:         true
+  currency_base:           NZD
+  currency_profit:         USD
+  currency_margin:         NZD
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              0.9015 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              100
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              1 pts
+  spread_float:            true
+  swap_long:               -4.103
+  swap_short:              0.195
+  sessions_today:          00:01-23:59 (Thursday, server time)
+  bid:                     0.55619
+  ask:                     0.55620
+  tick_time:               2026.11.12 11:33:19
+  tick_age_sec:            3
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.9015 EUR
+    tick_value_loss:       0.9015 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        100000
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 1.5, maintenance 1.5
+    margin_rate_sell:      initial 1.5, maintenance 1.5
+    swap_mode:             SYMBOL_SWAP_MODE_POINTS
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=90.15 tickvalue_formula=90.1478 expected_from_contract=90.1478 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=90.15 tickvalue_formula=90.1478 expected_from_contract=90.1478 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.00
+    margin_min_lot_buy:    25.07 EUR  (0.01 lot)
+    margin_1lot_buy:       2507.01 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=25.07
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       0.55063  (ask 0.55620)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol USDCAD]
+  path:                    Forex\Majors\USDCAD
+  description:             US Dollar vs Canadian Dollar
+  in_market_watch:         true
+  currency_base:           USD
+  currency_profit:         CAD
+  currency_margin:         USD
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              0.6326 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              200
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              2 pts
+  spread_float:            true
+  swap_long:               2.079
+  swap_short:              -9.537
+  sessions_today:          00:01-23:59 (Thursday, server time)
+  bid:                     1.42512
+  ask:                     1.42514
+  tick_time:               2026.11.12 11:33:21
+  tick_age_sec:            1
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.6326 EUR
+    tick_value_loss:       0.6326 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        100000
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 1, maintenance 1
+    margin_rate_sell:      initial 1, maintenance 1
+    swap_mode:             SYMBOL_SWAP_MODE_POINTS
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=63.26 tickvalue_formula=63.2643 expected_from_contract=63.2637 (rate via EURCAD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.01
+    loss_100ticks_sell:    OrderCalcProfit=63.26 tickvalue_formula=63.2643 expected_from_contract=63.2637 (rate via EURCAD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.01
+    margin_min_lot_buy:    30.05 EUR  (0.01 lot)
+    margin_1lot_buy:       3004.93 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=30.05
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       1.41088  (ask 1.42514)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol USDSEK]
+  path:                    Forex\Exotics\USDSEK
+  description:             US Dollar vs Swedish Kroner
+  in_market_watch:         true
+  currency_base:           USD
+  currency_profit:         SEK
+  currency_margin:         USD
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              0.0905 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              50
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              466 pts
+  spread_float:            true
+  swap_long:               34.506
+  swap_short:              -78.169
+  sessions_today:          00:01-23:59 (Thursday, server time)
+  bid:                     9.95870
+  ask:                     9.96336
+  tick_time:               2026.11.12 11:33:22
+  tick_age_sec:            0
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.0905 EUR
+    tick_value_loss:       0.0905 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        100000
+    margin_maintenance:    0
+    margin_hedged:         100000
+    margin_rate_buy:       initial 1.5, maintenance 1.5
+    margin_rate_sell:      initial 1.5, maintenance 1.5
+    swap_mode:             SYMBOL_SWAP_MODE_POINTS
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=9.05 tickvalue_formula=9.0522 expected_from_contract=9.05 (rate via EURSEK (inverted)) mismatch_pct=0.02 calcprofit_vs_tickvalue_pct=0.02
+    loss_100ticks_sell:    OrderCalcProfit=9.05 tickvalue_formula=9.0522 expected_from_contract=9.05 (rate via EURSEK (inverted)) mismatch_pct=0.02 calcprofit_vs_tickvalue_pct=0.02
+    margin_min_lot_buy:    45.07 EUR  (0.01 lot)
+    margin_1lot_buy:       4507.39 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=45.07
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       9.86372  (ask 9.96336)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol XAUUSD]
+  path:                    Commodities\Metals\XAUUSD
+  description:             Gold vs US Dollar
+  in_market_watch:         true
+  currency_base:           XAU
+  currency_profit:         USD
+  currency_margin:         XAU
+  digits:                  2
+  point:                   0.01
+  tick_size:               0.01
+  tick_size_in_points:     1
+  tick_value:              0.9015 EUR
+  contract_size:           100
+  volume_min:              0.01
+  volume_max:              100
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              8 pts
+  spread_float:            true
+  swap_long:               -54.593
+  swap_short:              37.656
+  sessions_today:          01:02-23:59 (Thursday, server time)
+  bid:                     3940.64
+  ask:                     3940.72
+  tick_time:               2026.11.12 11:33:21
+  tick_age_sec:            1
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.9015 EUR
+    tick_value_loss:       0.9015 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        100
+    margin_maintenance:    0
+    margin_hedged:         100
+    margin_rate_buy:       initial 1.5, maintenance 1.5
+    margin_rate_sell:      initial 1.5, maintenance 1.5
+    swap_mode:             SYMBOL_SWAP_MODE_POINTS
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=90.15 tickvalue_formula=90.1478 expected_from_contract=90.1478 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=90.15 tickvalue_formula=90.1478 expected_from_contract=90.1478 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.00
+    margin_min_lot_buy:    177.62 EUR  (0.01 lot)
+    margin_1lot_buy:       17762.4 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=177.62
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       3901.31  (ask 3940.72)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol US30]
+  path:                    Indices\Indices Spot\Major Spot Indices\US30
+  description:             US Wall Street 30 Index
+  in_market_watch:         true
+  currency_base:           USD
+  currency_profit:         USD
+  currency_margin:         USD
+  digits:                  2
+  point:                   0.01
+  tick_size:               0.01
+  tick_size_in_points:     1
+  tick_value:              0.009 EUR
+  contract_size:           1
+  volume_min:              0.1
+  volume_max:              250
+  volume_step:             0.1
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfd (2)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              120 pts
+  spread_float:            true
+  swap_long:               -14.024
+  swap_short:              -1.733
+  sessions_today:          01:00-23:59 (Thursday, server time)
+  bid:                     52545.00
+  ask:                     52546.20
+  tick_time:               2026.11.12 11:33:22
+  tick_age_sec:            0
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.009 EUR
+    tick_value_loss:       0.009 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        0
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 0.05, maintenance 0.05
+    margin_rate_sell:      initial 0.05, maintenance 0.05
+    swap_mode:             SYMBOL_SWAP_MODE_CURRENCY_MARGIN
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=0.9 tickvalue_formula=0.9015 expected_from_contract=0.9015 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.16
+    loss_100ticks_sell:    OrderCalcProfit=0.9 tickvalue_formula=0.9015 expected_from_contract=0.9015 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.16
+    margin_min_lot_buy:    236.85 EUR  (0.1 lot)
+    margin_1lot_buy:       2368.46 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=236.85
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       52020.73  (ask 52546.20)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol US500]
+  path:                    Indices\Indices Spot\Major Spot Indices\US500
+  description:             US SPX 500 Index
+  in_market_watch:         true
+  currency_base:           USD
+  currency_profit:         USD
+  currency_margin:         USD
+  digits:                  2
+  point:                   0.01
+  tick_size:               0.01
+  tick_size_in_points:     1
+  tick_value:              0.009 EUR
+  contract_size:           1
+  volume_min:              0.1
+  volume_max:              250
+  volume_step:             0.1
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfd (2)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              50 pts
+  spread_float:            true
+  swap_long:               -2.021
+  swap_short:              -0.25
+  sessions_today:          01:00-23:59 (Thursday, server time)
+  bid:                     7595.70
+  ask:                     7596.20
+  tick_time:               2026.11.12 11:33:21
+  tick_age_sec:            1
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.009 EUR
+    tick_value_loss:       0.009 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        0
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 0.05, maintenance 0.05
+    margin_rate_sell:      initial 0.05, maintenance 0.05
+    swap_mode:             SYMBOL_SWAP_MODE_CURRENCY_SYMBOL
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=0.9 tickvalue_formula=0.9015 expected_from_contract=0.9015 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.16
+    loss_100ticks_sell:    OrderCalcProfit=0.9 tickvalue_formula=0.9015 expected_from_contract=0.9015 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.16
+    margin_min_lot_buy:    34.24 EUR  (0.1 lot)
+    margin_1lot_buy:       342.39 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=34.24
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       7520.23  (ask 7596.20)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol JP225]
+  path:                    Indices\Indices Spot\Major Spot Indices\JP225
+  description:             Japan 225 Index
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           USD
+  currency_profit:         JPY
+  currency_margin:         JPY
+  digits:                  2
+  point:                   0.01
+  tick_size:               0.01
+  tick_size_in_points:     1
+  tick_value:              0.0001 EUR
+  contract_size:           1
+  volume_min:              1
+  volume_max:              250
+  volume_step:             1
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfd (2)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              400 pts
+  spread_float:            true
+  swap_long:               -11.48
+  swap_short:              -6.888
+  sessions_today:          01:00-23:59 (Thursday, server time)
+  bid:                     61054.00
+  ask:                     61058.00
+  tick_time:               2026.11.12 11:33:21
+  tick_age_sec:            1
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.0001 EUR
+    tick_value_loss:       0.0001 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        0
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 0.05, maintenance 0.05
+    margin_rate_sell:      initial 0.05, maintenance 0.05
+    swap_mode:             SYMBOL_SWAP_MODE_CURRENCY_MARGIN
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=0.01 tickvalue_formula=0.0056 expected_from_contract=0.0056 (rate via EURJPY (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=43.55
+    loss_100ticks_sell:    OrderCalcProfit=0.01 tickvalue_formula=0.0056 expected_from_contract=0.0056 (rate via EURJPY (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=43.55
+    margin_min_lot_buy:    17.23 EUR  (1 lot)
+    margin_1lot_buy:       17.23 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=17.23
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       60447.42  (ask 61058.00)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol JGB10Y_Z6]
+  path:                    Bonds CFDs\JGB10Y_Z6
+  description:             Japan JGB 10 YR -December 26 CFD
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           USD
+  currency_profit:         JPY
+  currency_margin:         JPY
+  digits:                  2
+  point:                   0.01
+  tick_size:               0.01
+  tick_size_in_points:     1
+  tick_value:              0.0056 EUR
+  contract_size:           100
+  volume_min:              1
+  volume_max:              100
+  volume_step:             1
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfd (2)
+  filling_flags:           FOK|IOC (3)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              6 pts
+  spread_float:            true
+  swap_long:               0
+  swap_short:              0
+  sessions_today:          02:00-11:10, 12:30-18:00 (Thursday, server time)
+  bid:                     126.74
+  ask:                     126.80
+  tick_time:               2026.11.12 11:09:32
+  tick_age_sec:            1430
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.0056 EUR
+    tick_value_loss:       0.0056 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        0
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 0.2, maintenance 0.2
+    margin_rate_sell:      initial 0.2, maintenance 0.2
+    swap_mode:             SYMBOL_SWAP_MODE_CURRENCY_MARGIN
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=0.56 tickvalue_formula=0.5645 expected_from_contract=0.5645 (rate via EURJPY (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.79
+    loss_100ticks_sell:    OrderCalcProfit=0.56 tickvalue_formula=0.5645 expected_from_contract=0.5645 (rate via EURJPY (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.79
+    margin_min_lot_buy:    14.31 EUR  (1 lot)
+    margin_1lot_buy:       14.31 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=true retcode=0 OK "Done" margin=14.31
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=14.31
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       125.53  (ask 126.80)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol EURGBP]
+  path:                    Forex\Minors\EURGBP
+  description:             Euro vs Great Britain Pound
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           EUR
+  currency_profit:         GBP
+  currency_margin:         EUR
+  digits:                  5
+  point:                   0.00001
+  tick_size:               0.00001
+  tick_size_in_points:     1
+  tick_value:              1.1966 EUR
+  contract_size:           100000
+  volume_min:              0.01
+  volume_max:              100
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              3 pts
+  spread_float:            true
+  swap_long:               -6.534
+  swap_short:              0.753
+  sessions_today:          00:01-23:59 (Thursday, server time)
+  bid:                     0.83564
+  ask:                     0.83567
+  tick_time:               2026.11.12 11:33:19
+  tick_age_sec:            3
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     1.1966 EUR
+    tick_value_loss:       1.1967 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        100000
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 1, maintenance 1
+    margin_rate_sell:      initial 1, maintenance 1
+    swap_mode:             SYMBOL_SWAP_MODE_POINTS
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 0.001 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=119.81 tickvalue_formula=119.6688 expected_from_contract=119.6666 (rate via EURGBP (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.12
+    loss_100ticks_sell:    OrderCalcProfit=119.53 tickvalue_formula=119.6688 expected_from_contract=119.6666 (rate via EURGBP (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.12
+    margin_min_lot_buy:    33.33 EUR  (0.01 lot)
+    margin_1lot_buy:       3333.33 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=33.33
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       0.82731  (ask 0.83567)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol XAUUSD.eu.custom]
+  path:                    Custom\FX - CFD Precious Metals (EU)\XAUUSD.eu.custom
+  description:             Spot Gold vs US Dollar
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           XAU
+  currency_profit:         USD
+  currency_margin:         USD
+  digits:                  2
+  point:                   0.01
+  tick_size:               0.01
+  tick_size_in_points:     1
+  tick_value:              0.8914 EUR
+  contract_size:           100
+  volume_min:              0.01
+  volume_max:              15
+  volume_step:             0.01
+  stops_level:             25 pts (0.25)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfdleverage (4)
+  filling_flags:           FOK (1)
+  expiration_flags:        GTC|SPECIFIED|SPECIFIED_DAY (13)
+  order_mode_flags:        MARKET|LIMIT|STOP|SL|TP (55)
+  spread_now:              0 pts
+  spread_float:            true
+  swap_long:               0
+  swap_short:              0
+  sessions_today:          00:00-24:00 (Thursday, server time)
+  bid:                     none
+  ask:                     none
+  tick_time:               none
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0 EUR
+    tick_value_loss:       0 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        0
+    margin_maintenance:    0
+    margin_hedged:         200
+    margin_rate_buy:       initial 10, maintenance 10
+    margin_rate_sell:      initial 10, maintenance 10
+    swap_mode:             SYMBOL_SWAP_MODE_DISABLED
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    skipped:               no quote
+  checks (OrderCheck only, nothing is executed):
+    skipped:               no quote or invalid symbol spec
+
+[symbol XAUEUR]
+  path:                    Commodities\Metals\XAUEUR
+  description:             Gold vs Euro
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           XAU
+  currency_profit:         EUR
+  currency_margin:         XAU
+  digits:                  2
+  point:                   0.01
+  tick_size:               0.01
+  tick_size_in_points:     1
+  tick_value:              1 EUR
+  contract_size:           100
+  volume_min:              0.01
+  volume_max:              100
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               forex (0)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              9 pts
+  spread_float:            true
+  swap_long:               -32.62
+  swap_short:              21.571
+  sessions_today:          01:02-23:59 (Thursday, server time)
+  bid:                     3552.39
+  ask:                     3552.48
+  tick_time:               2026.11.12 11:33:21
+  tick_age_sec:            1
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     1 EUR
+    tick_value_loss:       1 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        100
+    margin_maintenance:    0
+    margin_hedged:         100
+    margin_rate_buy:       initial 1.5, maintenance 1.5
+    margin_rate_sell:      initial 1.5, maintenance 1.5
+    swap_mode:             SYMBOL_SWAP_MODE_POINTS
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=100 tickvalue_formula=100 expected_from_contract=100 (rate via same currency) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=100 tickvalue_formula=100 expected_from_contract=100 (rate via same currency) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.00
+    margin_min_lot_buy:    177.62 EUR  (0.01 lot)
+    margin_1lot_buy:       17762.4 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=177.62
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       3516.95  (ask 3552.48)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol DOW.NYSE]
+  path:                    Stock CFD's\NYSE\DOW.NYSE
+  description:             Dow Inc CFD
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           USD
+  currency_profit:         USD
+  currency_margin:         USD
+  digits:                  3
+  point:                   0.001
+  tick_size:               0.001
+  tick_size_in_points:     1
+  tick_value:              0.0009 EUR
+  contract_size:           1
+  volume_min:              0.1
+  volume_max:              1000
+  volume_step:             0.1
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfd (2)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              10 pts
+  spread_float:            true
+  swap_long:               -5.98
+  swap_short:              0.98
+  sessions_today:          16:35-22:55 (Thursday, server time)
+  bid:                     32.530
+  ask:                     32.540
+  tick_time:               2026.11.11 22:54:55
+  tick_age_sec:            45507
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.0009 EUR
+    tick_value_loss:       0.0009 EUR
+    volume_limit:          1000
+    margin_initial:        0
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 0.2, maintenance 0.2
+    margin_rate_sell:      initial 0.2, maintenance 0.2
+    swap_mode:             SYMBOL_SWAP_MODE_INTEREST_CURRENT
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 0.1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=0.09 tickvalue_formula=0.0901 expected_from_contract=0.0901 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.16
+    loss_100ticks_sell:    OrderCalcProfit=0.09 tickvalue_formula=0.0901 expected_from_contract=0.0901 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.16
+    margin_min_lot_buy:    0.59 EUR  (0.1 lot)
+    margin_1lot_buy:       5.87 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=0.59
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       32.214  (ask 32.540)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol DOW.NYSE-24]
+  path:                    Stock CFD's\NYSE\24HR NYSE\DOW.NYSE-24
+  description:             Dow Inc 24/5 CFD
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           USD
+  currency_profit:         USD
+  currency_margin:         USD
+  digits:                  3
+  point:                   0.001
+  tick_size:               0.001
+  tick_size_in_points:     1
+  tick_value:              0.0009 EUR
+  contract_size:           1
+  volume_min:              0.1
+  volume_max:              1000
+  volume_step:             0.1
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfd (2)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              50 pts
+  spread_float:            true
+  swap_long:               -5.98
+  swap_short:              0.98
+  sessions_today:          00:05-23:55 (Thursday, server time)
+  bid:                     32.450
+  ask:                     32.500
+  tick_time:               2026.11.12 11:30:28
+  tick_age_sec:            174
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.0009 EUR
+    tick_value_loss:       0.0009 EUR
+    volume_limit:          1000
+    margin_initial:        0
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 0.2, maintenance 0.2
+    margin_rate_sell:      initial 0.2, maintenance 0.2
+    swap_mode:             SYMBOL_SWAP_MODE_INTEREST_CURRENT
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 0.1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=0.09 tickvalue_formula=0.0901 expected_from_contract=0.0901 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.16
+    loss_100ticks_sell:    OrderCalcProfit=0.09 tickvalue_formula=0.0901 expected_from_contract=0.0901 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.16
+    margin_min_lot_buy:    0.59 EUR  (0.1 lot)
+    margin_1lot_buy:       5.86 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=0.59
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       32.175  (ask 32.500)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol USTEC]
+  path:                    Indices\Indices Spot\Major Spot Indices\USTEC
+  description:             US Tech 100 Index
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           USD
+  currency_profit:         USD
+  currency_margin:         USD
+  digits:                  2
+  point:                   0.01
+  tick_size:               0.01
+  tick_size_in_points:     1
+  tick_value:              0.009 EUR
+  contract_size:           1
+  volume_min:              0.1
+  volume_max:              250
+  volume_step:             0.1
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfd (2)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              100 pts
+  spread_float:            true
+  swap_long:               -7.457
+  swap_short:              -0.922
+  sessions_today:          01:00-23:59 (Thursday, server time)
+  bid:                     28202.00
+  ask:                     28203.00
+  tick_time:               2026.11.12 11:33:22
+  tick_age_sec:            0
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.009 EUR
+    tick_value_loss:       0.009 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        0
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 0.05, maintenance 0.05
+    margin_rate_sell:      initial 0.05, maintenance 0.05
+    swap_mode:             SYMBOL_SWAP_MODE_CURRENCY_MARGIN
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=0.9 tickvalue_formula=0.9015 expected_from_contract=0.9015 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.16
+    loss_100ticks_sell:    OrderCalcProfit=0.9 tickvalue_formula=0.9015 expected_from_contract=0.9015 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.16
+    margin_min_lot_buy:    127.12 EUR  (0.1 lot)
+    margin_1lot_buy:       1271.22 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=127.12
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       27920.97  (ask 28203.00)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol NDX1.ETR]
+  path:                    Stock CFD's\EU\ETR\NDX1.ETR
+  description:             Nordex SE CFD
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           EUR
+  currency_profit:         EUR
+  currency_margin:         EUR
+  digits:                  4
+  point:                   0.0001
+  tick_size:               0.0001
+  tick_size_in_points:     1
+  tick_value:              0.0001 EUR
+  contract_size:           1
+  volume_min:              1
+  volume_max:              1000
+  volume_step:             1
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfd (2)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              600 pts
+  spread_float:            true
+  swap_long:               -4.69
+  swap_short:              -0.19
+  sessions_today:          10:05-18:25 (Thursday, server time)
+  bid:                     41.6800
+  ask:                     41.7400
+  tick_time:               2026.11.12 11:33:14
+  tick_age_sec:            8
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.0001 EUR
+    tick_value_loss:       0.0001 EUR
+    volume_limit:          1000
+    margin_initial:        0
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 0.2, maintenance 0.2
+    margin_rate_sell:      initial 0.2, maintenance 0.2
+    swap_mode:             SYMBOL_SWAP_MODE_INTEREST_CURRENT
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 0.01 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=0.01 tickvalue_formula=0.01 expected_from_contract=0.01 (rate via same currency) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.00
+    loss_100ticks_sell:    OrderCalcProfit=0.01 tickvalue_formula=0.01 expected_from_contract=0.01 (rate via same currency) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.00
+    margin_min_lot_buy:    8.35 EUR  (1 lot)
+    margin_1lot_buy:       8.35 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=8.35
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       41.3226  (ask 41.7400)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol SNDX.NAS]
+  path:                    Stock CFD's\Nasdaq\SNDX.NAS
+  description:             Syndax Pharmaceuticals Inc CFD
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           USD
+  currency_profit:         USD
+  currency_margin:         USD
+  digits:                  3
+  point:                   0.001
+  tick_size:               0.001
+  tick_size_in_points:     1
+  tick_value:              0.0009 EUR
+  contract_size:           1
+  volume_min:              0.1
+  volume_max:              1000
+  volume_step:             0.1
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfd (2)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              20 pts
+  spread_float:            true
+  swap_long:               -5.98
+  swap_short:              0.98
+  sessions_today:          16:35-22:55 (Thursday, server time)
+  bid:                     9.710
+  ask:                     9.730
+  tick_time:               2026.11.11 22:54:57
+  tick_age_sec:            45505
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.0009 EUR
+    tick_value_loss:       0.0009 EUR
+    volume_limit:          1000
+    margin_initial:        0
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 0.2, maintenance 0.2
+    margin_rate_sell:      initial 0.2, maintenance 0.2
+    swap_mode:             SYMBOL_SWAP_MODE_INTEREST_CURRENT
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 0.1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=0.09 tickvalue_formula=0.0901 expected_from_contract=0.0901 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.16
+    loss_100ticks_sell:    OrderCalcProfit=0.09 tickvalue_formula=0.0901 expected_from_contract=0.0901 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.16
+    margin_min_lot_buy:    0.18 EUR  (0.1 lot)
+    margin_1lot_buy:       1.75 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=0.18
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       9.632  (ask 9.730)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol BTCUSD]
+  path:                    Crypto\BTCUSD
+  description:             Bitcoin (USD)
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           USD
+  currency_profit:         USD
+  currency_margin:         USD
+  digits:                  2
+  point:                   0.01
+  tick_size:               0.01
+  tick_size_in_points:     1
+  tick_value:              0.009 EUR
+  contract_size:           1
+  volume_min:              0.01
+  volume_max:              10
+  volume_step:             0.01
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfd (2)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              500 pts
+  spread_float:            true
+  swap_long:               -20
+  swap_short:              0
+  sessions_today:          00:05-23:59 (Thursday, server time)
+  bid:                     73418.94
+  ask:                     73423.94
+  tick_time:               2026.11.12 11:33:22
+  tick_age_sec:            0
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.009 EUR
+    tick_value_loss:       0.009 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        0
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 0.5, maintenance 0.5
+    margin_rate_sell:      initial 0.5, maintenance 0.5
+    swap_mode:             SYMBOL_SWAP_MODE_INTEREST_CURRENT
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=0.9 tickvalue_formula=0.9015 expected_from_contract=0.9015 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.16
+    loss_100ticks_sell:    OrderCalcProfit=0.9 tickvalue_formula=0.9015 expected_from_contract=0.9015 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.16
+    margin_min_lot_buy:    330.95 EUR  (0.01 lot)
+    margin_1lot_buy:       33095.02 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=330.95
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       72689.70  (ask 73423.94)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol ABTC.NAS]
+  path:                    Stock CFD's\Nasdaq\ABTC.NAS
+  description:             American Bitcoin Corp CFD
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           USD
+  currency_profit:         USD
+  currency_margin:         USD
+  digits:                  3
+  point:                   0.001
+  tick_size:               0.001
+  tick_size_in_points:     1
+  tick_value:              0.0009 EUR
+  contract_size:           1
+  volume_min:              0.1
+  volume_max:              1000
+  volume_step:             0.1
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfd (2)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              20 pts
+  spread_float:            true
+  swap_long:               -5.98
+  swap_short:              0.98
+  sessions_today:          16:35-22:55 (Thursday, server time)
+  bid:                     5.285
+  ask:                     5.305
+  tick_time:               2026.11.11 22:54:44
+  tick_age_sec:            45518
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.0009 EUR
+    tick_value_loss:       0.0009 EUR
+    volume_limit:          1000
+    margin_initial:        0
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 0.2, maintenance 0.2
+    margin_rate_sell:      initial 0.2, maintenance 0.2
+    swap_mode:             SYMBOL_SWAP_MODE_INTEREST_CURRENT
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 0.1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=0.09 tickvalue_formula=0.0901 expected_from_contract=0.0901 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.16
+    loss_100ticks_sell:    OrderCalcProfit=0.09 tickvalue_formula=0.0901 expected_from_contract=0.0901 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.16
+    margin_min_lot_buy:    0.1 EUR  (0.1 lot)
+    margin_1lot_buy:       0.96 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=0.1
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       5.251  (ask 5.305)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol ABTC.NAS-24]
+  path:                    Stock CFD's\Nasdaq\24HR NAS\ABTC.NAS-24
+  description:             AMERICAN BITCOIN CORP-A 24/5 CFD
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           USD
+  currency_profit:         USD
+  currency_margin:         USD
+  digits:                  3
+  point:                   0.001
+  tick_size:               0.001
+  tick_size_in_points:     1
+  tick_value:              0.0009 EUR
+  contract_size:           1
+  volume_min:              0.1
+  volume_max:              1000
+  volume_step:             0.1
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfd (2)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              40 pts
+  spread_float:            true
+  swap_long:               -5.98
+  swap_short:              0.98
+  sessions_today:          00:05-23:55 (Thursday, server time)
+  bid:                     5.225
+  ask:                     5.265
+  tick_time:               2026.11.12 11:24:31
+  tick_age_sec:            531
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.0009 EUR
+    tick_value_loss:       0.0009 EUR
+    volume_limit:          1000
+    margin_initial:        0
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 0.2, maintenance 0.2
+    margin_rate_sell:      initial 0.2, maintenance 0.2
+    swap_mode:             SYMBOL_SWAP_MODE_INTEREST_CURRENT
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 0.1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=0.09 tickvalue_formula=0.0901 expected_from_contract=0.0901 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.16
+    loss_100ticks_sell:    OrderCalcProfit=0.09 tickvalue_formula=0.0901 expected_from_contract=0.0901 (rate via EURUSD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.16
+    margin_min_lot_buy:    0.09 EUR  (0.1 lot)
+    margin_1lot_buy:       0.95 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=0.09
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       5.212  (ask 5.265)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol CA60]
+  path:                    Indices\Indices Spot\Minor Spot Indices\CA60
+  description:             Canada 60 Index
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           CAD
+  currency_profit:         CAD
+  currency_margin:         CAD
+  digits:                  2
+  point:                   0.01
+  tick_size:               0.01
+  tick_size_in_points:     1
+  tick_value:              0.0063 EUR
+  contract_size:           1
+  volume_min:              1
+  volume_max:              250
+  volume_step:             1
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfd (2)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              80 pts
+  spread_float:            true
+  swap_long:               -0.166
+  swap_short:              0.136
+  sessions_today:          16:35-22:58 (Thursday, server time)
+  bid:                     2165.24
+  ask:                     2166.04
+  tick_time:               2026.11.11 22:57:59
+  tick_age_sec:            45323
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.0063 EUR
+    tick_value_loss:       0.0063 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        0
+    margin_maintenance:    0
+    margin_hedged:         1
+    margin_rate_buy:       initial 0.1, maintenance 0.1
+    margin_rate_sell:      initial 0.1, maintenance 0.1
+    swap_mode:             SYMBOL_SWAP_MODE_CURRENCY_MARGIN
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=0.63 tickvalue_formula=0.6326 expected_from_contract=0.6326 (rate via EURCAD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.42
+    loss_100ticks_sell:    OrderCalcProfit=0.63 tickvalue_formula=0.6326 expected_from_contract=0.6326 (rate via EURCAD (inverted)) mismatch_pct=0.00 calcprofit_vs_tickvalue_pct=0.42
+    margin_min_lot_buy:    137.03 EUR  (1 lot)
+    margin_1lot_buy:       137.03 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=137.03
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       2144.37  (ask 2166.04)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol SE30]
+  path:                    Indices\Indices Spot\Minor Spot Indices\SE30
+  description:             Sweden 30 Index
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           SEK
+  currency_profit:         SEK
+  currency_margin:         SEK
+  digits:                  2
+  point:                   0.01
+  tick_size:               0.01
+  tick_size_in_points:     1
+  tick_value:              0.0009 EUR
+  contract_size:           1
+  volume_min:              1
+  volume_max:              250
+  volume_step:             1
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfd (2)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              44 pts
+  spread_float:            true
+  swap_long:               -0.282
+  swap_short:              0.064
+  sessions_today:          10:05-18:24 (Thursday, server time)
+  bid:                     3370.38
+  ask:                     3370.82
+  tick_time:               2026.11.12 11:33:22
+  tick_age_sec:            0
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.0009 EUR
+    tick_value_loss:       0.0009 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        0
+    margin_maintenance:    0
+    margin_hedged:         0
+    margin_rate_buy:       initial 0.1, maintenance 0.1
+    margin_rate_sell:      initial 0.1, maintenance 0.1
+    swap_mode:             SYMBOL_SWAP_MODE_CURRENCY_MARGIN
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=0.09 tickvalue_formula=0.0905 expected_from_contract=0.0905 (rate via EURSEK (inverted)) mismatch_pct=0.02 calcprofit_vs_tickvalue_pct=0.58
+    loss_100ticks_sell:    OrderCalcProfit=0.09 tickvalue_formula=0.0905 expected_from_contract=0.0905 (rate via EURSEK (inverted)) mismatch_pct=0.02 calcprofit_vs_tickvalue_pct=0.58
+    margin_min_lot_buy:    30.51 EUR  (1 lot)
+    margin_1lot_buy:       30.51 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=30.51
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       3337.11  (ask 3370.82)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[symbol SA40]
+  path:                    Indices\Indices Spot\Minor Spot Indices\SA40
+  description:             South Africa 40 Index
+  in_market_watch:         false (added by the probe for its quotes, removed again at the end)
+  currency_base:           ZAR
+  currency_profit:         ZAR
+  currency_margin:         ZAR
+  digits:                  2
+  point:                   0.01
+  tick_size:               0.01
+  tick_size_in_points:     1
+  tick_value:              0.0005 EUR
+  contract_size:           1
+  volume_min:              1
+  volume_max:              250
+  volume_step:             1
+  stops_level:             0 pts (0)
+  freeze_level:            0 pts (0)
+  trade_mode:              full (4)
+  exec_mode:               market (2)
+  calc_mode:               cfd (2)
+  filling_flags:           IOC (2)
+  expiration_flags:        GTC|DAY|SPECIFIED|SPECIFIED_DAY (15)
+  order_mode_flags:        MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  spread_now:              1000 pts
+  spread_float:            true
+  swap_long:               -22.275
+  swap_short:              18.225
+  sessions_today:          08:35-17:25 (Thursday, server time)
+  bid:                     105985.20
+  ask:                     105995.20
+  tick_time:               2026.11.12 11:33:21
+  tick_age_sec:            1
+  spec_check:              OK - Symbol spec OK
+  mt5:
+    tick_value_profit:     0.0005 EUR
+    tick_value_loss:       0.0005 EUR
+    volume_limit:          0 (no limit)
+    margin_initial:        0
+    margin_maintenance:    0
+    margin_hedged:         1
+    margin_rate_buy:       initial 0.1, maintenance 0.1
+    margin_rate_sell:      initial 0.1, maintenance 0.1
+    swap_mode:             SYMBOL_SWAP_MODE_CURRENCY_MARGIN
+    chart_mode:            SYMBOL_CHART_MODE_BID
+  calc:
+    move:                  100 ticks = 1 price, 1.0 lot, values in EUR
+    loss_100ticks_buy:     OrderCalcProfit=0.05 tickvalue_formula=0.0542 expected_from_contract=0.0542 (rate via EURZAR (inverted)) mismatch_pct=0.02 calcprofit_vs_tickvalue_pct=8.49
+    loss_100ticks_sell:    OrderCalcProfit=0.05 tickvalue_formula=0.0542 expected_from_contract=0.0542 (rate via EURZAR (inverted)) mismatch_pct=0.02 calcprofit_vs_tickvalue_pct=8.49
+    margin_min_lot_buy:    575 EUR  (1 lot)
+    margin_1lot_buy:       575 EUR  (1 lot)
+  checks (OrderCheck only, nothing is executed):
+    market_buy fill=FOK:   ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    market_buy fill=IOC:   ok=true retcode=0 OK "Done" margin=575
+    market_buy fill=RETURN: ok=false retcode=10030 INVALID_FILL "Unsupported filling mode" last_error=4756
+    buy_limit_price:       104935.24  (ask 105995.20)
+    buy_limit fill=RETURN time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=RETURN time=SPECIFIED_DAY: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=FOK time=GTC: ok=true retcode=0 OK "Done" margin=0
+    buy_limit fill=IOC time=GTC: ok=true retcode=0 OK "Done" margin=0
+
+[conversion]
+  USD>EUR via EURUSD (inverted) rate 0.90147752
+  CHF>EUR via EURCHF (inverted) rate 1.08326518
+  JPY>EUR via EURJPY (inverted) rate 0.0056445
+  CNH>EUR via USDCNH (inverted) x EURUSD (inverted) rate 0.13516175
+  CAD>EUR via EURCAD (inverted) rate 0.63263712
+  SEK>EUR via EURSEK (inverted) rate 0.09050044
+  GBP>EUR via EURGBP (inverted) rate 1.19666609
+  ZAR>EUR via EURZAR (inverted) rate 0.05423869
+
+[summary]
+  symbols_probed:          28
+  symbols_without_quote:   1
+  items_to_check:          5
+  - JP225: OrderCalcProfit differs from tick value by 43.6 % (loss_100ticks_buy)
+  - JP225: OrderCalcProfit differs from tick value by 43.6 % (loss_100ticks_sell)
+  - XAUUSD.eu.custom: no quote (market closed, or the symbol was just added to Market Watch)
+  - SA40: OrderCalcProfit differs from tick value by 8.5 % (loss_100ticks_buy)
+  - SA40: OrderCalcProfit differs from tick value by 8.5 % (loss_100ticks_sell)

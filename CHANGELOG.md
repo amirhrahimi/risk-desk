@@ -4,6 +4,34 @@ All notable changes to this project are documented here. Format: Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-12 - Phase P2: Platform layer and GatewaySmoke
+### Added
+- `Platform/TradeGateway*.mqh`: `CTradeGateway` for MT4 and MT5 with one public API (ADR-001, ADR-019): `OpenMarket` (G-01), `PlacePending` (G-02), `ModifyPositionSLTP` (G-03), `ClosePosition` (G-04, partial and full; MT4 remainder ticket, MT5 netting without `position`), `DeletePending` (G-05), `ListPositions` / `ListPending` (G-06/G-07, scope filter), `ModifyPending` (G-08), `SelectPosition` / `SelectPending`, `Configure(SGatewaySettings)`.
+  - BC-06 MT5 filling ladder from the `SYMBOL_FILLING_*` flags with last-resort policies, retried only on `INVALID_FILL`, cached per symbol; `InpFillingOverride`.
+  - BC-08 expiration ladder (MT5 flags, `TimeTradeServer()`; MT4 error 147 → resend without expiry), amber note when the policy differs from the request.
+  - BC-07 stops and freeze checks before every request, with the distance needed; after an `INVALID_STOPS` answer the distances used.
+  - BC-11 SL/TP attach: Auto falls back to modify-after when the server refuses stops that pass BC-07 (remembered per symbol); verification after every open and every pending placement; rule R7: SL that cannot be attached → position closed / order deleted, loud red message.
+  - BC-13 retries with a fresh price (and Auto R/R TP) per attempt, doubling delays; BC-14 ambiguous answers checked in positions/orders/deal history before the single allowed resend (rule R9).
+  - BC-09 order-count limit; BC-10 netting (opposite opens refused, closes never exceed the position); BC-15 permission and symbol trade-mode checks in every primitive; MT5 order-mode flags (market/limit/stop/SL/TP).
+  - One log line per request and per answer with symbol, side, volume, price, SL, TP, filling/time policy, deviation, magic, attempt, retcode/error and its name (06 §6).
+- `Platform/TradeErrors.mqh`: every MT5 retcode and MT4 error of 03 §5 mapped to a handling class and a status message; fatal answers get the numbers (volume grid, margin needed vs free, freeze level, distances).
+- `Platform/Money.mqh`: `LossPerLot` / `ProfitPerLot` (BC-05: MT5 `OrderCalcProfit` with tick-value fallback; MT4 tick value cross-checked against contract × rate, conservative value and "Tick value mismatch" warning above 5 %; one retry after selecting the conversion pair), `MarginFor`, `MaxLotsByMargin` (BC-09), `FillLossToSl` for positions and orders (04 §5).
+- `Platform/Market.mqh`: `AgeSeconds`, `IsStale` (BC-17). `Platform/History.mqh`: `ClosedTrades` (MT5 exit deals, MT4 history pool). `Platform/Compat.mqh`: `RdServerTime`, `RdSymbolAcceptsTp`, `RdSymbolAcceptsKind`.
+- `GatewaySmoke.mq4/.mq5` with `GatewaySmokeCore.mqh` (demo only, R13): S00 preflight, M01–M07 market buy/sell with verify, modify, partial close, close, P01–P03 buy limit place/modify/delete, cleanup; PASS/FAIL/SKIP table to the Experts tab and `Files/RiskDesk/smoke_<company>_<platform>_<login>_<yyyymmdd>.txt` (08 §3b).
+- ADR-019; assumed details D12–D14; 08 §3b GatewaySmoke.
+- `build/run-script.ps1`: runs BrokerProbe or GatewaySmoke unattended on one saved account (login/server, inputs via a preset, waits for the report; no password handled) (08 §3c, ADR-020).
+- `CAccountSpec::WaitReady`: BrokerProbe and GatewaySmoke wait for the account data after a login; GatewaySmoke decides R13 after it.
+- First broker data: BrokerProbe reports for A1–A6 and GatewaySmoke reports (19 runs, 228 steps, 0 failures, plus targeted T-22, T-23 and ModifyAfter runs) in `broker-profiles/`; observations in 03 §3; Q21 answered (keep the conservative rule).
+
+### Fixed
+- BC-01 conversion lookup chose an index CFD as the USD→EUR pair on IC Markets EU MT5; forex symbols are now searched first.
+- MT4 partial close on servers that keep the original ticket (IG) is recognised at once instead of after a 1 s search and a warning.
+- MT5 close on servers that answer without a deal ticket (Dukascopy) now reports the close price and realized P/L.
+
+### Changed
+- 03 BC-05: commission is added once, by `CRiskMath::LotsFromRisk`, not by `LossPerLot` (they disagreed; ADR-019).
+- 09 P2: GatewaySmoke opens 2 × min lot when the risk guard allows, so the partial close can be tested.
+
 ## [0.1.0] - 2026-11-12 - Phase P1: Domain and unit tests
 ### Added
 - `Domain/PriceMath.mqh`: tick-size normalization and directional rounding (BC-03), half-tick price comparisons, BC-07 distance helpers, points/ticks, `RdVolumeDigits`, `RdFloorVolume` (never rounds up, +1e-8 epsilon; BC-04), volume validity and comparisons.
