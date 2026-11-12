@@ -34,11 +34,13 @@ private:
    string            m_wrapText;
    int               m_wrapWidth;
    int               m_wrapFont;
+   string            m_wrapFace;
    string            m_lines[RD_STATUS_LINES];
 
    void              Wrap(const string text, const int width);
    int               Width(const string text) const;
    string            Ellipsize(const string text, const int width) const;
+   static bool       IsUnit(const string w) { return w == "%" || w == "pts" || w == "pips" || w == "lot" || w == "lots"; }
 
 public:
                      CStatusBar();
@@ -50,6 +52,7 @@ public:
    string            Text() const { return m_text; }
    ESeverity         Severity() const { return m_sev; }
    string            IdleText() const { return m_idleText; }
+   color             WarnColor() const { return m_theme.statusWarn; }
   };
 
 //+------------------------------------------------------------------+
@@ -67,6 +70,7 @@ CStatusBar::CStatusBar()
    m_wrapText = "";
    m_wrapWidth = -1;
    m_wrapFont = -1;
+   m_wrapFace = "";
    for(int i = 0; i < RD_STATUS_LINES; i++)
       m_lines[i] = "";
   }
@@ -132,16 +136,19 @@ string CStatusBar::Ellipsize(const string text, const int width) const
 
 //+------------------------------------------------------------------+
 //| Greedy word wrap into RD_STATUS_LINES lines of 'width' pixels.   |
-//| A word longer than a line is broken; overflow ends with "...".   |
+//| A unit stays with its number; a word longer than a line is       |
+//| broken; overflow ends with "...".                                |
 //+------------------------------------------------------------------+
 void CStatusBar::Wrap(const string text, const int width)
   {
    int font = m_layout.FontStatus();
-   if(text == m_wrapText && width == m_wrapWidth && font == m_wrapFont)
+   // the font face too: a font preset change keeps the size but changes every width (found in P4)
+   if(text == m_wrapText && width == m_wrapWidth && font == m_wrapFont && m_theme.fontBody == m_wrapFace)
       return;
    m_wrapText = text;
    m_wrapWidth = width;
    m_wrapFont = font;
+   m_wrapFace = m_theme.fontBody;
    for(int i = 0; i < RD_STATUS_LINES; i++)
       m_lines[i] = "";
    if(text == "" || width <= 0)
@@ -149,6 +156,18 @@ void CStatusBar::Wrap(const string text, const int width)
 
    string words[];
    int n = StringSplit(text, ' ', words);
+   // a unit never starts a line: "0.00 %" stays together (T-24 screenshot: "Open risk 0.00 / % / 10 %")
+   int kept = 0;
+   for(int i = 0; i < n; i++)
+     {
+      if(words[i] == "")
+         continue;
+      if(kept > 0 && IsUnit(words[i]))
+         words[kept - 1] = words[kept - 1] + " " + words[i];
+      else
+         words[kept++] = words[i];
+     }
+   n = kept;
    int line = 0;
    string current = "";
    for(int i = 0; i < n && line < RD_STATUS_LINES; i++)

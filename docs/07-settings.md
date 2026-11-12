@@ -76,6 +76,7 @@ Resulting TP mode (derived once in `Settings`, enum `ETpMode`, F-17, ADR-013):
 | `InpAutoScreenshot` | bool | true ★ | Automatic Screenshot After Actions | F-19 |
 | `InpShotWidth` / `InpShotHeight` | int | 0 / 0 | – | 0 = current chart size |
 | `InpShowPendingOverlay` | bool | true | – | F-22: placed pending orders drawn in the overlay colours, draggable to modify the order (OP-16) |
+| `InpDefaultOffsetPct` | double | 15.0 | – | Add Line / Add Pend Line: distance O of the first line from the price, in % of the visible price range (05 §5). Range 1–45 (ADR-022). Was referenced by 05 §5 but missing here until P4 |
 
 ## Panel / Font
 | Input | Type | Default | Orig label | Notes |
@@ -84,6 +85,7 @@ Resulting TP mode (derived once in `Settings`, enum `ETpMode`, F-17, ADR-013):
 | `InpFontSize` | int | 8 ★ | Font Size | 6–16 |
 | `InpScale` | double | 1.0 | Shape Size Scale (0.40 - 1.60) | Range 0.40–1.60 (owner uses 1.2) |
 | `InpAutoFitPanel` | bool | true ★ | Auto fit panel size to chart/monitor | F-34 |
+| `InpPanelColumns` | `EPanelColumns` | `PANEL_COLUMNS_AUTO` | – [NEW] "Panel columns" | Auto / One / Two. Auto: two columns when one column would shrink below 85 % of Shape Size Scale to fit the chart (05 §1, ADR-023) |
 | `InpPanelX` / `InpPanelY` | int | 20 / 40 | X Start / Y Start | First-run position (owner uses 1075 / 50); then persisted |
 | `InpStartHidden` | bool | false | – | |
 | `InpShowPricesOnButtons` | bool | true | – | "Buy 1.10012" |
@@ -151,6 +153,7 @@ enum EClosedTradeObjects { CTO_KEEP,   // Keep closed trade objects
                            CTO_REMOVE  // Remove closed trade objects
                          };
 enum EFontPreset         { FONT_SEGOE_UI, FONT_ARIAL, FONT_TAHOMA, FONT_CALIBRI, FONT_VERDANA, FONT_CONSOLAS };
+enum EPanelColumns       { PANEL_COLUMNS_AUTO, PANEL_COLUMNS_ONE, PANEL_COLUMNS_TWO };   // ADR-023
 enum ETpMode             { TPMODE_NONE, TPMODE_AUTO_RR, TPMODE_MANUAL_LINE };   // derived in Settings, not an input
 ```
 In MQL5 the `// comment` after an enum value is shown in the dropdown; use the original's wording.

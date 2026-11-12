@@ -127,6 +127,14 @@ enum EFontPreset
    FONT_CONSOLAS          // Consolas
   };
 
+// Panel layout (05 section 1, ADR-023).
+enum EPanelColumns
+  {
+   PANEL_COLUMNS_AUTO,    // Auto (two when one column would shrink a lot)
+   PANEL_COLUMNS_ONE,     // One column
+   PANEL_COLUMNS_TWO      // Two columns
+  };
+
 // Derived once in Settings from the two TP inputs (ADR-013); not an input.
 enum ETpMode
   {

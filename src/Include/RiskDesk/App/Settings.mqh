@@ -83,11 +83,13 @@ public:
    int               shotWidth;
    int               shotHeight;
    bool              showPendingOverlay;
+   double            defaultOffsetPct;
    //--- Panel / Font
    EFontPreset       fontPreset;
    int               fontSize;
    double            scale;
    bool              autoFitPanel;
+   EPanelColumns     panelColumns;
    int               panelX;
    int               panelY;
    bool              startHidden;
@@ -265,12 +267,15 @@ void CSettings::Load()
    shotWidth                 = ClampI("Screenshot width", InpShotWidth, 0, 8000);
    shotHeight                = ClampI("Screenshot height", InpShotHeight, 0, 8000);
    showPendingOverlay        = InpShowPendingOverlay;
+   // 05 section 5 (ADR-022): beyond 45 % the pending SL (1.5 x) would leave the visible range
+   defaultOffsetPct          = ClampD("Add Line distance %", InpDefaultOffsetPct, 1.0, 45.0, 15.0);
 
    //--- Panel / Font (07: font 6-16, scale 0.40-1.60, refresh 100-2000)
    fontPreset                = InpFontPreset;
    fontSize                  = ClampI("Font Size", InpFontSize, 6, 16);
    scale                     = ClampD("Shape Size Scale", InpScale, 0.40, 1.60, 1.0);
    autoFitPanel              = InpAutoFitPanel;
+   panelColumns              = InpPanelColumns;
    panelX                    = ClampI("X Start", InpPanelX, 0, 20000);
    panelY                    = ClampI("Y Start", InpPanelY, 0, 20000);
    startHidden               = InpStartHidden;
@@ -387,6 +392,7 @@ string CSettings::Summary() const
           ", TP " + TpModeText() +
           ", magic " + IntegerToString(magic) +
           ", scale " + RdNum(scale, 2) + (autoFitPanel ? " auto-fit" : "") +
+          ", columns " + (panelColumns == PANEL_COLUMNS_ONE ? "1" : (panelColumns == PANEL_COLUMNS_TWO ? "2" : "auto")) +
           ", font " + EnumToString(fontPreset) + " " + IntegerToString(fontSize) +
           ", refresh " + IntegerToString(refreshMs) + " ms" +
           ", cooldown " + IntegerToString(clickCooldownMs) + " ms";

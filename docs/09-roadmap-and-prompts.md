@@ -66,7 +66,7 @@ Compile clean and give me the T-xx list to run (include T-37).
 
 ## P4 — Market orders
 **Goal:** Add Line, Delete Line, Lots preview, Buy, Sell with full risk logic.
-**Deliverables:** `UI/Lines.mqh` (market mode, labels, manual-deletion detection), commands OP-01/02/03/04/15, caps (F-16), commission (F-30), margin (F-31), open-risk readout (F-29), dim invalid side (F-33), `Services/Screenshot.mqh` (basic naming).
+**Deliverables:** `UI/Lines.mqh` (market mode, labels, manual-deletion detection), commands OP-01/02/03/04/15, caps (F-16), commission (F-30), margin (F-31), open-risk readout (F-29), dim invalid side (F-33), `Services/Screenshot.mqh` (basic naming). Added in P4 (ADR-022): the pending-mode lines and display of OP-05 Add Pend Line and OP-06 Pending Info (T-03 needs Add Pend Line), and the camera button (OP-14, already promised by the P3 panel).
 **Done when:** T-03…T-12, T-25…T-28 pass on A1–A5.
 
 ```text
@@ -76,7 +76,7 @@ Every refusal must name the reason and the numbers. Compile clean and give me th
 ```
 
 ## P5 — Pending orders
-**Deliverables:** pending mode in Lines (Entry/SL/TP), pending order overlay with drag-to-modify (`UI/PendingOverlay.mqh`, F-22, OP-16), OP-05/06/07/08.
+**Deliverables:** pending order overlay with drag-to-modify (`UI/PendingOverlay.mqh`, F-22, OP-16), OP-07/08. (Pending mode in Lines, OP-05 Add Pend Line and OP-06 Pending Info were done in P4, ADR-022; P5 adds the order placement to them.)
 **Done when:** T-13…T-15, T-23, T-39 pass on A1–A5.
 
 ```text

@@ -179,6 +179,12 @@ So a fixed filling policy fails on at least one of A3/A5/A6, and a tick-value-on
 
 Targeted runs, all as expected: T-22 (A3, filling forced to FOK: M01 refused "Filling policy rejected (tried FOK) [Unsupported filling mode]", nothing executed), T-23 (A4 and A5, `InpPendingExpiryHours=24`: placed with SPECIFIED expiry, kept on modify), BC-11 ModifyAfter forced (A2 and A3: SL/TP attached right after the open and verified). Not reachable on these servers and left to the P8 test hooks: a filling-ladder fallback after a real rejection (no server reports wrong flags), the R7 close-on-SL-failure path (T-29) and the ambiguous-result path (T-35).
 
+P4 trade self-test (08 §3e, 2026-11-12, panel Buy/Sell with real demo orders on A1–A6: EURUSD, gold, a US30-type index, AUS.IDX on Dukascopy):
+- A1 IG MT4 XAUUSD: at the US open every Buy/Sell was answered "Requote" four times in a row (error 138, fresh price each attempt) with `InpSlippagePoints` 20 = 0.20 USD, below the gold spread; with 60 every order filled (Q22).
+- A2/A3 IC Markets US30 (MT4 and MT5, market execution): fills up to 4.0 index points away from the price sent. The Auto R/R TP is computed from the price sent (F-17 AC2), so it is up to that much away from "R/R from the fill"; the SL and the lot are not affected.
+- A4 Dukascopy MT4 index CFDs (T-28): an SL hit on USA30.IDX booked −€3.33 against a displayed risk of €3.44 (96.9 %, with 126 points of slippage at the SL). RiskDesk's valuation of the same move was 9.8 % (USA30.IDX) and 38.4 % (AUS.IDX) above the booked P/L: the conservative BC-05 rule the owner chose (Q21), never below it. On every other account and symbol the booked P/L of the move equalled RiskDesk's valuation within rounding (≤ 1.5 %, cents). SL hits on index CFDs filled up to 7.5 % beyond the displayed risk on MT5 (A3 US30, A5 USA30.IDX: slippage at the stop, which no lot size can prevent); FX and gold SL hits were 100–101 %.
+- A6 netting: same-direction add merged after confirmation; opposite refused by default; with `InpNettingAllowOpposite` it reduced the position (BC-10).
+
 ## 4. BrokerProbe → what to look at
 For each account the probe report (08-testing §3) must let a developer answer, per symbol: filling flags, expiration flags, execution mode, order-mode flags, tick size vs point, tick value vs computed expectation, volume min/step/max/limit, stops/freeze level, margin for 1 lot, and account margin mode/currency/leverage. Any surprise becomes a new line in §3 and, if needed, a new BC rule.
 

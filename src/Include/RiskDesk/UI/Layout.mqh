@@ -6,6 +6,11 @@
 //|             scale = min(Shape Size Scale, largest scale at which |
 //|             the whole panel, handle to camera, fits the chart    |
 //|             minus 10 px)                                         |
+//|           - one or two columns (ADR-023): two put Pending Info   |
+//|             and Del Pending..Full Close to the right of Risk %.. |
+//|             Set Pending, row by row; title and status span both. |
+//|             Auto picks two when one column would shrink below    |
+//|             85 % of Shape Size Scale to fit the chart            |
 //|           - every rectangle comes from one running y-cursor in   |
 //|             unscaled pixels; an edge is Px(cursor), so rounding  |
 //|             never accumulates                                    |
@@ -81,6 +86,8 @@ enum EPanelItem
 #define RD_LY_FIT_MARGIN    10     // F-34: chart size minus 10 px
 #define RD_LY_MIN_SCALE     0.40
 #define RD_LY_MIN_FONT      6
+#define RD_LY_TWO_COL_BELOW 0.85   // Auto columns: two when one column fits only below 85 % of Shape Size Scale
+#define RD_LY_LABEL_GAP     6      // line labels end this far (96 DPI px) from the panel (ADR-024)
 // The terminal's One-Click Trading panel in the chart's top-left corner, at
 // 96 DPI (it scales with the DPI, not with Shape Size Scale). Measured in P3
 // on window captures of MT4 build 1492 and MT5 build 6311 at 125 %: it ends at
@@ -135,6 +142,8 @@ class CLayout
 private:
    double            m_userScale;     // Shape Size Scale
    bool              m_autoFit;
+   EPanelColumns     m_mode;          // Panel columns input
+   int               m_cols;          // columns shown: 1 or 2
    double            m_dpiFactor;     // DPI / 96
    int               m_fontSize;      // body size before scaling
    string            m_fontBody;      // for the row minimums (text never taller than its row)
@@ -153,29 +162,33 @@ private:
    int               Row(const double h, const int minPx, int &top);
    void              Gap(const double g) { m_u += g; }
    int               FontAt(const int points, const double scale) const;
-   int               ComputeAt(const double scale, const bool store);
+   int               ComputeAt(const double scale, const int cols, const bool store);
+   static double     WidthUnits(const int cols) { return cols == 2 ? 2 * RD_LY_WIDTH - RD_LY_PAD : RD_LY_WIDTH; }
+   int               WidthPx(const double scale, const int cols) const { return (int)MathRound(WidthUnits(cols) * scale * m_dpiFactor); }
+   double            FitScale(const int cols, const int chartW, const int chartH);
 
 public:
                      CLayout();
-   void              Configure(const double userScale, const bool autoFit, const int dpi, const int fontSize,
-                               const string fontBody, const string fontTitle);
+   void              Configure(const double userScale, const bool autoFit, const EPanelColumns columns, const int dpi,
+                               const int fontSize, const string fontBody, const string fontTitle);
    bool              Fit(const int chartW, const int chartH);
-   void              Compute() { m_height = ComputeAt(m_scale, true); }
+   void              Compute() { m_height = ComputeAt(m_scale, m_cols, true); }
 
    double            Scale() const { return m_scale; }
    double            UserScale() const { return m_userScale; }
+   int               Columns() const { return m_cols; }
    double            PixelScale() const { return m_scale * m_dpiFactor; }
    int               Px(const double v) const { return P(v); }
    // Terminal UI sizes: DPI only, not the panel scale.
    int               TerminalPx(const double v) const { return (int)MathRound(v * m_dpiFactor); }
    void              Rect(const EPanelItem item, SRect &r) const { r = m_r[item]; }
-   int               Width() const { return P(RD_LY_WIDTH); }
+   int               Width() const { return WidthPx(m_scale, m_cols); }
    int               Height() const { return m_height; }
    int               BgHeight(const bool collapsed) const { return collapsed ? m_collapsedBgH : m_r[PI_BG].h; }
    // Handle to camera when expanded; handle to the title row's bottom when collapsed.
    int               ShownHeight(const bool collapsed) const;
-   int               HeightAt(const double scale) { return ComputeAt(scale, false); }
-   int               WidthAt(const double scale) const;
+   int               HeightAt(const double scale) { return ComputeAt(scale, m_cols, false); }
+   int               WidthAt(const double scale) const { return WidthPx(scale, m_cols); }
 
    int               FontBody() const { return FontAt(m_fontSize, m_scale); }
    int               FontTitle() const { return FontAt(m_fontSize + 3, m_scale); }
@@ -193,6 +206,8 @@ CLayout::CLayout()
   {
    m_userScale = 1.0;
    m_autoFit = false;
+   m_mode = PANEL_COLUMNS_ONE;
+   m_cols = 1;
    m_dpiFactor = 1.0;
    m_fontSize = 8;
    m_fontBody = "Segoe UI";
@@ -205,11 +220,13 @@ CLayout::CLayout()
    m_extra = 0;
   }
 
-void CLayout::Configure(const double userScale, const bool autoFit, const int dpi, const int fontSize,
-                        const string fontBody, const string fontTitle)
+void CLayout::Configure(const double userScale, const bool autoFit, const EPanelColumns columns, const int dpi,
+                        const int fontSize, const string fontBody, const string fontTitle)
   {
    m_userScale = userScale;
    m_autoFit = autoFit;
+   m_mode = columns;
+   m_cols = (columns == PANEL_COLUMNS_TWO) ? 2 : 1;   // Auto is decided by Fit
    m_dpiFactor = (dpi > 0 ? dpi : 96) / 96.0;
    m_fontSize = fontSize;
    m_fontBody = fontBody;
@@ -246,8 +263,13 @@ int CLayout::Row(const double h, const int minPx, int &top)
 //| at 6 pt while the geometry keeps shrinking), and the caption     |
 //| column is at least as wide as "Risk %" (05 section 1: adjust if  |
 //| text overflows; ADR-021).                                        |
+//| Two columns (ADR-023): the right column shares the left one's    |
+//| rows - Pending Info caption beside Risk %, its field beside      |
+//| Lots, Del Pending..Full Close beside Add Line..Add Pend Line - so|
+//| the rows line up at every scale; Set Pending's neighbour is      |
+//| empty. The columns are 'pad' apart.                              |
 //+------------------------------------------------------------------+
-int CLayout::ComputeAt(const double scale, const bool store)
+int CLayout::ComputeAt(const double scale, const int cols, const bool store)
   {
    m_k = scale * m_dpiFactor;
    m_u = 0.0;
@@ -258,13 +280,15 @@ int CLayout::ComputeAt(const double scale, const bool store)
    int lhStatus = LineHeight(m_fontBody, FontAt(m_fontSize - 1, scale));
    int lhGlyph = LineHeight(m_fontBody, FontAt(m_fontSize + 2, scale));
 
-   int width = Pk(RD_LY_WIDTH);
+   int width = Pk(WidthUnits(cols));
    int pad = Pk(RD_LY_PAD);
-   int inner = width - 2 * pad;
+   int inner = width - 2 * pad;                          // title row and status: full width
+   int colW = (cols == 2) ? (inner - pad) / 2 : inner;   // one column of fields and buttons
+   int col2X = width - pad - colW;
    int capW = 0;
    int capH = 0;
    TextSize(m_fontBody, bodyPt, "Risk %", capW, capH);
-   int labelCol = MathMin(inner / 2, MathMax(Pk(RD_LY_LABELCOL), capW + Pk(RD_LY_TEXT_PAD)));
+   int labelCol = MathMin(colW / 2, MathMax(Pk(RD_LY_LABELCOL), capW + Pk(RD_LY_TEXT_PAD)));
    SRect r[PI_COUNT];
    int top = 0;
    int h = 0;
@@ -288,34 +312,42 @@ int CLayout::ComputeAt(const double scale, const bool store)
 
    h = Row(RD_LY_FIELD_H, lhBody + 2, top);
    r[PI_RISK_CAP].Set(pad, top, labelCol, h);
-   r[PI_RISK].Set(pad + labelCol, top, inner - labelCol, h);
+   r[PI_RISK].Set(pad + labelCol, top, colW - labelCol, h);
+   if(cols == 2)
+      r[PI_PINFO_CAP].Set(col2X, top, colW, h);
    Gap(RD_LY_GAP);
    h = Row(RD_LY_FIELD_H, lhBody + 2, top);
    r[PI_LOTS_CAP].Set(pad, top, labelCol, h);
-   r[PI_LOTS].Set(pad + labelCol, top, inner - labelCol, h);
+   r[PI_LOTS].Set(pad + labelCol, top, colW - labelCol, h);
+   if(cols == 2)
+      r[PI_PINFO].Set(col2X, top, colW, h);
    Gap(RD_LY_GAP);
 
    EPanelItem upper[] = {PI_ADDLINE, PI_DELLINE, PI_BUY, PI_SELL, PI_ADDPEND, PI_SETPEND};
+   EPanelItem lower[] = {PI_DELPEND, PI_RISKFREE, PI_HALF, PI_CHARTCLOSE, PI_FULLCLOSE};
    for(int i = 0; i < ArraySize(upper); i++)
      {
       h = Row(RD_LY_BUTTON_H, lhBody + 2, top);
-      r[upper[i]].Set(pad, top, inner, h);
+      r[upper[i]].Set(pad, top, colW, h);
+      if(cols == 2 && i < ArraySize(lower))
+         r[lower[i]].Set(col2X, top, colW, h);
       Gap(RD_LY_GAP);
      }
 
-   h = Row(RD_LY_CAPTION_H, lhBody, top);
-   r[PI_PINFO_CAP].Set(pad, top, inner, h);
-   Gap(RD_LY_CAPTION_GAP);
-   h = Row(RD_LY_FIELD_H, lhBody + 2, top);
-   r[PI_PINFO].Set(pad, top, inner, h);
-   Gap(RD_LY_GAP);
-
-   EPanelItem lower[] = {PI_DELPEND, PI_RISKFREE, PI_HALF, PI_CHARTCLOSE, PI_FULLCLOSE};
-   for(int i = 0; i < ArraySize(lower); i++)
+   if(cols != 2)
      {
-      h = Row(RD_LY_BUTTON_H, lhBody + 2, top);
-      r[lower[i]].Set(pad, top, inner, h);
+      h = Row(RD_LY_CAPTION_H, lhBody, top);
+      r[PI_PINFO_CAP].Set(pad, top, inner, h);
+      Gap(RD_LY_CAPTION_GAP);
+      h = Row(RD_LY_FIELD_H, lhBody + 2, top);
+      r[PI_PINFO].Set(pad, top, inner, h);
       Gap(RD_LY_GAP);
+      for(int i = 0; i < ArraySize(lower); i++)
+        {
+         h = Row(RD_LY_BUTTON_H, lhBody + 2, top);
+         r[lower[i]].Set(pad, top, inner, h);
+         Gap(RD_LY_GAP);
+        }
      }
 
    h = Row(RD_LY_CAPTION_H, lhBody, top);
@@ -352,45 +384,76 @@ int CLayout::ShownHeight(const bool collapsed) const
    return m_r[PI_BG].y + m_collapsedBgH;
   }
 
-int CLayout::WidthAt(const double scale) const
+//+------------------------------------------------------------------+
+//| F-34: effective scale of a 'cols' layout for this chart size:    |
+//| the largest on a 0.01 grid whose panel fits, never above the     |
+//| user's scale, never below 0.40 (then the panel may not fit: the  |
+//| clamp keeps its top-left corner in view). Auto-fit off or        |
+//| unknown chart size (0, e.g. non-visual tester) -> user's scale.  |
+//| Starts at the linear estimate, steps up while the next step      |
+//| still fits, then down until it fits (the height grows with the   |
+//| scale, so this ends at the largest fitting step).                |
+//+------------------------------------------------------------------+
+double CLayout::FitScale(const int cols, const int chartW, const int chartH)
   {
-   return (int)MathRound(RD_LY_WIDTH * scale * m_dpiFactor);
+   double s = m_userScale;
+   if(!m_autoFit || chartW <= 0 || chartH <= 0)
+      return s;
+   int availH = chartH - RD_LY_FIT_MARGIN;
+   int availW = chartW - RD_LY_FIT_MARGIN;
+   double perScale = MathMax(1.0, (double)ComputeAt(1.0, cols, false));   // panel height at scale 1
+   double est = MathMin(availH / perScale, availW / (WidthUnits(cols) * m_dpiFactor));
+   est = MathFloor(est * 100.0) / 100.0;
+   if(est < s)
+     {
+      s = MathMax(RD_LY_MIN_SCALE, est);
+      while(s + 0.01 <= m_userScale + 1e-9 && ComputeAt(s + 0.01, cols, false) <= availH && WidthPx(s + 0.01, cols) <= availW)
+         s += 0.01;
+     }
+   while(s > RD_LY_MIN_SCALE + 1e-9 && (ComputeAt(s, cols, false) > availH || WidthPx(s, cols) > availW))
+      s -= 0.01;
+   if(s < RD_LY_MIN_SCALE)
+      s = RD_LY_MIN_SCALE;
+   return NormalizeDouble(s, 2);
   }
 
 //+------------------------------------------------------------------+
-//| F-34: effective scale for this chart size: the largest on a 0.01 |
-//| grid whose panel fits, never above the user's scale, never below |
-//| 0.40 (then the panel may not fit: the clamp keeps its top-left   |
-//| corner in view). Unknown chart size (0, e.g. non-visual tester)  |
-//| -> user's scale. Starts at the linear estimate, steps up while   |
-//| the next step still fits, then down until it fits (the height    |
-//| grows with the scale, so this ends at the largest fitting step). |
-//| True if the scale changed.                                       |
+//| Scale and columns for this chart size. One or Two columns: as    |
+//| set. Auto (ADR-023): one column unless it has to shrink below    |
+//| 85 % of Shape Size Scale to fit (auto-fit on) or does not fit at |
+//| all (auto-fit off); then two columns if they do better: a larger |
+//| scale, or the same scale with more of the panel in view (one     |
+//| column cut off, two columns fit the chart's width).              |
+//| True if the scale or the columns changed.                        |
 //+------------------------------------------------------------------+
 bool CLayout::Fit(const int chartW, const int chartH)
   {
-   double s = m_userScale;
-   if(m_autoFit && chartW > 0 && chartH > 0)
+   int cols = (m_mode == PANEL_COLUMNS_TWO) ? 2 : 1;
+   double s = FitScale(cols, chartW, chartH);
+   if(m_mode == PANEL_COLUMNS_AUTO && chartW > 0 && chartH > 0)
      {
-      int availH = chartH - RD_LY_FIT_MARGIN;
-      int availW = chartW - RD_LY_FIT_MARGIN;
-      double perScale = MathMax(1.0, (double)ComputeAt(1.0, false));   // panel height at scale 1
-      double est = MathMin(availH / perScale, availW / (RD_LY_WIDTH * m_dpiFactor));
-      est = MathFloor(est * 100.0) / 100.0;
-      if(est < s)
+      if(m_autoFit)
         {
-         s = MathMax(RD_LY_MIN_SCALE, est);
-         while(s + 0.01 <= m_userScale + 1e-9 && ComputeAt(s + 0.01, false) <= availH && WidthAt(s + 0.01) <= availW)
-            s += 0.01;
+         if(s < m_userScale * RD_LY_TWO_COL_BELOW - 1e-9)
+           {
+            double s2 = FitScale(2, chartW, chartH);
+            // a larger scale; or both at 0.40, one column cut off and two columns (shorter) fit the width
+            if(s2 > s + 1e-9 || (MathAbs(s2 - s) < 1e-9 && ComputeAt(s, 1, false) > chartH - RD_LY_FIT_MARGIN &&
+                                 WidthPx(s2, 2) <= chartW - RD_LY_FIT_MARGIN))
+              {
+               cols = 2;
+               s = s2;
+              }
+           }
         }
-      while(s > RD_LY_MIN_SCALE + 1e-9 && (ComputeAt(s, false) > availH || WidthAt(s) > availW))
-         s -= 0.01;
-      if(s < RD_LY_MIN_SCALE)
-         s = RD_LY_MIN_SCALE;
+      else
+         if(ComputeAt(s, 1, false) > chartH - RD_LY_FIT_MARGIN && WidthPx(s, 2) <= chartW - RD_LY_FIT_MARGIN)
+            cols = 2;
      }
    s = NormalizeDouble(s, 2);
-   bool changed = MathAbs(s - m_scale) > 1e-9;
+   bool changed = MathAbs(s - m_scale) > 1e-9 || cols != m_cols;
    m_scale = s;
+   m_cols = cols;
    Compute();
    return changed;
   }

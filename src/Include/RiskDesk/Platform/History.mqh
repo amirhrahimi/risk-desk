@@ -25,6 +25,7 @@ struct SClosedTrade
    double            volume;       // volume closed
    double            closePrice;
    double            profit;       // profit + swap + commission (+ MT5 fee) of this exit
+   double            grossProfit;  // the price move alone (DEAL_PROFIT / OrderProfit)
    datetime          closeTime;
    long              magic;
   };
@@ -65,7 +66,8 @@ bool CHistory::ClosedTrades(const string symbol, const datetime from, SClosedTra
       t.side       = (type == DEAL_TYPE_SELL) ? SIDE_BUY : SIDE_SELL;   // a sell deal closes a buy
       t.volume     = HistoryDealGetDouble(deal, DEAL_VOLUME);
       t.closePrice = HistoryDealGetDouble(deal, DEAL_PRICE);
-      t.profit     = HistoryDealGetDouble(deal, DEAL_PROFIT) + HistoryDealGetDouble(deal, DEAL_SWAP) +
+      t.grossProfit = HistoryDealGetDouble(deal, DEAL_PROFIT);
+      t.profit     = t.grossProfit + HistoryDealGetDouble(deal, DEAL_SWAP) +
                      HistoryDealGetDouble(deal, DEAL_COMMISSION) + HistoryDealGetDouble(deal, DEAL_FEE);
       t.closeTime  = (datetime)HistoryDealGetInteger(deal, DEAL_TIME);
       t.magic      = HistoryDealGetInteger(deal, DEAL_MAGIC);
@@ -89,6 +91,7 @@ bool CHistory::ClosedTrades(const string symbol, const datetime from, SClosedTra
       t.side       = (OrderType() == OP_BUY) ? SIDE_BUY : SIDE_SELL;
       t.volume     = OrderLots();
       t.closePrice = OrderClosePrice();
+      t.grossProfit = OrderProfit();
       t.profit     = OrderProfit() + OrderSwap() + OrderCommission();
       t.closeTime  = OrderCloseTime();
       t.magic      = OrderMagicNumber();
