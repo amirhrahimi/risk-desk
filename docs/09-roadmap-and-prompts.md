@@ -31,12 +31,12 @@ Compile both platforms until clean. Then give me: the exact steps to fill paths.
 
 ## P1 — Domain and unit tests
 **Goal:** all money/price/volume logic, pure and tested.
-**Deliverables:** `Domain/PriceMath.mqh`, `RiskMath.mqh`, `Validators.mqh`, `Planner.mqh`, `RiskBudget.mqh`; `RiskDeskTests.mq4/.mq5` covering V-01…V-22 plus validator edge cases.
+**Deliverables:** `Domain/PriceMath.mqh`, `RiskMath.mqh`, `Validators.mqh`, `Planner.mqh`, `RiskBudget.mqh`; `RiskDeskTests.mq4/.mq5` covering V-01…V-24 plus validator edge cases.
 **Done when:** tests compile on both platforms and the owner reports "N passed, 0 failed" on MT4 and MT5.
 
 ```text
 Read CLAUDE.md, docs/04-risk-engine.md (all of it), docs/03-broker-compatibility.md BC-03/BC-04/BC-07, docs/02-architecture.md §6.
-Implement phase P1: the pure Domain layer (PriceMath, RiskMath, Validators, Planner, RiskBudget) with no terminal calls, and the RiskDeskTests scripts for MT4 and MT5 that implement every test vector V-01..V-22 from docs/04-risk-engine.md §12 plus extra edge cases you consider necessary.
+Implement phase P1: the pure Domain layer (PriceMath, RiskMath, Validators, Planner, RiskBudget) with no terminal calls, and the RiskDeskTests scripts for MT4 and MT5 that implement every test vector V-01..V-24 from docs/04-risk-engine.md §12 plus extra edge cases you consider necessary.
 Rules: FloorVolume must use the +1e-8 epsilon; never round lots up; all functions return bool + SResult with plain-English messages.
 Compile both targets clean. Tell me how to run the tests and what output to paste back.
 ```

@@ -4,6 +4,22 @@ All notable changes to this project are documented here. Format: Keep a Changelo
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-12 - Phase P1: Domain and unit tests
+### Added
+- `Domain/PriceMath.mqh`: tick-size normalization and directional rounding (BC-03), half-tick price comparisons, BC-07 distance helpers, points/ticks, `RdVolumeDigits`, `RdFloorVolume` (never rounds up, +1e-8 epsilon; BC-04), volume validity and comparisons.
+- `Domain/Format.mqh` (new, ADR-018): money in the account currency with thousands separators and BC-12 signs, percent, lots with the step's decimals, prices, order names.
+- `Domain/RiskMath.mqh`: risk base and money, `LotsFromRisk` (min-lot refusal with numbers, `InpAllowMinLotOverRisk`, max-lot cap; 04 §2–4), `TpFromRR`, reward ratio, commission/cost distance, partial-close volume (04 §10), tick-value valuation formula.
+- `Domain/Validators.mqh`: Risk % parsing (F-02), market side and Lots-preview side (04 §6), pending classification and order-type geometry (04 §7), stops level for market and pending orders and freeze level for positions and pending orders (BC-07), MT5 volume limit (BC-04), quote check. Every refusal names what is needed ("needs >= 30 pts (0.00030), move it to 1.09970 or lower").
+- `Domain/Planner.mqh`: market / Lots-preview / pending plans with the three TP modes (F-17), sizing step after the platform valuation, Risk Free target with all four modes and skip reasons (04 §9, F-11), moves of placed pending orders (OP-16).
+- `Domain/RiskBudget.mqh`: open risk of tool positions and pending orders, per-trade and total caps with old-contribution replacement for netting adds and moved orders (04 §5, F-16), open-risk readout (F-29).
+- `Domain/Types.mqh`: `SPlanSettings` (the settings the Domain reads), `ELineRole`, `RdSkip`, `RdTpModeFrom`.
+- `RiskDeskTests.mq4/.mq5` with `Scripts/RiskDesk/Tests/` (runner, fixtures, one file per module): all vectors V-01…V-24 plus edge cases and sweeps, 58 tests / 581 checks; failures and summary to the Experts tab and an Alert, report in `Files/RiskDesk/tests_<platform>.txt`.
+- `build/run-tests.ps1`: headless run of RiskDeskTests in every MT4/MT5 terminal of `paths.local.ps1` (08 §2); first results 581 passed, 0 failed on MT4 and MT5.
+- ADR-018 (Domain API shape); assumed details D7–D11.
+
+### Changed
+- `docs/09` P1 now names V-01…V-24 (04 §12 defines 24 vectors; the roadmap said V-22).
+
 ## [0.0.1] - 2026-11-12 - Phase P0: bootstrap and diagnostics
 ### Added
 - Specification pack: CLAUDE.md, README, docs 01–11, broker-profiles placeholder.
