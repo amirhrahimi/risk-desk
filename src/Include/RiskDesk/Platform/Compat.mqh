@@ -20,6 +20,25 @@
    #define RD_MQL_DIR   "MQL4"
 #endif
 
+// MT5 draws chart-object text in Unicode. MT4 draws it in the ANSI code
+// page: characters outside Windows-1252 show as "?" (seen in P3 on the
+// move handle), so glyphs must come from a symbol font there (ADR-021).
+#ifdef __MQL5__
+   #define RD_OBJ_TEXT_UNICODE  true
+#else
+   #define RD_OBJ_TEXT_UNICODE  false
+#endif
+
+// OBJPROP_TIMEFRAMES values that show / hide a chart object on every
+// timeframe. MQL4 has no OBJ_NO_PERIODS; its documented value is EMPTY.
+#ifdef __MQL5__
+   #define RD_OBJ_ALL_PERIODS  OBJ_ALL_PERIODS
+   #define RD_OBJ_NO_PERIODS   OBJ_NO_PERIODS
+#else
+   #define RD_OBJ_ALL_PERIODS  OBJ_ALL_PERIODS
+   #define RD_OBJ_NO_PERIODS   EMPTY
+#endif
+
 //====================================================================
 // Terminal / program
 //====================================================================

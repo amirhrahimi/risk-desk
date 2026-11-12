@@ -75,6 +75,20 @@ powershell -File build/run-script.ps1 -Platform mt4 -Login A1 -Server IG-DEMO -S
 ```
 Use the broker's own symbol names from its probe report (`[test symbols]`). Copy the reports into `broker-profiles/` afterwards.
 
+## 3d. Panel self-test (`build/run-uitest.ps1`, debug build, phase P3)
+
+Checks the panel on a real terminal without clicking (ADR-021). Only in a debug build: `build.ps1 -Debug` first, `build.ps1` afterwards to put the release build back.
+
+```
+powershell -File build/build.ps1 -Debug
+powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol EURUSD
+powershell -File build/run-uitest.ps1 -Platform mt4 -Login A1 -Server IG-DEMO -Symbol EURUSD
+powershell -File build/build.ps1
+```
+The runner writes the one-time request file `Files/RiskDesk/uitest.request`, starts the terminal with RiskDesk (`InpTestUiSelfTest=true`) on a temporary chart, waits for `Files/RiskDesk/uitest/<PLATFORM>_<login>_report.txt` and copies the report and the screenshots to `-OutDir` (default `%TEMP%\RiskDesk-uitest`). The EA removes itself and closes the terminal. It never trades and uses `Files/RiskDesk/uitest/store/` instead of `ui.ini` / `acct_*.ini`.
+
+Covered: T-01 (objects, in view, ready status, prices, spread, fields, tooltips), T-02 (the five inputs), every button's status (R8), T-25 cooldown, hide/show, drag, clamp, T-20 (timeframe and symbol change with a planning line), T-21 (two runs: the second checks, after the real restart, what the first saved), text fit at scales 0.40–1.60 and every font preset, T-37 (this chart and the fit arithmetic for 52 chart sizes), the key=value file layer, the chart look (Chart on foreground switched off again, panel kept clear of the One-Click Trading panel); screenshots of each state and glyph sheets of Wingdings/Webdings. `ChartScreenShot` does not draw terminal overlays, so for the One-Click check the self-test writes `uitest/capture.request` and the runner saves a capture of the real terminal window (`<PLATFORM>_<login>_window_<name>.png` in `-OutDir`). Not covered: Windows scaling (T-24) and real mouse/keyboard input.
+
 ## 4. Account and symbol matrix (L4)
 
 | Account | Platform | Notes |

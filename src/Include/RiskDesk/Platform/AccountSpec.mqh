@@ -27,6 +27,8 @@ public:
    static bool       WaitReady(const int timeoutMs, int &waitedMs);
    static bool       IsCentCurrency(const string currency);
    static string     Describe(const SAccountSpec &a);
+   // Current login (0 while not logged in); cheap enough for every refresh.
+   static long       Login() { return AccountInfoInteger(ACCOUNT_LOGIN); }
   };
 
 //+------------------------------------------------------------------+

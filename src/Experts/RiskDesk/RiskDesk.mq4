@@ -10,7 +10,7 @@
 
 #property copyright   RD_COPYRIGHT
 #property description "Risk-based trade panel for MetaTrader 4 and 5."
-#property description "Phase P0 shell: logs version, account and symbol spec only."
+#property description "Phase P3 UI shell: panel, Risk %, spread and prices; trading buttons arrive in P4-P6."
 
 #include "..\..\Include\RiskDesk\App\App.mqh"
 

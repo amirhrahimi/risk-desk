@@ -4,6 +4,29 @@ All notable changes to this project are documented here. Format: Keep a Changelo
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-12 - Phase P3: UI shell
+### Added
+- The panel (05-ui-spec, ADR-021): title with accent, hide/show toggle, Risk % and Lots fields, the eleven trading buttons, Pending Info, spread, a 3-line status bar and the camera button, built only from standard chart objects. Drag by the move handle (chart scrolling off while dragging), clamp so the whole panel stays in view, DPI scaling (scale × DPI / 96, fonts × scale with a 6 pt floor), auto-fit to the chart size (F-34, debounced 300 ms, grows back up to Shape Size Scale), six font presets, all colour inputs, tooltips that say what each button affects, live Ask/Bid on Buy/Sell, spread in points or pips with an optional amber threshold.
+- Status bar (F-25): severity colours, word wrap measured in the status font, full text as tooltip and in the log; after `InpStatusHoldSec` the idle readout: permission warnings (BC-15), the symbol's trade mode, missing/stale quotes (BC-17), MT4 tick-value mismatch (BC-05), else "Open risk x % / cap" (F-29) from fresh position and order lists.
+- Risk % field (F-02, T-02): `.` or `,`, 2 decimals, `0 < x ≤ max`; refusals restore the value in use and say why in red; saved per account in `Files/RiskDesk/acct_<login>.ini`.
+- Persistence (F-23): `Files/RiskDesk/ui.ini` (panel position and hidden state, written 1 s after a change and on exit, only by the chart that changed it), Risk % per account; a timeframe change keeps everything in memory; a symbol change removes the old symbol's planning lines (chart object `RD_S_CHART`).
+- `App/Inputs.mqh`: every input of 07-settings with the original's labels; `App/Settings.mqh` validates and clamps them (bounds in ADR-021), derives the TP mode and fills the Domain and gateway settings.
+- `App/Controller.mqh`: busy guard and per-button click cooldown (F-06 AC6), Strategy Tester polling of buttons and the Risk % field, panel self-repair, one redraw per refresh. Every trading button answers amber "not implemented yet (coming in phase Pn)" with a log line (R8); buttons the symbol's trade mode forbids are grey with the reason (BC-15).
+- Debug-only panel self-test (`RD_TEST_HOOKS`, `App/UiSelfTest*.mqh`) and `build/run-uitest.ps1` (08 §3d): drives the real event handlers on a terminal and covers T-01, T-02, T-20, T-21 (across a real restart), T-25, T-37, text fit at every scale and font, with screenshots; never trades and never touches the owner's saved state.
+- `Platform/Compat.mqh`: `RD_OBJ_TEXT_UNICODE`, `RD_OBJ_ALL_PERIODS` / `RD_OBJ_NO_PERIODS`; `CAccountSpec::Login()`.
+- ADR-021; assumed details D15–D20; 08 §3d.
+
+### Fixed
+- Candles drawn over the panel on charts with "Chart on foreground": RiskDesk switches it off while it runs and restores it when removed (D20).
+- MetaTrader's One-Click Trading panel covered the panel's top, including the move handle: the panel keeps out of that corner while it is shown.
+
+### Changed
+- 05 §3: the clamp keeps the whole panel in view (`y ≤ chartHeight − panelHeight`), not only its top 40 px; 05 §1: rows never shorter than their text line.
+- 02 §8/§11: the chart's last symbol is kept in the chart object `RD_S_CHART` instead of `chart_<ChartID>.ini`; object table completed.
+
+### Verified
+- Both targets 0 errors / 0 warnings (release and debug). Unit tests 581 passed, 0 failed on MT4 and MT5. Panel self-test 60 passed, 0 failed on A1 (IG MT4) and A3 (IC Markets EU MT5), 120 DPI, including a real window capture with One-Click Trading shown.
+
 ## [0.2.0] - 2026-11-12 - Phase P2: Platform layer and GatewaySmoke
 ### Added
 - `Platform/TradeGateway*.mqh`: `CTradeGateway` for MT4 and MT5 with one public API (ADR-001, ADR-019): `OpenMarket` (G-01), `PlacePending` (G-02), `ModifyPositionSLTP` (G-03), `ClosePosition` (G-04, partial and full; MT4 remainder ticket, MT5 netting without `position`), `DeletePending` (G-05), `ListPositions` / `ListPending` (G-06/G-07, scope filter), `ModifyPending` (G-08), `SelectPosition` / `SelectPending`, `Configure(SGatewaySettings)`.
