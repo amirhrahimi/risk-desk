@@ -147,7 +147,7 @@ struct SResult   { bool ok; ESeverity sev; int code; string message; ulong ticke
 | `OnChartEvent` | `OBJECT_CLICK` → Controller; `OBJECT_ENDEDIT` (risk field); `OBJECT_DRAG` (planning lines → recompute; overlay lines `RD_PO_*` → OP-16); `MOUSE_MOVE` (panel drag); `CHART_CHANGE` (re-clamp panel, re-anchor labels) |
 | `OnDeinit` | Save state. `REASON_CHARTCHANGE` / `REASON_PARAMETERS` / `REASON_RECOMPILE`: keep objects. `REASON_REMOVE`: delete all `RD_` objects. Always `EventKillTimer()`. |
 
-Note: `REASON_CHARTCHANGE` does not say whether the symbol or the period changed. Persist the symbol; on the next `OnInit` compare it and delete lines if it differs (F-23 AC2).
+Note: `REASON_CHARTCHANGE` does not say whether the symbol or the period changed. Persist the symbol in the hidden chart object `RD_S_CHART`; on the next `OnInit` compare it and delete lines if it differs (F-23 AC2, ADR-021).
 
 ### 7.2 Sequence: user clicks Buy
 ```
@@ -175,7 +175,7 @@ Each step that fails returns `SResult` with a message; the command stops and sho
 |---|---|---|---|
 | Panel x, y, hidden, scale override | `Files/RiskDesk/ui.ini` | global | on change (debounced 1 s) and `OnDeinit` |
 | Risk % | `Files/RiskDesk/acct_<login>.ini` | per account | on valid edit |
-| Last symbol of the chart | `Files/RiskDesk/chart_<ChartID>.ini` | per chart, session | `OnDeinit` |
+| Last symbol of the chart | hidden chart object `RD_S_CHART` (its text) | per chart | every `OnInit` (ADR-021: chart IDs are not stable across sessions, so a `chart_<ChartID>.ini` could belong to another chart) |
 | Lines | the chart objects themselves | object names | MT keeps objects across timeframe change and saves them with the chart |
 
 On `OnInit`, lines found on the chart by name are **adopted** (not recreated) so a timeframe change never duplicates or moves them. Use files, not terminal GlobalVariables: they hold strings, are human-readable and survive terminal reinstallation of the data folder backup.
@@ -211,12 +211,14 @@ On `OnInit`, lines found on the chart by name are **adopted** (not recreated) so
 | Object | Name | Type |
 |---|---|---|
 | Panel background | `RD_P_BG` | `OBJ_RECTANGLE_LABEL` |
-| Move handle | `RD_P_HANDLE` | `OBJ_LABEL` (icon glyph) or small `OBJ_BUTTON` |
-| Title / hide toggle | `RD_P_TITLE`, `RD_P_HIDE` | `OBJ_LABEL`, `OBJ_BUTTON` |
+| Move handle | `RD_P_HANDLE` | small `OBJ_BUTTON` with a glyph (MT4: Wingdings, ADR-021) |
+| Title / hide toggle | `RD_P_TITLE` ("Risk"), `RD_P_TITLE2` ("Desk", accent), `RD_P_HIDE` | `OBJ_LABEL`, `OBJ_LABEL`, `OBJ_BUTTON` |
+| Field captions | `RD_L_RISK`, `RD_L_LOTS`, `RD_L_PINFO` | `OBJ_LABEL` |
 | Risk / Lots fields | `RD_E_RISK`, `RD_E_LOTS` | `OBJ_EDIT` (Lots read-only) |
 | Buttons | `RD_B_ADDLINE`, `RD_B_DELLINE`, `RD_B_BUY`, `RD_B_SELL`, `RD_B_ADDPEND`, `RD_B_SETPEND`, `RD_B_DELPEND`, `RD_B_RISKFREE`, `RD_B_HALF`, `RD_B_CHARTCLOSE`, `RD_B_FULLCLOSE`, `RD_B_SHOT` | `OBJ_BUTTON` |
 | Pending info | `RD_E_PINFO` | `OBJ_EDIT` read-only |
 | Spread / status | `RD_L_SPREAD`, `RD_L_STATUS1..3` | `OBJ_LABEL` |
+| Chart symbol memory | `RD_S_CHART` | `OBJ_LABEL`, hidden on every timeframe |
 | Lines | `RD_LN_SL`, `RD_LN_TP`, `RD_LN_EN` | `OBJ_HLINE` |
 | Line labels | `RD_LT_SL`, `RD_LT_TP`, `RD_LT_EN` | `OBJ_TEXT` |
 | Pending order overlay | `RD_PO_<ticket>_EN/SL/TP` (lines), `RD_PT_<ticket>_EN/SL/TP` (labels) | `OBJ_HLINE` (selectable), `OBJ_TEXT` |

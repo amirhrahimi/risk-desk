@@ -50,6 +50,7 @@ Layout computes every rectangle from a running y-cursor; nothing is positioned w
 - `pxScale = scale × TerminalInfoInteger(TERMINAL_SCREEN_DPI) / 96`. Multiply every pixel distance/size by `pxScale`.
 - Font point sizes are multiplied by `scale` only (the terminal already applies DPI to fonts); minimum 6 pt.
 - Verify with T-24 at 100 %, 150 %, 200 % Windows scaling and T-37 (small chart window); adjust if text overflows (use `TextSetFont` + `TextGetSize` to measure).
+- Rows are never shorter than one line of their text, and the caption column never narrower than "Risk %": below about scale 0.7 the fonts stay at 6 pt while the geometry keeps shrinking, so those rows grow and push the rows below them down; auto-fit uses the resulting height (ADR-021).
 
 ## 2. Default theme (all overridable in 07-settings)
 
@@ -81,9 +82,9 @@ Every button has an `OBJPROP_TOOLTIP` that says exactly what it affects, e.g. "C
 | Behaviour | Spec |
 |---|---|
 | Move | Mouse-down on the handle (hit test with `CHARTEVENT_MOUSE_MOVE` x/y and left-button bit in `sparam`) starts a drag; disable `CHART_MOUSE_SCROLL` while dragging; move all panel objects by the delta; on release re-enable scroll and save position (debounced). |
-| Clamp | On init and on `CHARTEVENT_CHART_CHANGE`: keep `x ∈ [0, chartWidth − panelWidth]`, `y ∈ [0, chartHeight − 40]` (`CHART_WIDTH_IN_PIXELS`, `CHART_HEIGHT_IN_PIXELS`). |
+| Clamp | On init and on `CHARTEVENT_CHART_CHANGE`: keep `x ∈ [0, chartWidth − panelWidth]`, `y ∈ [0, chartHeight − panelHeight]` (`CHART_WIDTH_IN_PIXELS`, `CHART_HEIGHT_IN_PIXELS`; panel height = handle to camera, or to the title row when hidden), so the whole panel stays in view (T-37). The saved position is the user's; only the shown one is clamped, so the panel moves back when the window grows. Changed from `chartHeight − 40` in P3 (ADR-021). While MetaTrader's One-Click Trading panel is shown (`CHART_SHOW_ONE_CLICK`), the panel also keeps out of the top-left 215 × 90 px (× DPI / 96) that it covers: below it if the panel fits there, else to its right. |
 | Hide | `[–]` collapses to title + handle; `[+]` restores. Lines stay on the chart. Persisted. |
-| Z-order | Panel objects `OBJPROP_BACK=false`, `OBJPROP_ZORDER` high (buttons above background), `OBJPROP_HIDDEN=true`, not selectable. |
+| Z-order | Panel objects `OBJPROP_BACK=false`, `OBJPROP_ZORDER` high (buttons above background), `OBJPROP_HIDDEN=true`, not selectable. "Chart on foreground" (`CHART_FOREGROUND`) would still draw the candles above them: RiskDesk switches it off while it runs and restores the user's value when it is removed (ADR-021, D20). |
 | Redraw | Widgets keep their last rendered text/colour and only call `ObjectSet*` when something changed; one `ChartRedraw()` per refresh cycle at most. |
 
 ## 4. Fields

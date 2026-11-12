@@ -11,3 +11,11 @@ Thumbs.db
 .DS_Store
 .vscode/
 *.bak
+
+# clangd / MQL clangd helper: generated per machine (absolute paths)
+.clangd
+.clang-format
+compile_commands.json
+.mql-auto-forwards/
+
+.cache
