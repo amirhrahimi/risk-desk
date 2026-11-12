@@ -28,9 +28,11 @@ It is a manual-trading tool. It never opens, modifies or closes anything unless 
 | 7 | `docs/07-settings.md` | Every input parameter and its default |
 | 8 | `docs/08-testing.md` | Unit tests, BrokerProbe, demo test matrix (T-xx) |
 | 9 | `docs/09-roadmap-and-prompts.md` | Phases and their Definition of Done |
-| 10 | `docs/10-decisions.md` | ADRs: why things are the way they are |
-| 11 | `docs/11-open-questions.md` | Assumptions awaiting the owner's answer |
-| - | `broker-profiles/*.txt` | Real symbol/account properties dumped by BrokerProbe on the owner's terminals |
+| 10 | `docs/10-decisions.md` | Index of the ADRs (one file each in `docs/adr/`): why things are the way they are |
+| 11 | `docs/11-open-questions.md` | Open questions, the owner's answers as decisions (Q-xx), assumed details (D-xx) |
+| - | `broker-profiles/SUMMARY.md` | Account and test-symbol properties of every demo account, generated from the BrokerProbe/GatewaySmoke reports beside it |
+
+This table is a map, not a reading list: read only what the task names (§8).
 
 When docs conflict, precedence is: 03 > 04 > 06 > 01 > the rest. Report every conflict you find.
 
@@ -47,7 +49,7 @@ When docs conflict, precedence is: 03 > 04 > 06 > 01 > the rest. Report every co
 - **R9 No blind resend.** After an ambiguous result (timeout, connection lost, no reply) never resend before checking whether the first request was executed (BC-14).
 - **R10 Self-contained.** No DLLs, no WebRequest, no external libraries. File I/O only under `MQL4/Files/RiskDesk/` or `MQL5/Files/RiskDesk/`.
 - **R11 Clean builds.** After every change both targets compile with **0 errors and 0 warnings**. `#property strict` in every MQL4 entry file.
-- **R12 Docs are not edited silently.** If the implementation reveals a gap, add it to `docs/11-open-questions.md` or a new ADR in `docs/10-decisions.md`, and mention it in your summary.
+- **R12 Docs are not edited silently.** If the implementation reveals a gap, add it to `docs/11-open-questions.md` or write a new ADR (`docs/adr/ADR-NNN-<slug>.md` plus a row at the end of `docs/10-decisions.md`), and mention it in your summary.
 - **R13 Demo-only test trading.** Test scripts that place orders must abort unless `AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_DEMO`.
 
 ## 4. Repository layout
@@ -56,10 +58,17 @@ When docs conflict, precedence is: 03 > 04 > 06 > 01 > the rest. Report every co
 /
 ├─ CLAUDE.md  README.md  CHANGELOG.md  .gitignore
 ├─ docs/                       specifications (see rule R12)
-├─ broker-profiles/            BrokerProbe outputs from the owner's terminals
+│  ├─ adr/                     one file per ADR, indexed by 10-decisions.md
+│  └─ history/                 implementation-log.md: history only, not needed to implement
+├─ broker-profiles/            SUMMARY.md (generated) + BrokerProbe/GatewaySmoke reports from the owner's terminals
 ├─ build/
 │  ├─ build.ps1                compiles every target, prints a summary, exit 1 on any error/warning
 │  ├─ install-junctions.ps1    links src/ into each terminal data folder
+│  ├─ run-tests.ps1            RiskDeskTests headless on each terminal
+│  ├─ run-script.ps1           BrokerProbe / GatewaySmoke on one demo account
+│  ├─ run-uitest.ps1           debug panel/trade/pending self-test on one demo account
+│  ├─ profile-guard.ps1        chart-profile snapshot/restore used by the runners
+│  ├─ summarize-profiles.ps1   regenerates broker-profiles/SUMMARY.md
 │  ├─ paths.example.ps1        template (committed)
 │  └─ paths.local.ps1          real paths (git-ignored)
 └─ src/
@@ -109,3 +118,14 @@ Includes are **relative** to the including file, using backslashes as in MetaQuo
 3. Add or extend unit tests for any `Domain/` change (`RiskDeskTests` scripts).
 4. End every session with: summary, files changed, compile result for both targets, the manual test list (T-xx) the owner should run, and open questions.
 5. Commit only when the owner asks; use messages like `phase-4: market orders with risk sizing`.
+
+## 8. Context budget
+
+A session runs out of context long before it runs out of work: the docs are ~240 KB, the source ~940 KB, the raw probe reports ~590 KB. Read in proportion to the task.
+
+- **Docs: only the sections the task names.** Prompts name sections (`docs/03 BC-07`, `docs/06 OP-05..OP-08`, `docs/05 §5`). Grep for the heading (`^### BC-07`, `^### OP-05`, `^## 5\.`; rows such as V-xx or T-xx with `^\| T-13 \|`) and Read only that range with `offset`/`limit`. Read a whole doc only when the prompt says "all of it" or "entirely".
+- **Broker data: `broker-profiles/SUMMARY.md`.** For a property or symbol it lacks, Grep the raw probe for `^\[symbol NAME\]` and read that section (about 60 lines). Never read a whole `probe_*.txt` (~90 KB each), even where an older prompt says "every file in broker-profiles/". After adding a probe or smoke report, run `build/summarize-profiles.ps1`.
+- **Decisions:** the index `docs/10-decisions.md`, then only the ADR files the task names or changes. In `docs/11-open-questions.md`, Grep for the Q-xx/D-xx IDs you need. `docs/history/implementation-log.md` and the released sections of `CHANGELOG.md` are history: don't read them to implement anything. To add a CHANGELOG entry, Read only its first ~20 lines (the `[Unreleased]` section).
+- **Source:** Grep for the class or function first and Read the matching range; many files are 20–37 KB. Don't open `App/UiSelfTest*.mqh` unless the task changes a self-test suite.
+- **Test output is short by design.** `run-uitest.ps1` prints the header, INFO lines, each FAIL with its screenshot and the SUMMARY (`-Full` prints the whole report). `run-script.ps1` prints the last run's FAIL/SKIP rows and `[summary]`. `run-tests.ps1` prints PASS or the FAIL lines. Open a full report or a screenshot only to investigate a failure.
+- **Builds:** `build.ps1` prints the issues it found. Open a MetaEditor `.log` only if that is not enough.
