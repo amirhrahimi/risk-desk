@@ -18,6 +18,13 @@ public:
    // BC-15 terminal/EA/account checks, in the order of the table.
    // Symbol trade modes are checked per command (they depend on the side).
    static bool       CanTrade(SResult &why);
+   // Right after a login (terminal started from a startup configuration,
+   // account switched) the account properties arrive a moment after the
+   // connection: balance 0, trade not allowed. Waits up to timeoutMs until
+   // the terminal is connected and the account reports a currency and
+   // either trading allowed or a balance. False on timeout (the caller
+   // continues and reports what it sees).
+   static bool       WaitReady(const int timeoutMs, int &waitedMs);
    static bool       IsCentCurrency(const string currency);
    static string     Describe(const SAccountSpec &a);
   };
@@ -69,6 +76,27 @@ bool CAccountSpec::CanTrade(SResult &why)
    if(AccountInfoInteger(ACCOUNT_TRADE_EXPERT) == 0)
       return RdFail(why, "Broker disabled EA trading on this account");
    return RdOk(why, "Trading allowed");
+  }
+
+//+------------------------------------------------------------------+
+bool CAccountSpec::WaitReady(const int timeoutMs, int &waitedMs)
+  {
+   uint start = GetTickCount();
+   waitedMs = 0;
+   while(!IsStopped())
+     {
+      bool ready = TerminalInfoInteger(TERMINAL_CONNECTED) != 0 &&
+                   AccountInfoInteger(ACCOUNT_LOGIN) != 0 &&
+                   AccountInfoString(ACCOUNT_CURRENCY) != "" &&
+                   (AccountInfoInteger(ACCOUNT_TRADE_ALLOWED) != 0 || AccountInfoDouble(ACCOUNT_BALANCE) > 0.0);
+      waitedMs = (int)(GetTickCount() - start);
+      if(ready)
+         return true;
+      if(waitedMs >= timeoutMs)
+         return false;
+      Sleep(250);
+     }
+   return false;
   }
 
 //+------------------------------------------------------------------+

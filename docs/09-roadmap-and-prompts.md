@@ -43,7 +43,7 @@ Compile both targets clean. Tell me how to run the tests and what output to past
 
 ## P2 — Platform layer and GatewaySmoke
 **Goal:** a gateway that trades correctly on every account, proven before the UI exists.
-**Deliverables:** `Platform/Market.mqh`, `Money.mqh` (BC-05 incl. MT4 cross-check), `TradeGateway.mqh` + `TradeGatewayMT4.mqh` + `TradeGatewayMT5.mqh` (G-01…G-08 with BC-06/07/08/09/10/11/13/14/16), `History.mqh` (stub ok); `Scripts/RiskDesk/GatewaySmoke.mq4/.mq5` (demo-only, R13): on the chart symbol, with min lot and safe distances: open buy with SL/TP → verify → modify SL → partial close (if divisible) → close; place buy limit far from price → modify price/SL/TP → delete; prints a PASS/FAIL table.
+**Deliverables:** `Platform/Market.mqh`, `Money.mqh` (BC-05 incl. MT4 cross-check), `TradeGateway.mqh` + `TradeGatewayMT4.mqh` + `TradeGatewayMT5.mqh` (G-01…G-08 with BC-06/07/08/09/10/11/13/14/16), `History.mqh` (stub ok); `Scripts/RiskDesk/GatewaySmoke.mq4/.mq5` (demo-only, R13): on the chart symbol, with the smallest volume (2 × min lot when the risk guard allows, so the partial close is divisible; ADR-019) and safe distances: open buy with SL/TP → verify → modify SL → partial close (if divisible) → close; place buy limit far from price → modify price/SL/TP → delete; prints a PASS/FAIL table.
 **Done when:** GatewaySmoke passes on A1–A5 (and A6 netting for the netting path).
 
 ```text

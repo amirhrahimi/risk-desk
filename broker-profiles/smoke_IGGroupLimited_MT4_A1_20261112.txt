@@ -1,0 +1,96 @@
+
+# RiskDesk GatewaySmoke 0.2.0 - 2026.11.12 11:29:53 - EURUSD
+[run]
+  platform:        MT4, terminal build 1492
+  account:         A1 on IG-DEMO (IG Group Limited), demo, currency USD, leverage 1:200, margin mode hedging (MT4: every trade is its own ticket), balance 10000.00, equity 10000.00, order limit 10000
+  symbol:          EURUSD: digits 5, point 0.00001, tick size 0.00001, tick value 1 USD (profit 1, loss 1), contract 100000, volume min 0.01 / step 0.01 / max 50 / limit 0, stops level 40 pts, freeze level 0 pts, trade full (4), exec instant (1), calc cfd (1), currencies USD/USD margin USD, filling n/a (MT4), expiration n/a (MT4), orders n/a (MT4)
+  settings:        magic 772299, fill FILLPOL_AUTO, stops STOPS_AUTO, retries 3, delay 300 ms, slippage 20 pts, expiry 0 h
+  test:            0.02 lot, SL/TP distance 0.00333 (333 pts), risk at SL about $6.66 (0.07 %)
+[results]
+  ID   STEP                          RESULT  MS     DETAIL
+  S00  preflight                     PASS    31     demo, permissions, spec and quote OK; hedging
+  M01  open buy with SL/TP           PASS    141    #194778512 0.02 lot @1.10965 sends=1
+  M02  verify buy SL/TP              PASS    0      sl 1.10623 tp 1.11298 vol 0.02 magic 772299
+  M03  modify SL                     PASS    125    sl 1.10765 tp 1.11298
+  M04  partial close                 PASS    1344   closed 0.01, rest 0.01 #194778512 (same ticket)
+  M05  close the rest                PASS    735    0.01 lot @1.10956 P/L -$0.09
+  M06  open sell with SL/TP          PASS    172    #194778514 0.02 lot @1.10956 sends=1
+  M06v verify sell SL/TP             PASS    0      sl 1.11298 tp 1.10623 vol 0.02 magic 772299
+  M07  close sell                    PASS    640    0.02 lot @1.10965 P/L -$0.18
+  P01  place buy limit               PASS    110    #194778515 0.02 lot @1.10299 time=GTC sends=1 sl 1.09966 tp 1.10632
+  P02  modify price/SL/TP            PASS    140    @1.10132 sl 1.09799 tp 1.10465
+  P03  delete                        PASS    703    #194778515 deleted
+[summary]
+  PASS 12, FAIL 0, SKIP 0
+
+# RiskDesk GatewaySmoke 0.2.0 - 2026.11.12 11:30:24 - XAUUSD
+[run]
+  platform:        MT4, terminal build 1492
+  account:         A1 on IG-DEMO (IG Group Limited), demo, currency USD, leverage 1:200, margin mode hedging (MT4: every trade is its own ticket), balance 9999.63, equity 9999.63, order limit 10000
+  symbol:          XAUUSD: digits 2, point 0.01, tick size 0.01, tick value 1 USD (profit 1, loss 1), contract 100, volume min 0.01 / step 0.01 / max 15 / limit 0, stops level 200 pts, freeze level 0 pts, trade full (4), exec instant (1), calc cfd (1), currencies USD/USD margin USD, filling n/a (MT4), expiration n/a (MT4), orders n/a (MT4)
+  settings:        magic 772299, fill FILLPOL_AUTO, stops STOPS_AUTO, retries 3, delay 300 ms, slippage 20 pts, expiry 0 h
+  test:            0.02 lot, SL/TP distance 11.85 (1185 pts), risk at SL about $23.70 (0.24 %)
+[results]
+  ID   STEP                          RESULT  MS     DETAIL
+  S00  preflight                     PASS    31     demo, permissions, spec and quote OK; hedging
+  M01  open buy with SL/TP           PASS    203    #194778654 0.02 lot @3946.78 sends=1
+  M02  verify buy SL/TP              PASS    0      sl 3934.43 tp 3958.63 vol 0.02 magic 772299
+  M03  modify SL                     PASS    157    sl 3939.67 tp 3958.63
+  M04  partial close                 PASS    1375   closed 0.01, rest 0.01 #194778654 (same ticket)
+  M05  close the rest                PASS    672    0.01 lot @3945.95 P/L -$0.83
+  M06  open sell with SL/TP          PASS    157    #194778663 0.02 lot @3945.99 sends=1
+  M06v verify sell SL/TP             PASS    0      sl 3958.14 tp 3934.14 vol 0.02 magic 772299
+  M07  close sell                    PASS    672    0.02 lot @3946.29 P/L -$0.60
+  P01  place buy limit               PASS    140    #194778664 0.02 lot @3923.13 time=GTC sends=1 sl 3911.28 tp 3934.98
+  P02  modify price/SL/TP            PASS    125    @3917.20 sl 3905.35 tp 3929.05
+  P03  delete                        PASS    672    #194778664 deleted
+[summary]
+  PASS 12, FAIL 0, SKIP 0
+
+# RiskDesk GatewaySmoke 0.2.0 - 2026.11.12 11:30:55 - US30
+[run]
+  platform:        MT4, terminal build 1492
+  account:         A1 on IG-DEMO (IG Group Limited), demo, currency USD, leverage 1:200, margin mode hedging (MT4: every trade is its own ticket), balance 9997.67, equity 9997.67, order limit 10000
+  symbol:          US30: digits 1, point 0.1, tick size 0.1, tick value 1 USD (profit 1, loss 1), contract 10, volume min 0.01 / step 0.01 / max 30 / limit 0, stops level 150 pts, freeze level 0 pts, trade full (4), exec instant (1), calc cfd (1), currencies USD/USD margin USD, filling n/a (MT4), expiration n/a (MT4), orders n/a (MT4)
+  settings:        magic 772299, fill FILLPOL_AUTO, stops STOPS_AUTO, retries 3, delay 300 ms, slippage 20 pts, expiry 0 h
+  test:            0.02 lot, SL/TP distance 157.7 (1577 pts), risk at SL about $31.54 (0.32 %)
+[results]
+  ID   STEP                          RESULT  MS     DETAIL
+  S00  preflight                     PASS    31     demo, permissions, spec and quote OK; hedging
+  M01  open buy with SL/TP           PASS    156    #194778666 0.02 lot @52556.0 sends=1
+  M02  verify buy SL/TP              PASS    0      sl 52394.7 tp 52713.7 vol 0.02 magic 772299
+  M03  modify SL                     PASS    125    sl 52461.3 tp 52713.7
+  M04  partial close                 PASS    1359   closed 0.01, rest 0.01 #194778666 (same ticket)
+  M05  close the rest                PASS    719    0.01 lot @52552.9 P/L -$0.31
+  M06  open sell with SL/TP          PASS    203    #194778668 0.02 lot @52552.9 sends=1
+  M06v verify sell SL/TP             PASS    0      sl 52714.2 tp 52395.2 vol 0.02 magic 772299
+  M07  close sell                    PASS    703    0.02 lot @52556.5 P/L -$0.72
+  P01  place buy limit               PASS    187    #194778669 0.02 lot @52240.6 time=GTC sends=1 sl 52082.9 tp 52398.3
+  P02  modify price/SL/TP            PASS    188    @52161.8 sl 52004.1 tp 52319.5
+  P03  delete                        PASS    718    #194778669 deleted
+[summary]
+  PASS 12, FAIL 0, SKIP 0
+
+# RiskDesk GatewaySmoke 0.2.0 - 2026.11.12 11:36:17 - EURUSD
+[run]
+  platform:        MT4, terminal build 1492
+  account:         A1 on IG-DEMO (IG Group Limited), demo, currency USD, leverage 1:200, margin mode hedging (MT4: every trade is its own ticket), balance 9996.33, equity 9996.33, order limit 10000
+  symbol:          EURUSD: digits 5, point 0.00001, tick size 0.00001, tick value 1 USD (profit 1, loss 1), contract 100000, volume min 0.01 / step 0.01 / max 50 / limit 0, stops level 40 pts, freeze level 0 pts, trade full (4), exec instant (1), calc cfd (1), currencies USD/USD margin USD, filling n/a (MT4), expiration n/a (MT4), orders n/a (MT4)
+  settings:        magic 772299, fill FILLPOL_AUTO, stops STOPS_AUTO, retries 3, delay 300 ms, slippage 20 pts, expiry 0 h
+  test:            0.02 lot, SL/TP distance 0.00333 (333 pts), risk at SL about $6.66 (0.07 %)
+[results]
+  ID   STEP                          RESULT  MS     DETAIL
+  S00  preflight                     PASS    31     demo, permissions, spec and quote OK; hedging
+  M01  open buy with SL/TP           PASS    125    #194778735 0.02 lot @1.10986 sends=1
+  M02  verify buy SL/TP              PASS    0      sl 1.10644 tp 1.11319 vol 0.02 magic 772299
+  M03  modify SL                     PASS    109    sl 1.10786 tp 1.11319
+  M04  partial close                 PASS    187    closed 0.01, rest 0.01 #194778735 (same ticket)
+  M05  close the rest                PASS    688    0.01 lot @1.10979 P/L -$0.07
+  M06  open sell with SL/TP          PASS    203    #194778737 0.02 lot @1.10979 sends=1
+  M06v verify sell SL/TP             PASS    0      sl 1.11321 tp 1.10646 vol 0.02 magic 772299
+  M07  close sell                    PASS    766    0.02 lot @1.10988 P/L -$0.18
+  P01  place buy limit               PASS    109    #194778738 0.02 lot @1.10322 time=GTC sends=1 sl 1.09989 tp 1.10655
+  P02  modify price/SL/TP            PASS    172    @1.10155 sl 1.09822 tp 1.10488
+  P03  delete                        PASS    687    #194778738 deleted
+[summary]
+  PASS 12, FAIL 0, SKIP 0

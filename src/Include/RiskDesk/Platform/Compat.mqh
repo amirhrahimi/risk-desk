@@ -307,6 +307,47 @@ bool RdSymbolAcceptsSl(const SSymbolSpec &spec)
 #endif
   }
 
+// MT5 SYMBOL_ORDER_MODE: TP allowed on this symbol. MT4: always.
+bool RdSymbolAcceptsTp(const SSymbolSpec &spec)
+  {
+#ifdef __MQL5__
+   return (spec.orderModeFlags & SYMBOL_ORDER_TP) != 0;
+#else
+   return true;
+#endif
+  }
+
+// MT5 SYMBOL_ORDER_MODE: market / limit / stop orders allowed. MT4: always.
+bool RdSymbolAcceptsKind(const SSymbolSpec &spec, const EOrderKind kind)
+  {
+#ifdef __MQL5__
+   if(kind == KIND_LIMIT)
+      return (spec.orderModeFlags & SYMBOL_ORDER_LIMIT) != 0;
+   if(kind == KIND_STOP)
+      return (spec.orderModeFlags & SYMBOL_ORDER_STOP) != 0;
+   return (spec.orderModeFlags & SYMBOL_ORDER_MARKET) != 0;
+#else
+   return true;
+#endif
+  }
+
+//====================================================================
+// Time
+//====================================================================
+
+// Server time for request timestamps (BC-14) and expirations (BC-08).
+// MT5: the terminal's estimate of the current server time, which keeps
+// running between ticks. MT4: time of the last server tick (the only
+// server clock MQL4 has).
+datetime RdServerTime()
+  {
+#ifdef __MQL5__
+   return TimeTradeServer();
+#else
+   return TimeCurrent();
+#endif
+  }
+
 #ifdef __MQL5__
 //====================================================================
 // MT5 trade server return codes -> constant names (for logs/reports).

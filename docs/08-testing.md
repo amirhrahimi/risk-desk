@@ -55,6 +55,26 @@ Writes `Files/RiskDesk/probe_<company>_<platform>_<login>_<yyyymmdd>.txt` (compa
 
 Owner workflow: run once on each account (chart of any symbol), copy the files from `MQLx/Files/RiskDesk/` into `broker-profiles/`, commit. Claude Code reads them before implementing or debugging broker-specific behaviour.
 
+## 3b. GatewaySmoke (L3b, phase P2)
+
+Script, both platforms, **demo accounts only** (rule R13; checked in the entry file and again in the core). Drag it onto a chart of the symbol to test; it trades that symbol only and needs Algo/AutoTrading on (MT4: also "Allow live trading" in the script's Common tab).
+
+Inputs: `InpDistancePct` (0.30: SL/TP distance in % of price, raised to 2 × (stops + freeze level) + 3 × spread + 10 ticks), `InpMaxRiskPct` (1.0: abort before sending if a test position would risk more at SL), `InpTestPartialClose` (true: open 2 × min lot), `InpTestSell`, `InpTestPending`, `InpConfirm` (true: Yes/No box before anything is sent), `InpSmokeMagic` (772299, not the EA's magic), and the gateway inputs `InpSlippagePoints`, `InpMaxRetries`, `InpRetryDelayMs`, `InpFillingOverride` (T-22), `InpStopsMode`, `InpPendingExpiryHours` (T-23).
+
+Steps: S00 preflight (demo, permissions, spec, quote, netting state, risk and margin guard) · M01 open buy with SL/TP · M02 verify SL/TP/volume/magic · M03 modify SL · M04 partial close (SKIP when indivisible) and check the rest (MT4: new ticket) · M05 close the rest · M06 open sell with SL/TP · M06v verify · M07 close · P01 place Buy Limit 2 distances below Ask · P02 move price/SL/TP down by half a distance · P03 delete · X01/X02 cleanup of anything still open. A netting account with an open position on the symbol is refused (the test would merge with it).
+
+Output: one line per step in the Experts tab, an Alert with the summary, and a block appended to `Files/RiskDesk/smoke_<company>_<platform>_<login>_<yyyymmdd>.txt` ([run] account/symbol/settings, [results] table with ms per step, [summary]). Copy the file to `broker-profiles/`.
+
+## 3c. Unattended runs (`build/run-script.ps1`)
+
+Runs BrokerProbe or GatewaySmoke on one saved account without clicking (ADR-020). The terminal must not be running; it logs into `-Login` on `-Server` with the password it has saved, opens a chart of `-Symbol`, runs the script, and closes when the report appears in `MQLx/Files/RiskDesk`.
+
+```
+powershell -File build/run-script.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Script BrokerProbe -Symbol EURUSD -Report "probe_*_A3_*.txt"
+powershell -File build/run-script.ps1 -Platform mt4 -Login A1 -Server IG-DEMO -Script GatewaySmoke -Symbol US30 -Inputs "InpConfirm=false" -Report "smoke_*_A1_*.txt"
+```
+Use the broker's own symbol names from its probe report (`[test symbols]`). Copy the reports into `broker-profiles/` afterwards.
+
 ## 4. Account and symbol matrix (L4)
 
 | Account | Platform | Notes |
@@ -110,7 +130,7 @@ Format: **ID — goal** · steps · expected. "Status" means the panel status ba
 | T-33 | Chart extras | Close a few trades with `CTO_REMOVE`, then `CTO_KEEP`; toggle Candle Time; place 2 pending orders with overlay on, move one with MetaTrader's own trade level, delete one | Closed-trade arrows removed/kept (user drawings untouched); countdown correct at M1 (`mm:ss`), H4 (`hh:mm:ss`), W1 (`Nd hh:mm:ss`), gold, red in the last `InpCandleTimeWarnSec` seconds and at `00:00` when the market is closed, keeps running between ticks; overlay follows orders exactly; no lag |
 | T-34 | Screenshot naming | Several actions + camera button | Files named per F-19 |
 | T-35 | Ambiguous result | Debug build, `InpTestForceAmbiguous=true` | Log shows check-before-resend; exactly one position |
-| T-36 | Original-tool regressions | Repeat every scenario recorded in `broker-profiles/original-tool-errors.md` | All succeed or fail with a clear reason |
+| T-36 | Original-tool regressions | The owner recorded only "nothing happens, Experts and Journal empty" for the original (2026-11-12) and closed the topic. On every account: Add Line, Buy with RiskDesk on EURUSD, XAUUSD and an index | Each click opens the trade or shows a red reason with a log line; never nothing (R8) |
 | T-37 | Auto-fit panel | `InpScale=1.6`, `InpAutoFitPanel=true`; shrink the chart window step by step, then enlarge | Panel always fully visible, never larger than scale 1.6, text readable; with auto-fit off it keeps its size |
 | T-39 | Drag a pending order | Buy Stop placed by RiskDesk: drag its SL farther (risk still under the caps), drag its TP, drag its entry up, drag its entry below Ask, drag the SL so the risk exceeds 10 %; select an overlay line and press Delete | SL/TP modified, labels and open risk updated, amber note when risk > panel %; entry up: SL and TP move by the same distance, risk unchanged; entry below Ask refused and snapped back; over-cap move refused with numbers and snapped back; deleted line redrawn, order intact |
 | T-38 | Original settings parity | Set the same inputs as the original (07-settings ★ values) | Colours, font, sizes and TP behaviour match the original side by side |
