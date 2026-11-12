@@ -35,7 +35,10 @@
          (trade suites: <PLATFORM>_<login>_trade_<symbol>_report.txt, pending:
          <PLATFORM>_<login>_pending_<symbol>_report.txt); the EA
          removes itself and closes the terminal when it is done,
-      4. copies the report and the screenshots to -OutDir and prints the report.
+      4. copies the report and the screenshots to -OutDir and prints a short
+         result: the header line, INFO lines, every FAIL line with its
+         screenshot, and the SUMMARY line. -Full prints the whole report
+         (one PASS line per check, about 10 KB per run) instead.
     Exit code 0 when the report says "0 failed".
 
     The panel suite never trades. Both keep ui.ini / acct_*.ini in the sandbox
@@ -67,7 +70,8 @@ param(
     # run switches it on again.
     [ValidateSet('on', 'off')][string]$Permissions = 'on',
     [string]$OutDir = (Join-Path $env:TEMP 'RiskDesk-uitest'),
-    [int]$TimeoutSec = 240
+    [int]$TimeoutSec = 240,
+    [switch]$Full                    # print the whole report instead of the short result
 )
 
 $ErrorActionPreference = 'Stop'
@@ -237,7 +241,28 @@ Get-ChildItem -LiteralPath $testDir -Filter "${filePrefix}*" -File | Where-Objec
     Copy-Item -LiteralPath $_.FullName -Destination $OutDir -Force
     $copied++
 }
-Get-Content -LiteralPath $found.FullName | ForEach-Object { Write-Host $_ }
-Write-Host "OK    $copied file(s) copied to $OutDir"
-if (Select-String -LiteralPath $found.FullName -Pattern 'SUMMARY \d+ passed, 0 failed' -Quiet) { exit 0 }
+$report = @([IO.File]::ReadAllLines($found.FullName, [Text.Encoding]::UTF8))   # the EA writes UTF-8 without BOM
+$reportCopy = Join-Path $OutDir $found.Name
+$passed = Select-String -LiteralPath $found.FullName -Pattern 'SUMMARY \d+ passed, 0 failed' -Quiet
+if ($Full) {
+    $report | ForEach-Object { Write-Host $_ }
+} else {
+    # short output: header, INFO lines, every FAIL with its continuation lines and screenshot, the summary.
+    # The full report (one PASS line per check, ~10 KB) stays in -OutDir; -Full prints it.
+    $known = '^(PASS|FAIL|SHOT|INFO|SUMMARY|setup:|cleanup|T-\d+ setup)'
+    if ($report.Count -gt 0) { Write-Host $report[0] }
+    for ($i = 1; $i -lt $report.Count; $i++) {
+        $line = [string]$report[$i]
+        if ($line -match '^INFO ') { Write-Host $line; continue }
+        if ($line -notmatch '^FAIL ') { continue }
+        Write-Host $line
+        $j = $i + 1
+        while ($j -lt $report.Count -and [string]$report[$j] -notmatch $known) { Write-Host ([string]$report[$j]); $j++ }
+        if ($j -lt $report.Count -and [string]$report[$j] -match '^SHOT ') { Write-Host ("  " + [string]$report[$j]) }
+    }
+    $summaryLine = @($report | Where-Object { $_ -match '^SUMMARY ' }) | Select-Object -Last 1
+    if ($summaryLine) { Write-Host $summaryLine } else { Write-Host 'FAIL  the report has no SUMMARY line (did the self-test stop early?)' }
+}
+Write-Host "OK    $copied file(s) copied to $OutDir; full report: $reportCopy"
+if ($passed) { exit 0 }
 exit 1

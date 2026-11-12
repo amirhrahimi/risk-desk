@@ -6,6 +6,15 @@ All notable changes to this project are documented here. Format: Keep a Changelo
 ### Changed
 - Q20 answered: the candle countdown turns red when 10 % or less of the candle time is left, and at `00:00`. The input `InpCandleTimeWarnPct` (10, range 0–100, 0 = only at `00:00`) replaces `InpCandleTimeWarnSec` (60). The countdown itself comes in P7 (01 F-21, 05 §6, 07, 08 T-33).
 - Q22 answered: requotes stay as they are. There is one `InpSlippagePoints` for every symbol and broker, with no broker-specific settings, and a requote that outlasts the retries ends red with nothing opened (03 §3, 07).
+- Less context per Claude Code session (no change to the EA or scripts):
+  - `build/run-uitest.ps1` prints a short result (header, INFO, FAIL lines with their screenshot, SUMMARY) instead of the whole report; `-Full` prints the report. The report is now read as UTF-8, so `·` no longer shows as `Â·`.
+  - `build/run-script.ps1` prints the last run's FAIL/SKIP rows and `[summary]`.
+  - `docs/10-decisions.md` is now an index; each ADR moved unchanged into `docs/adr/ADR-NNN-<slug>.md`.
+  - The implementation log moved from `docs/11-open-questions.md` to `docs/history/implementation-log.md`.
+  - CLAUDE.md §8 "Context budget".
+
+### Added
+- `build/summarize-profiles.ps1` and the generated `broker-profiles/SUMMARY.md`: account and test-symbol properties, probe items to check, and the latest GatewaySmoke result for every demo account (14 KB instead of 590 KB of raw reports).
 
 ## [0.5.0] - 2026-11-12 - Phase P5: Pending orders
 ### Added

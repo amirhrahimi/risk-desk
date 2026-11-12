@@ -19,8 +19,10 @@ riskdesk/
    ├─ 07-settings.md               all inputs and defaults
    ├─ 08-testing.md                unit tests, BrokerProbe, demo test matrix
    ├─ 09-roadmap-and-prompts.md    phases P0–P8 with copy-paste prompts
-   ├─ 10-decisions.md              architecture decision records
-   └─ 11-open-questions.md         answer these before P3
+   ├─ 10-decisions.md              index of the architecture decision records
+   ├─ 11-open-questions.md         answer these before P3
+   ├─ adr/                         one file per architecture decision record
+   └─ history/                     implementation log (history only)
 ```
 
 ## Before you start (15 minutes)

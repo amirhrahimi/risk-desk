@@ -18,8 +18,9 @@
            closes the terminal window.
 
     The report is the newest file in MQLx\Files\RiskDesk matching -Report
-    (wildcards) written after the start. Its path is printed; exit code 0 when
-    a fresh report appeared.
+    (wildcards) written after the start. Its path is printed with a short
+    result (the last run's FAIL/SKIP rows and its [summary] section); exit
+    code 0 when a fresh report appeared.
 
     Needs build.ps1 and install-junctions.ps1 run first and the terminal NOT
     running (a running instance ignores the startup configuration).
@@ -147,4 +148,22 @@ if (-not $found) {
     exit 1
 }
 Write-Host "OK    report: $($found.FullName)"
+# short result, so the report need not be read: the last run in the file (GatewaySmoke appends one
+# block per run, each starting with '# RiskDesk '), its FAIL/SKIP rows and its [summary] section
+$lines = @([IO.File]::ReadAllLines($found.FullName, [Text.Encoding]::UTF8))
+$start = 0
+for ($i = 0; $i -lt $lines.Count; $i++) { if ($lines[$i] -match '^# RiskDesk ') { $start = $i } }
+$inSummary = $false; $shown = 0
+for ($i = $start; $i -lt $lines.Count; $i++) {
+    $line = [string]$lines[$i]
+    if ($i -eq $start -and $line -match '^# RiskDesk ') { Write-Host "      $line"; continue }
+    if ($line -match '^\[(.+)\]\s*$') { $inSummary = ($Matches[1] -eq 'summary'); if ($inSummary) { Write-Host '      [summary]' }; continue }
+    if ($inSummary -or $line -match '^\s+\S+\s+.+?\s+(FAIL|SKIP)\s+\d+') {
+        if ($line.Trim() -eq '') { continue }
+        if ($found.Name -like 'probe_*' -and $line -match '^\s+- ') { continue }   # the items: merged in SUMMARY.md
+        if ($shown -ge 30) { Write-Host '      ... (more in the report)'; break }
+        Write-Host "      $line"; $shown++
+    }
+}
+if ($found.Name -like 'probe_*') { Write-Host '      copy it into broker-profiles/ and run build/summarize-profiles.ps1: SUMMARY.md lists the items to check' }
 exit 0

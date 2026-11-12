@@ -1,0 +1,5 @@
+# ADR-013 TP modes derived from the original's full input labels
+
+- **Context:** The first spec read "Trade with TP Line = false" as "no TP line, TP from R/R". That reading came from screenshots in which the labels were cut off. The full labels say "Manual TP Line - It doesn't work if Trade with TP Line is False" and "R/R | Only Active When Trade with TP Line is True", and the owner's demo test (Q15, 2026-11-12) confirmed them.
+- **Decision:** Three TP modes, derived once in `Settings` as `ETpMode`: **No TP** (Trade with TP Line = false: no TP line, no TP), **Auto R/R** (true / Manual false: no TP line, TP from R/R at send time), **Manual TP line** (both true: draggable TP line that starts at the R/R distance). Lines, labels and order paths read `ETpMode`; nothing else reads the two booleans.
+- **Consequences:** With the owner's configuration (true / false / 1.0) trades open with a 1:1 TP and no TP line, as in the original. Updated: 01 F-04/F-07/F-17, 04 §8, 05 §5, 06 OP-01/03/07, 07, 08 T-08.
