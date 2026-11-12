@@ -135,6 +135,14 @@ enum ETpMode
    TPMODE_MANUAL_LINE
   };
 
+// Which line of a placed pending order was dropped (OP-16).
+enum ELineRole
+  {
+   LINEROLE_ENTRY,
+   LINEROLE_SL,
+   LINEROLE_TP
+  };
+
 //====================================================================
 // Structs (02-architecture section 6)
 //====================================================================
@@ -337,6 +345,43 @@ struct SResult
    void              Reset() { ok = true; sev = SEV_OK; code = 0; message = ""; ticket = 0; }
   };
 
+// The settings the Domain layer needs, as one plain struct (Domain never
+// reads inputs). App/Settings fills every field from the validated
+// inputs; Defaults() holds the 07-settings defaults (used by the tests).
+struct SPlanSettings
+  {
+   ERiskBase         riskBase;
+   double            maxRiskPerTradePct;
+   double            maxTotalRiskPct;
+   double            commissionPerLot;          // round turn, account currency
+   bool              allowMinLotOverRisk;
+   bool              includePendingInTotalRisk;
+   long              magic;                     // identifies tool trades (BC-16)
+   ETpMode           tpMode;
+   double            tpRR;
+   ERiskFreeMode     riskFreeMode;
+   int               riskFreeExtraPoints;
+   double            partialClosePct;
+   EIndivisible      partialIndivisible;
+
+   void              Defaults()
+     {
+      riskBase = RISKBASE_BALANCE;
+      maxRiskPerTradePct = 10.0;
+      maxTotalRiskPct = 10.0;
+      commissionPerLot = 0.0;
+      allowMinLotOverRisk = false;
+      includePendingInTotalRisk = true;
+      magic = 772211;
+      tpMode = TPMODE_AUTO_RR;
+      tpRR = 1.0;
+      riskFreeMode = RF_SPREAD_COMMISSION;
+      riskFreeExtraPoints = 0;
+      partialClosePct = 50.0;
+      partialIndivisible = INDIV_SKIP;
+     }
+  };
+
 //====================================================================
 // SResult helpers. RdOk/RdWarn return true and RdFail returns false,
 // so a function can end with 'return RdFail(r, "...")'.
@@ -366,6 +411,25 @@ bool RdFail(SResult &r, const string message, const int code = 0)
    r.code = code;
    r.message = message;
    return false;
+  }
+
+// Nothing to do for this item, for a reason the user should see in amber
+// (e.g. Risk Free "not enough profit", Half Close "indivisible").
+bool RdSkip(SResult &r, const string message)
+  {
+   r.ok = false;
+   r.sev = SEV_WARN;
+   r.code = 0;
+   r.message = message;
+   return false;
+  }
+
+// ADR-013: the TP mode from "Trade with TP Line" and "Manual TP Line".
+ETpMode RdTpModeFrom(const bool tradeWithTpLine, const bool manualTpLine)
+  {
+   if(!tradeWithTpLine)
+      return TPMODE_NONE;
+   return manualTpLine ? TPMODE_MANUAL_LINE : TPMODE_AUTO_RR;
   }
 
 string RdSeverityText(const ESeverity sev)

@@ -20,6 +20,7 @@ Claude Code cannot click inside MetaTrader. At the end of each phase it outputs 
 - Each V-xx from `04-risk-engine.md` §12 is one named test; add one test per bug fixed later.
 - Output: one line per failure, then `RiskDeskTests: 58 passed, 0 failed` via `Print` and `Alert`. Also written to `Files/RiskDesk/tests_<platform>.txt`.
 - Optional (MT5): a headless run via `terminal64.exe /config:<ini>` is possible but not required; do not spend more than one session on automating it.
+- Done in P1: `build/run-tests.ps1 [-Target mt4|mt5|all] [-Symbol EURUSD]` starts each terminal of `paths.local.ps1` (which must not be running) with a startup configuration that runs `RiskDesk\RiskDeskTests` on one chart, waits for `tests_<platform>.txt`, prints the summary and failures and exits 1 on any failure. MT5 closes itself (`ShutdownTerminal=1`); MT4 has no such switch for scripts, so the runner closes its window. The terminal logs into its last account; the script never trades. Needs `build.ps1` and `install-junctions.ps1` first.
 
 ### Test hooks (debug builds only)
 Compile-time `#define RD_TEST_HOOKS` (off in release) exposes hidden inputs used by T-29/T-35:
