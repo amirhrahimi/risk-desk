@@ -48,6 +48,8 @@ Set-StrictMode -Version 2.0
 
 $PathsFile = Join-Path $PSScriptRoot 'paths.local.ps1'
 
+. (Join-Path $PSScriptRoot 'profile-guard.ps1')
+
 function Write-Status([string]$status, [string]$text) {
     $color = 'Gray'
     if ($status -eq 'PASS') { $color = 'Green' }
@@ -98,6 +100,9 @@ function Invoke-TerminalTests($t) {
     [IO.File]::WriteAllText($ini, (($lines -join "`r`n") + "`r`n"), [Text.Encoding]::ASCII)
 
     $started = Get-Date
+    # the chart profile is put back as it was after the run (MT4 adds a chart per start, build/profile-guard.ps1)
+    $profileSnap = Save-ChartProfile $data $platform
+    $proc = $null
     try {
         $proc = Start-Process -FilePath $exe -ArgumentList $arguments -PassThru
         $fresh = $false
@@ -118,6 +123,8 @@ function Invoke-TerminalTests($t) {
             }
         }
     } finally {
+        if ($proc -and -not $proc.HasExited) { $null = $proc.WaitForExit(30000) }
+        Restore-ChartProfile $profileSnap
         Remove-Item -LiteralPath $ini -Force -ErrorAction SilentlyContinue
     }
 

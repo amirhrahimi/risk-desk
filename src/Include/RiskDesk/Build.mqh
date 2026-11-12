@@ -18,7 +18,7 @@
 #define RD_BUILD_MQH
 
 #define RD_PRODUCT     "RiskDesk"
-#define RD_VERSION     "0.4.0"
+#define RD_VERSION     "0.5.0"
 #define RD_COPYRIGHT   "RiskDesk"
 
 //#define RD_TEST_HOOKS

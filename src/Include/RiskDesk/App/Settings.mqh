@@ -77,7 +77,7 @@ public:
    int               candleTimeFontSize;
    color             colorCandleTime;
    color             colorCandleTimeWarn;
-   int               candleTimeWarnSec;
+   int               candleTimeWarnPct;   // red when time left <= this % of the candle (Q20)
    int               slLossFontSize;
    bool              autoScreenshot;
    int               shotWidth;
@@ -261,7 +261,7 @@ void CSettings::Load()
    candleTimeFontSize        = ClampI("Candle Time Font Size", InpCandleTimeFontSize, 6, 36);
    colorCandleTime           = InpColorCandleTime;
    colorCandleTimeWarn       = InpColorCandleTimeWarn;
-   candleTimeWarnSec         = ClampI("Candle time red below seconds", InpCandleTimeWarnSec, 0, 86400);
+   candleTimeWarnPct         = ClampI("Candle time red in the last % of the candle", InpCandleTimeWarnPct, 0, 100);
    slLossFontSize            = ClampI("SL Dollar Loss Font Size", InpSlLossFontSize, 6, 36);
    autoScreenshot            = InpAutoScreenshot;
    shotWidth                 = ClampI("Screenshot width", InpShotWidth, 0, 8000);

@@ -140,3 +140,27 @@
   P03  delete                        PASS    562    #161607042 deleted
 [summary]
   PASS 9, FAIL 0, SKIP 1
+
+# RiskDesk GatewaySmoke 0.5.0 - 2026.11.12 20:03:11 - EURUSD
+[run]
+  platform:        MT5, terminal build 6311
+  account:         A5 on Dukascopy-demo-mt5-1 (Dukascopy Bank SA), demo, currency EUR, leverage 1:100, margin mode hedging, balance 9942.14, equity 9942.14, order limit none
+  symbol:          EURUSD: digits 5, point 0.00001, tick size 0.00001, tick value 0.90509205 EUR (profit 0.90509205, loss 0.90511662), contract 100000, volume min 0.01 / step 0.01 / max 10000 / limit 1000, stops level 0 pts, freeze level 0 pts, trade full (4), exec market (2), calc forex (0), currencies EUR/USD margin EUR, filling IOC (2), expiration GTC|DAY|SPECIFIED|SPECIFIED_DAY (15), orders MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSE_BY (127)
+  settings:        magic 772299, fill FILLPOL_AUTO, stops STOPS_AUTO, retries 3, delay 300 ms, slippage 20 pts, expiry 0 h
+  test:            0.02 lot, SL/TP distance 0.00332 (332 pts), risk at SL about €6.03 (0.06 %)
+[results]
+  ID   STEP                          RESULT  MS     DETAIL
+  S00  preflight                     PASS    31     demo, permissions, spec and quote OK; hedging
+  M01  open buy with SL/TP           PASS    125    #161627341 0.02 lot @1.10485 fill=IOC sends=1
+  M02  verify buy SL/TP              PASS    0      sl 1.10149 tp 1.10817 vol 0.02 magic 772299
+  M03  modify SL                     PASS    31     sl 1.10285 tp 1.10817
+  M04  partial close                 PASS    110    closed 0.01, rest 0.01 #161627341 (same ticket), P/L -€0.07
+  M05  close the rest                PASS    610    0.01 lot @1.10481 P/L -€0.07 fill=IOC
+  M06  open sell with SL/TP          PASS    125    #161627344 0.02 lot @1.10481 fill=IOC sends=1
+  M06v verify sell SL/TP             PASS    0      sl 1.10817 tp 1.10149 vol 0.02 magic 772299
+  M07  close sell                    PASS    656    0.02 lot @1.10486 P/L -€0.16 fill=IOC
+  P01  place buy limit               PASS    62     #161627346 0.02 lot @1.09822 fill=RETURN time=GTC sends=1 sl 1.09490 tp 1.10154
+  P02  modify price/SL/TP            PASS    32     @1.09656 sl 1.09324 tp 1.09988
+  P03  delete                        PASS    547    #161627346 deleted
+[summary]
+  PASS 12, FAIL 0, SKIP 0

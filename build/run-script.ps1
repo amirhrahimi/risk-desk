@@ -107,9 +107,13 @@ function Get-FreshReport([datetime]$since) {
         Where-Object { $_.LastWriteTime -ge $since } | Sort-Object LastWriteTime | Select-Object -Last 1
 }
 
+# the chart profile is put back as it was after the run (MT4 adds a chart per start, build/profile-guard.ps1)
+. (Join-Path $PSScriptRoot 'profile-guard.ps1')
+$profileSnap = Save-ChartProfile $data $Platform
 Write-Host "RUN   $Platform $Login@$Server  $Script on $Symbol $Period  inputs: $(if ($Inputs) { $Inputs } else { 'defaults' })"
 $started = (Get-Date).AddSeconds(-1)
 $found = $null
+$proc = $null
 try {
     $proc = Start-Process -FilePath $exe -ArgumentList $arguments -PassThru
     $deadline = (Get-Date).AddSeconds($TimeoutSec)
@@ -132,6 +136,8 @@ try {
         }
     }
 } finally {
+    if ($proc -and -not $proc.HasExited) { $null = $proc.WaitForExit(30000) }
+    Restore-ChartProfile $profileSnap
     Remove-Item -LiteralPath $ini -Force -ErrorAction SilentlyContinue
     foreach ($f in $setFiles) { Remove-Item -LiteralPath $f -Force -ErrorAction SilentlyContinue }
 }

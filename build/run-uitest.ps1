@@ -16,6 +16,12 @@
                    position closed again. One run per symbol.
       trade-basic  the trade checks without T-08/T-11/T-12/T-25 and netting:
                    for the extra symbols of an account (XAUUSD, an index).
+      pending      the P5 checks: Set Pending (T-13, T-14, T-08 pending part,
+                   refusals), the pending order overlay (F-22), dragging its
+                   lines (T-39), expiry (T-23), Del Pending (T-15, with a
+                   test order on a second symbol) with REAL pending orders
+                   far from the price on a DEMO account only, magic 772288,
+                   every test order deleted again. One run per symbol.
 
     The runner
       1. writes the one-time request file MQLx\Files\RiskDesk\uitest.request
@@ -26,7 +32,8 @@
          chart of -Symbol and attaches Experts\RiskDesk\RiskDesk with
          InpTestUiSelfTest=true (a .set file in the Presets folder),
       3. waits for MQLx\Files\RiskDesk\uitest\<PLATFORM>_<login>_report.txt
-         (trade suites: <PLATFORM>_<login>_trade_<symbol>_report.txt); the EA
+         (trade suites: <PLATFORM>_<login>_trade_<symbol>_report.txt, pending:
+         <PLATFORM>_<login>_pending_<symbol>_report.txt); the EA
          removes itself and closes the terminal when it is done,
       4. copies the report and the screenshots to -OutDir and prints the report.
     Exit code 0 when the report says "0 failed".
@@ -43,6 +50,7 @@
     powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol EURUSD
     powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol EURUSD -Suite trade
     powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol XAUUSD -Suite trade-basic
+    powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol EURUSD -Suite pending -TimeoutSec 600
     powershell -File build/build.ps1
 #>
 param(
@@ -52,7 +60,7 @@ param(
     [Parameter(Mandatory = $true)][string]$Symbol,
     [string]$Inputs = '',            # extra EA inputs 'Key=Value;Key=Value'
     [string]$Period = 'H1',
-    [ValidateSet('panel', 'trade', 'trade-basic')][string]$Suite = 'panel',
+    [ValidateSet('panel', 'trade', 'trade-basic', 'pending')][string]$Suite = 'panel',
     # T-26: 'off' starts the terminal with Algo/AutoTrading switched off (MT5 [Experts] Enabled=0,
     # MT4 ExpertsTrades=false; tested in P4 - MT5 AllowLiveTrading=0 and MT4 ExpertsEnable=false
     # did not stop the startup EA from trading). The terminal keeps the setting: the next normal
@@ -163,10 +171,11 @@ Remove-Item -LiteralPath $captureRequest -Force -ErrorAction SilentlyContinue
 $reportName = "${tag}_${Login}_report.txt"
 $filePrefix = "${tag}_${Login}_"
 if ($Suite -ne 'panel') {
-    # the EA names the trade reports after the symbol: / \ : * ? " < > | and spaces become _
+    # the EA names the trade and pending reports after the symbol: / \ : * ? " < > | and spaces become _
     $safe = ($Symbol -replace '[\\/:*?"<>| ]', '_')
-    $reportName = "${tag}_${Login}_trade_${safe}_report.txt"
-    $filePrefix = "${tag}_${Login}_trade_${safe}_"
+    $kind = if ($Suite -eq 'pending') { 'pending' } else { 'trade' }
+    $reportName = "${tag}_${Login}_${kind}_${safe}_report.txt"
+    $filePrefix = "${tag}_${Login}_${kind}_${safe}_"
 }
 function Get-FreshReport([datetime]$since) {
     $p = Join-Path $testDir $reportName
@@ -176,23 +185,15 @@ function Get-FreshReport([datetime]$since) {
     return $null
 }
 
-#--- the terminal saves its open charts into the active profile when it closes. MT4 once grew its
-#--- profile by one chart per start (a chart01.CHR with an upper-case extension was loaded as an
-#--- extra chart every time): count the profile's charts before and after, and say so if it grew.
-function Get-ProfileCharts {
-    $dir = $null
-    if ($Platform -eq 'mt4') {
-        $last = Join-Path $data 'profiles\lastprofile.ini'
-        $name = if (Test-Path -LiteralPath $last) { ([string](Get-Content -LiteralPath $last -TotalCount 1)).Trim() } else { 'default' }
-        $dir = Join-Path $data "profiles\$name"
-    } else { $dir = Join-Path $data 'MQL5\Profiles\Charts\Default' }
-    if (-not (Test-Path -LiteralPath $dir)) { return @($dir, -1) }
-    return @($dir, @(Get-ChildItem -LiteralPath $dir -File | Where-Object { $_.Extension -ieq '.chr' }).Count)
-}
-$profileBefore = Get-ProfileCharts
+#--- the terminal saves its open charts into the active profile when it closes, and MT4 adds a copy
+#--- of the owner's chart on every start with a startup configuration: the profile is put back as
+#--- it was after the run (build/profile-guard.ps1)
+. (Join-Path $PSScriptRoot 'profile-guard.ps1')
+$profileSnap = Save-ChartProfile $data $Platform
 Write-Host "RUN   $Platform $Login@$Server  RiskDesk self-test '$Suite' on $Symbol $Period  permissions: $Permissions  inputs: $($setLines -join ';')"
 $started = (Get-Date).AddSeconds(-1)
 $found = $null
+$proc = $null
 try {
     $proc = Start-Process -FilePath $exe -ArgumentList $arguments -PassThru
     $deadline = (Get-Date).AddSeconds($TimeoutSec)
@@ -219,6 +220,8 @@ try {
     }
     if (-not $found) { $found = Get-FreshReport $started }
 } finally {
+    if ($proc -and -not $proc.HasExited) { $null = $proc.WaitForExit(30000) }
+    Restore-ChartProfile $profileSnap
     Remove-Item -LiteralPath $ini -Force -ErrorAction SilentlyContinue
     foreach ($f in $setFiles) { Remove-Item -LiteralPath $f -Force -ErrorAction SilentlyContinue }
     Remove-Item -LiteralPath $request -Force -ErrorAction SilentlyContinue
@@ -233,10 +236,6 @@ $copied = 0
 Get-ChildItem -LiteralPath $testDir -Filter "${filePrefix}*" -File | Where-Object { $_.LastWriteTime -ge $started } | ForEach-Object {
     Copy-Item -LiteralPath $_.FullName -Destination $OutDir -Force
     $copied++
-}
-$profileAfter = Get-ProfileCharts
-if ($profileBefore[1] -ge 0 -and $profileAfter[1] -gt $profileBefore[1]) {
-    Write-Host "WARN  the terminal's profile $($profileAfter[0]) grew from $($profileBefore[1]) to $($profileAfter[1]) charts during this run"
 }
 Get-Content -LiteralPath $found.FullName | ForEach-Object { Write-Host $_ }
 Write-Host "OK    $copied file(s) copied to $OutDir"

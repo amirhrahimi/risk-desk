@@ -125,6 +125,8 @@ private:
    bool              VerifyPending(const ulong ticket, const SSymbolSpec &s, const double price, const double sl,
                                    const double tp, SResult &r);
    bool              ReadSelectedOrder(SOrder &o, bool &stopLimit) const;
+   bool              OrderListed(const ulong ticket) const;
+   bool              WaitUnlisted(const ulong ticket) const;
    void              ReadSelectedPosition(SPosition &p) const;
    bool              DealProfit(const ulong deal, double &profit) const;
    ulong             DealOfOrder(const ulong order, const long positionId) const;

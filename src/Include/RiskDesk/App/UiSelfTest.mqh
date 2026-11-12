@@ -18,6 +18,10 @@
 //|             Buy / Sell buttons with REAL orders on a DEMO        |
 //|             account only (rule R13), own magic number, every     |
 //|             test trade closed again: App/UiSelfTestTrade.mqh.    |
+//|           - pending (P5): Set Pending, Del Pending, the overlay  |
+//|             and dragging its lines (OP-16) with REAL pending     |
+//|             orders far from the price, same safety rules:        |
+//|             App/UiSelfTestPending*.mqh.                          |
 //|           Neither replaces T-24 (Windows DPI) or real clicks.    |
 //| Safety : runs only when the runner left the request file         |
 //|          RiskDesk/uitest.request (deleted at start), so a chart  |
@@ -45,6 +49,7 @@
 #include "..\UI\Panel.mqh"
 #include "..\UI\StatusBar.mqh"
 #include "..\UI\Lines.mqh"
+#include "..\UI\PendingOverlay.mqh"
 #include "Settings.mqh"
 #include "State.mqh"
 #include "Commands.mqh"
@@ -71,8 +76,9 @@ private:
    CMoney           *m_money;
    CCommands        *m_cmd;
    CLines           *m_plan;            // the planning lines (the report text is m_lines)
+   CPendingOverlay  *m_overlay;
 
-   string            m_suite;           // "panel", "trade", "trade-basic"
+   string            m_suite;           // "panel", "trade", "trade-basic", "pending"
    bool              m_active;
    bool              m_closeOnDeinit;
    int               m_step;
@@ -121,6 +127,11 @@ private:
    bool              m_labelMoved;
    double            m_labelPriceWas;
    int               m_labelWantX, m_labelWantY;
+   //--- pending suite (P5, App/UiSelfTestPending*.mqh)
+   ulong             m_pendBuyStop;     // the T-13 Buy Stop that F-22 / T-39 work on
+   ulong             m_pendTickets[];   // T-13 orders (T-15 deletes them)
+   string            m_otherSymbol2;    // T-15: the second symbol with a test order
+   ulong             m_otherTicket;
 
    void              Line(const string text);
    void              Check(const bool ok, const string id, const string detail);
@@ -221,6 +232,30 @@ private:
    void              TradeNet1();
    void              TradeNet2();
 
+   //--- pending suite (App/UiSelfTestPending.mqh, UiSelfTestPendingMove.mqh)
+   void              StepPending(const uint now);
+   int               TestOrders(SOrder &arr[], const string symbol = "");
+   bool              FindTestOrder(const ulong ticket, SOrder &o);
+   bool              PendLines(const ESide side, const EOrderKind kind, const double factor, double &entry, double &sl);
+   double            AutoTp(const ESide side, const double entry, const double sl, const double rr) const;
+   bool              CheckPlaced(const string id, const ESide side, const EOrderKind kind, const int before, const double entry,
+                                 const double sl, const double tpWanted);
+   bool              OverlayDrawn(const ulong ticket, const SOrder &o, string &why);
+   void              DropOverlay(const ulong ticket, const ELineRole role, const double price);
+   double            OrderRisk(const SOrder &o);
+   bool              HasMoney(const string text, const SAccountSpec &acc, const double amount) const;
+   void              PendT13(const ESide side, const EOrderKind kind, const double factor);
+   void              PendT14();
+   void              PendRefusals();
+   void              PendT08(const ETpMode mode);
+   void              PendF22();
+   void              PendT39a();
+   void              PendT39b();
+   void              PendT39c();
+   void              PendT23();
+   void              PendT15();
+   void              PendNet();
+
 public:
                      CUiSelfTest();
    static string     RequestFile() { return "RiskDesk\\uitest.request"; }
@@ -233,7 +268,7 @@ public:
    string            Suite() const { return m_suite; }
    void              Start(CSettings *cfg, CState *state, CTheme *theme, CLayout *layout, CPanel *panel,
                            CStatusBar *status, CController *ctl, CRdRedraw *redraw, CPersistence *store,
-                           CTradeGateway *gw, CMoney *money, CCommands *cmd, CLines *lines);
+                           CTradeGateway *gw, CMoney *money, CCommands *cmd, CLines *lines, CPendingOverlay *overlay);
    bool              Active() const { return m_active; }
    void              Step();
    void              OnDeinit(const int reason);
@@ -295,6 +330,10 @@ CUiSelfTest::CUiSelfTest()
    m_labelPriceWas = 0.0;
    m_labelWantX = 0;
    m_labelWantY = 0;
+   m_overlay = NULL;
+   m_pendBuyStop = 0;
+   m_otherSymbol2 = "";
+   m_otherTicket = 0;
   }
 
 //+------------------------------------------------------------------+
@@ -314,15 +353,17 @@ string CUiSelfTest::ReadSuite()
          suite = RdTrim(StringSubstr(line, 6));
      }
    FileClose(h);
-   if(suite != "trade" && suite != "trade-basic")
+   if(suite != "trade" && suite != "trade-basic" && suite != "pending")
       suite = "panel";
    return suite;
   }
 
 void CUiSelfTest::Start(CSettings *cfg, CState *state, CTheme *theme, CLayout *layout, CPanel *panel,
                         CStatusBar *status, CController *ctl, CRdRedraw *redraw, CPersistence *store,
-                        CTradeGateway *gw, CMoney *money, CCommands *cmd, CLines *lines)
+                        CTradeGateway *gw, CMoney *money, CCommands *cmd, CLines *lines, CPendingOverlay *overlay)
   {
+   m_overlay = overlay;
+   ArrayResize(m_pendTickets, 0);
    m_gw = gw;
    m_money = money;
    m_cmd = cmd;
@@ -356,12 +397,15 @@ void CUiSelfTest::Start(CSettings *cfg, CState *state, CTheme *theme, CLayout *l
    RD_LOG_WARN("TEST: self-test '" + m_suite + "' started (debug build); the terminal closes when it ends");
   }
 
-// <PLATFORM>_<login>_... ; the trade suites add the symbol (one run per symbol)
+// <PLATFORM>_<login>_... ; the trade and pending suites add the symbol (one run per symbol)
 string CUiSelfTest::FilePrefix() const
   {
    string p = RD_UITEST_DIR + "\\" + RD_PLATFORM + "_" + IntegerToString(CAccountSpec::Login());
-   if(m_suite != "panel")
-      p += "_trade_" + CScreenshot::Sanitize(_Symbol);
+   if(m_suite == "pending")
+      p += "_pending_" + CScreenshot::Sanitize(_Symbol);
+   else
+      if(m_suite != "panel")
+         p += "_trade_" + CScreenshot::Sanitize(_Symbol);
    return p;
   }
 
@@ -469,7 +513,10 @@ void CUiSelfTest::Step()
    if(m_suite == "panel")
       StepPanel(now);
    else
-      StepTrade(now);
+      if(m_suite == "pending")
+         StepPending(now);
+      else
+         StepTrade(now);
   }
 
 //+------------------------------------------------------------------+
@@ -629,5 +676,7 @@ void CUiSelfTest::OnDeinit(const int reason)
 
 #include "UiSelfTestSteps.mqh"
 #include "UiSelfTestTrade.mqh"
+#include "UiSelfTestPending.mqh"
+#include "UiSelfTestPendingMove.mqh"
 
 #endif // RD_APP_UISELFTEST_MQH

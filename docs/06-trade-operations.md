@@ -81,6 +81,7 @@ ACCOUNT_LIMIT_ORDERS check (BC-09)
 res   = G-02 PlacePending(kind, side, lots, entry, sl, tp)
 ok    → "Buy Stop 0.35 EURUSD @1.10250 placed · risk $100.00 (1.00 %) · #123457"; delete lines unless keep; screenshot "pending"
 ```
+P5 (ADR-025): the checks run in the order of OP-03 with entry = Entry line; the margin is checked at the entry price (D32); the BC-09 order count is checked by G-02 before sending. Netting accounts (BC-10, D27): an order in the position's direction is checked as the merged position and always confirmed; an opposite one is refused unless `InpNettingAllowOpposite`, then confirmed. With an expiry the status adds "· expires 2026.11.13 20:47 server time".
 
 ## 3. Managing trades
 
@@ -98,6 +99,7 @@ for each: G-05 DeletePending(ticket)                     BC-07 freeze check firs
 status "Deleted 3 of 3 pending orders" (amber if any failed, failures listed in tooltip/log)
 screenshot "delpending" if ≥ 1 deleted
 ```
+P5: an order that is gone between listing and deleting (filled or deleted elsewhere) is reported as "already gone" in amber; the screenshot carries the ticket when one order was deleted, else 0 (D30).
 
 ### OP-09 Risk Free (F-11)
 ```
@@ -160,6 +162,7 @@ res    = G-08 ModifyPending(ticket, new.price, new.sl, new.tp)
 ok     → green "Buy Stop #123457 SL 3985.00 · risk $30.12 (0.30 %)"; labels updated; screenshot "modify"
 refused / failed → line snaps back to the order's current value; red status with the reason
 ```
+P5 (ADR-025, `CRiskBudget::CheckMove`): a move that does not raise the order's risk is allowed without the caps (D29); an order without SL is not moved (D28); a line dropped at the order's own price changes nothing (amber). After every drop the overlay shows the order's values on the server.
 
 ## 4. Other
 

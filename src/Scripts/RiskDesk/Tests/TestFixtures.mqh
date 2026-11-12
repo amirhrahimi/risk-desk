@@ -106,6 +106,7 @@ void TfAddOrder(SOrder &arr[], const ulong ticket, const string symbol, const ES
    arr[n].tp = 0.0;
    arr[n].magic = magic;
    arr[n].lossToSl = lossToSl;
+   arr[n].expiration = 0;
   }
 
 #endif // RD_TESTS_FIXTURES_MQH

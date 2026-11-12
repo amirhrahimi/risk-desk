@@ -338,6 +338,7 @@ struct SOrder
    double            tp;
    long              magic;
    double            lossToSl;
+   datetime          expiration;      // 0 = none (GTC, or MT5 DAY); BC-08, kept by G-08
   };
 
 // Result of every function that can fail. 'message' is final,

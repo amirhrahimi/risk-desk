@@ -103,6 +103,9 @@ public:
    void              SetTpFree(const bool free);
    void              Restyle();
    void              SetAvoid(const int x, const int y, const int w, const int h, const int gap);
+   void              LabelSpot(const string text, const double price, datetime &t, int &anchor) const;
+   string            LabelFont() const { return m_style.labelFont; }
+   int               LabelSize() const { return m_style.labelSize; }
    bool              ShowLabel(const ELineRole role, const string text, const color clr);
    void              HideLabel(const ELineRole role);
    static bool       BoxAt(const string font, const int size, const string text, const double price, const datetime t,
@@ -435,6 +438,16 @@ void CLines::AvoidPanel(const string text, const double price, datetime &t, int 
   }
 
 //+------------------------------------------------------------------+
+//| Where a label with this text at this price goes (05 section 5,   |
+//| ADR-024); also used by the pending order overlay (05 section 6). |
+//+------------------------------------------------------------------+
+void CLines::LabelSpot(const string text, const double price, datetime &t, int &anchor) const
+  {
+   LabelAnchor(t, anchor);
+   AvoidPanel(text, price, t, anchor);
+  }
+
+//+------------------------------------------------------------------+
 //| Label of a line at its price; true when the object was created.  |
 //+------------------------------------------------------------------+
 bool CLines::ShowLabel(const ELineRole role, const string text, const color clr)
@@ -443,8 +456,7 @@ bool CLines::ShowLabel(const ELineRole role, const string text, const color clr)
    double price = Price(role);
    datetime t = 0;
    int anchor = ANCHOR_LEFT_LOWER;
-   LabelAnchor(t, anchor);
-   AvoidPanel(text, price, t, anchor);
+   LabelSpot(text, price, t, anchor);
    bool created = false;
    if(ObjectFind(0, name) < 0)
      {
