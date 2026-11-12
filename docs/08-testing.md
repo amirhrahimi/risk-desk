@@ -27,7 +27,7 @@ Compile-time `#define RD_TEST_HOOKS` (off in release) exposes hidden inputs used
 
 ## 3. BrokerProbe (L3, F-27)
 
-Script, both platforms. Inputs: `InpExtraSymbols` (comma list, e.g. `XAUUSD,US30,DE40,BTCUSD`), `InpIncludeMarketWatch=true`.
+Script, both platforms. Inputs: `InpExtraSymbols` (comma list, e.g. `XAUUSD,US30,DE40,BTCUSD`), `InpIncludeMarketWatch=true`, `InpFindTestSymbols=true` (finds and probes candidates for the §4 instruments; section `[test symbols]`), `InpMaxSymbols=150` (ADR-017).
 
 Writes `Files/RiskDesk/probe_<company>_<platform>_<login>_<yyyymmdd>.txt` (company/server sanitized). Plain `key: value` text, one block per section, so it diffs well in git.
 
