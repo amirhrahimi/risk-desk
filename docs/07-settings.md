@@ -40,7 +40,7 @@ Resulting TP mode (derived once in `Settings`, enum `ETpMode`, F-17, ADR-013):
 |---|---|---|---|
 | `InpMagic` | int | 772211 | Identifies tool trades (BC-16) |
 | `InpComment` | string | "RiskDesk" | Informational only |
-| `InpSlippagePoints` | int | 20 | Max deviation for market orders |
+| `InpSlippagePoints` | int | 20 | Max deviation for market orders. One value for every symbol and broker: no broker- or symbol-specific defaults and no spread-based deviation (owner, Q22). A requote that outlasts the retries ends red, e.g. "Buy failed: Requote (4 attempts)", and nothing opens |
 | `InpMaxRetries` | int | 3 | BC-13 |
 | `InpRetryDelayMs` | int | 300 | Doubles each retry |
 | `InpFillingOverride` | `EFillingOverride` | `FILLPOL_AUTO` | AUTO / FOK / IOC / RETURN (BC-06; MT5 only) |
@@ -70,8 +70,8 @@ Resulting TP mode (derived once in `Settings`, enum `ETpMode`, F-17, ADR-013):
 | `InpShowCandleTime` | bool | true ★ | Candle Time | F-21 |
 | `InpCandleTimeFontSize` | int | 10 ★ | Candle Time Font Size | |
 | `InpColorCandleTime` | color | `clrGold` | – | Normal colour. The original has no colour inputs: gold, red near the close and at 00:00 (Q4, Q20) |
-| `InpColorCandleTimeWarn` | color | `clrRed` | – | When fewer than `InpCandleTimeWarnSec` seconds are left, including `00:00` (market closed) |
-| `InpCandleTimeWarnSec` | int | 60 | – | Red threshold in seconds (assumption until Q20 is answered); 0 = red only at `00:00` |
+| `InpColorCandleTimeWarn` | color | `clrRed` | – | When the time left is at most `InpCandleTimeWarnPct` % of the candle, and at `00:00` (market closed) |
+| `InpCandleTimeWarnPct` | int | 10 | – | Red in the last N % of the candle's length (owner, Q20: "when 10 % and less of the candle time remains"); range 0–100, 0 = red only at `00:00`. Replaces the earlier assumption `InpCandleTimeWarnSec` = 60 |
 | `InpSlLossFontSize` | int | 10 ★ | SL Dollar Loss Font Size | Size of the money-risk label on the SL line (F-18) |
 | `InpAutoScreenshot` | bool | true ★ | Automatic Screenshot After Actions | F-19 |
 | `InpShotWidth` / `InpShotHeight` | int | 0 / 0 | – | 0 = current chart size |

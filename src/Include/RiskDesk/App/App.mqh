@@ -79,6 +79,7 @@ private:
    CTradeGateway     m_gw;
    CMoney            m_money;
    CLines            m_lines;
+   CPendingOverlay   m_overlay;
    bool              m_running;
    bool              m_mouseEventsWere;
    bool              m_foregroundWas;   // "Chart on foreground" before RiskDesk switched it off
@@ -146,7 +147,7 @@ int CApp::Init()
               GetPointer(m_lines));
    m_ctl.Init(GetPointer(m_cfg), GetPointer(m_state), GetPointer(m_panel), GetPointer(m_status), GetPointer(m_cmd),
               GetPointer(m_layout), GetPointer(m_redraw), GetPointer(m_store), GetPointer(m_gw), GetPointer(m_money),
-              GetPointer(m_lines));
+              GetPointer(m_lines), GetPointer(m_overlay));
    m_ctl.ChartSizeChanged();   // chart size + auto-fit before the objects exist
 
    ResetLastError();
@@ -191,7 +192,7 @@ int CApp::Init()
       m_selfTest.Start(GetPointer(m_cfg), GetPointer(m_state), GetPointer(m_theme), GetPointer(m_layout),
                        GetPointer(m_panel), GetPointer(m_status), GetPointer(m_ctl), GetPointer(m_redraw),
                        GetPointer(m_store), GetPointer(m_gw), GetPointer(m_money), GetPointer(m_cmd),
-                       GetPointer(m_lines));
+                       GetPointer(m_lines), GetPointer(m_overlay));
 #endif
    m_ctl.Refresh();
    return INIT_SUCCEEDED;
@@ -213,7 +214,7 @@ void CApp::Deinit(const int reason)
    if(leaving)
      {
       m_panel.Destroy();
-      int lines = CLines::DeleteAll();
+      int lines = CLines::DeleteAll() + CPendingOverlay::DeleteAll();   // the orders themselves stay
       int rest = RdDeleteObjects("RD_");
       RD_LOG_INFO("Chart objects removed (" + IntegerToString(lines + rest) + " besides the panel)");
       if(m_foregroundWas)
@@ -357,7 +358,8 @@ void CApp::ConfigureTheme()
   }
 
 //+------------------------------------------------------------------+
-//| 05 section 5 line look from the Colors / Chart extras inputs.    |
+//| 05 sections 5-6 line look from the Colors / Chart extras inputs: |
+//| planning lines and the pending order overlay (F-22).             |
 //+------------------------------------------------------------------+
 void CApp::ConfigureLines()
   {
@@ -372,6 +374,12 @@ void CApp::ConfigureLines()
    ls.labelFont = m_theme.fontBody;
    ls.tpRR = m_cfg.tpRR;
    m_lines.Init(ls, GetPointer(m_redraw));
+   SOverlayStyle os;
+   os.Defaults();
+   os.entry = m_cfg.colorPendOverlayEntry;
+   os.sl = m_cfg.colorPendOverlaySL;
+   os.tp = m_cfg.colorPendOverlayTP;
+   m_overlay.Init(os, GetPointer(m_lines), GetPointer(m_redraw));
   }
 
 //+------------------------------------------------------------------+

@@ -92,6 +92,8 @@ private:
                                    const double tp, SResult &r);
    void              ReadSelectedPosition(SPosition &p) const;
    bool              ReadSelectedOrder(SOrder &o) const;
+   bool              OrderListed(const ulong ticket) const;
+   bool              WaitUnlisted(const ulong ticket) const;
    ulong             FindRemainder(const ulong oldTicket, const SSymbolSpec &s, const int type, const datetime openTime,
                                    const double openPrice, const double expected) const;
 

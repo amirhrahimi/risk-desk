@@ -21,8 +21,11 @@
 //|             side from the live preview (OP-06, OP-15, F-18,      |
 //|             F-33); the panel is raised above new chart objects;  |
 //|             screenshots after commands (F-19).                   |
+//|           - pending order overlay (P5, F-22): drawn every        |
+//|             refresh; a dropped overlay line runs OP-16.          |
 //|           View model and idle readout: App/ControllerModel.mqh.  |
 //|           Preview and lines: App/ControllerPreview.mqh.          |
+//|           Overlay and OP-16 drops: App/ControllerOverlay.mqh.    |
 //+------------------------------------------------------------------+
 #ifndef RD_APP_CONTROLLER_MQH
 #define RD_APP_CONTROLLER_MQH
@@ -46,6 +49,7 @@
 #include "..\UI\Widgets.mqh"
 #include "..\UI\Panel.mqh"
 #include "..\UI\Lines.mqh"
+#include "..\UI\PendingOverlay.mqh"
 #include "..\UI\StatusBar.mqh"
 #include "Settings.mqh"
 #include "State.mqh"
@@ -111,8 +115,12 @@ private:
    CTradeGateway    *m_gw;
    CMoney           *m_money;
    CLines           *m_lines;
+   CPendingOverlay  *m_overlay;
 
    SPreview          m_pv;
+   SOverlayItem      m_ov[];            // placed pending orders as drawn (F-22)
+   string            m_ovKey;           // orders + account of the last label texts
+   bool              m_ovOn;            // overlay objects may exist (removed when switched off)
    bool              m_tpWas;           // a TP line existed at the last refresh (manual deletion note)
    bool              m_raiseWanted;     // chart objects were created: raise the panel in this refresh
    string            m_tips[PB_COUNT];
@@ -153,12 +161,16 @@ private:
    void              ApplyPreview(SPanelModel &m) const;
    void              LineDropped(const ELineRole role);
    void              TakeShot(SResult &r);
+   //--- App/ControllerOverlay.mqh
+   bool              SyncOverlay();
+   void              OverlayLabels(const SOrder &arr[], const SAccountSpec &acc, const bool accOk);
+   void              OverlayDropped(const ulong ticket, const ELineRole role, const bool drag);
 
 public:
                      CController();
    void              Init(CSettings *cfg, CState *state, CPanel *panel, CStatusBar *status, CCommands *cmd,
                           CLayout *layout, CRdRedraw *redraw, CPersistence *store, CTradeGateway *gw, CMoney *money,
-                          CLines *lines);
+                          CLines *lines, CPendingOverlay *overlay);
    void              AdoptLines();
    string            LotsTip() const { return m_pv.lotsTip; }
    void              OnChartEvent(const int id, const long &lparam, const double &dparam, const string &sparam);
@@ -187,7 +199,10 @@ CController::CController()
    m_gw = NULL;
    m_money = NULL;
    m_lines = NULL;
+   m_overlay = NULL;
    m_pv.Reset();
+   m_ovKey = "";
+   m_ovOn = true;     // objects kept with the chart are removed if the overlay is off
    m_tpWas = false;
    m_raiseWanted = false;
    m_specOk = false;
@@ -210,9 +225,13 @@ CController::CController()
 //+------------------------------------------------------------------+
 void CController::Init(CSettings *cfg, CState *state, CPanel *panel, CStatusBar *status, CCommands *cmd,
                        CLayout *layout, CRdRedraw *redraw, CPersistence *store, CTradeGateway *gw, CMoney *money,
-                       CLines *lines)
+                       CLines *lines, CPendingOverlay *overlay)
   {
    m_lines = lines;
+   m_overlay = overlay;
+   ArrayResize(m_ov, 0);
+   m_ovKey = "";
+   m_ovOn = true;
    m_pv.Reset();
    m_raiseWanted = false;
    m_cfg = cfg;
@@ -267,12 +286,17 @@ void CController::OnChartEvent(const int id, const long &lparam, const double &d
          RiskEdited();
       return;
      }
-   //--- a planning line was dropped (or its price typed in its properties dialog)
+   //--- a planning line was dropped (or its price typed in its properties dialog);
+   //--- a line of a placed order's overlay was dropped: OP-16
    if(id == CHARTEVENT_OBJECT_DRAG || id == CHARTEVENT_OBJECT_CHANGE)
      {
       ELineRole role = LINEROLE_SL;
+      ulong ticket = 0;
       if(CLines::RoleOf(sparam, role))
          LineDropped(role);
+      else
+         if(CPendingOverlay::Parse(sparam, ticket, role))
+            OverlayDropped(ticket, role, id == CHARTEVENT_OBJECT_DRAG);
       return;
      }
    if(id == CHARTEVENT_MOUSE_MOVE)
@@ -403,6 +427,7 @@ void CController::Click(const EPanelButton b)
    if(m_cmd.TakeRaise())
       m_raiseWanted = true;
    m_pv.key = "";      // lines or positions may have changed
+   m_ovKey = "";       // pending orders too (overlay labels)
    m_riskAt = 0;       // open risk read again (F-29)
    m_idleAt = 0;
    if(b != PB_SHOT)    // the camera reports where the file went
@@ -582,6 +607,8 @@ void CController::Refresh()
                     m_layout.TerminalPx(RD_LY_LABEL_GAP));
    if(ApplyLabels())
       m_raiseWanted = true;
+   if(SyncOverlay())   // F-22: placed pending orders
+      m_raiseWanted = true;
    if(m_raiseWanted && !m_panel.Dragging())
      {
       m_raiseWanted = false;
@@ -597,5 +624,6 @@ void CController::Refresh()
 
 #include "ControllerModel.mqh"
 #include "ControllerPreview.mqh"
+#include "ControllerOverlay.mqh"
 
 #endif // RD_APP_CONTROLLER_MQH

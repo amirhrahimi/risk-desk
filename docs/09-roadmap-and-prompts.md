@@ -78,6 +78,7 @@ Every refusal must name the reason and the numbers. Compile clean and give me th
 ## P5 — Pending orders
 **Deliverables:** pending order overlay with drag-to-modify (`UI/PendingOverlay.mqh`, F-22, OP-16), OP-07/08. (Pending mode in Lines, OP-05 Add Pend Line and OP-06 Pending Info were done in P4, ADR-022; P5 adds the order placement to them.)
 **Done when:** T-13…T-15, T-23, T-39 pass on A1–A5.
+**Done in P5 (ADR-025):** besides the deliverables, the debug pending self-test (08 §3f) that runs T-13…T-15, T-23, T-39, F-22 and the pending part of T-08 unattended; `build/profile-guard.ps1` so unattended runs leave the terminal's charts as they were. T-23 is checked with `InpPendingExpiryHours=24`: no account has a symbol without GTC.
 
 ```text
 Read CLAUDE.md, docs/01 (F-07..F-10, F-22), docs/04 §7, docs/05 §5, docs/06 OP-05..OP-08, OP-16 and G-02/G-05/G-07/G-08, docs/03 BC-07/BC-08.

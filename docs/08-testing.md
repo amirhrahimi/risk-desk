@@ -87,7 +87,7 @@ powershell -File build/build.ps1
 ```
 The runner writes the one-time request file `Files/RiskDesk/uitest.request`, starts the terminal with RiskDesk (`InpTestUiSelfTest=true`) on a temporary chart, waits for `Files/RiskDesk/uitest/<PLATFORM>_<login>_report.txt` and copies the report and the screenshots to `-OutDir` (default `%TEMP%\RiskDesk-uitest`). The EA removes itself and closes the terminal. It never trades and uses `Files/RiskDesk/uitest/store/` instead of `ui.ini` / `acct_*.ini`.
 
-Covered: T-01 (objects, in view, ready status, prices, spread, fields, tooltips), T-02 (the five inputs), every button's status (R8), T-25 cooldown, hide/show, drag, clamp, T-20 (timeframe and symbol change with a planning line), T-21 (two runs: the second checks, after the real restart, what the first saved), text fit at scales 0.40–1.60 and every font preset, one and two columns (widgets inside the panel, none overlapping, rows level; ADR-023), T-37 (this chart and the fit arithmetic for 52 chart sizes per layout, and the Auto columns rule), the key=value file layer, the chart look (Chart on foreground switched off again, panel kept clear of the One-Click Trading panel); screenshots of each state and glyph sheets of Wingdings/Webdings. `ChartScreenShot` does not draw terminal overlays, so for the One-Click check the self-test writes `uitest/capture.request` and the runner saves a capture of the real terminal window (`<PLATFORM>_<login>_window_<name>.png` in `-OutDir`). Not covered: Windows scaling (T-24) and real mouse/keyboard input.
+Covered: T-01 (objects, in view, ready status, prices, spread, fields, tooltips), T-02 (the five inputs), every button's status (R8; from P5 Set Pending is clicked only after the pending lines were removed, and Del Pending only when no order is in its scope, so the suite still never trades), T-25 cooldown, hide/show, drag, clamp, T-20 (timeframe and symbol change with a planning line), T-21 (two runs: the second checks, after the real restart, what the first saved), text fit at scales 0.40–1.60 and every font preset, one and two columns (widgets inside the panel, none overlapping, rows level; ADR-023), T-37 (this chart and the fit arithmetic for 52 chart sizes per layout, and the Auto columns rule), the key=value file layer, the chart look (Chart on foreground switched off again, panel kept clear of the One-Click Trading panel); screenshots of each state and glyph sheets of Wingdings/Webdings. `ChartScreenShot` does not draw terminal overlays, so for the One-Click check the self-test writes `uitest/capture.request` and the runner saves a capture of the real terminal window (`<PLATFORM>_<login>_window_<name>.png` in `-OutDir`). Not covered: Windows scaling (T-24) and real mouse/keyboard input.
 
 ## 3e. Trade self-test (`build/run-uitest.ps1 -Suite trade`, debug build, phase P4)
 
@@ -124,6 +124,33 @@ powershell -File build/build.ps1
 | Netting account only: second buy merges after the confirmation (volume summed, new SL); a sell is refused; with `InpNettingAllowOpposite` it reduces the position after its confirmation | BC-10 (T-30 part) |
 
 `trade-basic` runs T-03, T-04, T-07, T-09, T-05, T-06, T-26/T-27 when they apply, and T-28: for the extra symbols of an account (gold, an index, a whole-contract CFD). A `-Permissions` run changes the terminal's saved Algo/AutoTrading setting; the next normal run switches it on again. Not covered: T-10 is the Risk % field (§3d, T-02); real mouse/keyboard input.
+
+The runners (`run-tests.ps1`, `run-script.ps1`, `run-uitest.ps1`) copy the terminal's active chart profile before they start it and put it back after it closed: MT4 otherwise keeps one more copy of the owner's chart after every start with a startup configuration (ADR-025). A `NOTE  chart profile restored …` line says when the terminal had added a chart.
+
+## 3f. Pending suite (`build/run-uitest.ps1 -Suite pending`, debug build, phase P5)
+
+The same runner, debug build and safety rules as §3e (demo accounts only, magic 772288, test lot about 2.5 × the minimum lot's risk and at most 1 %, own sandbox), with REAL pending orders placed 3 SL distances (at least 0.75 % of the price) away from the market so they do not fill during the run. Every test order is deleted again, also those of an aborted earlier run. Report and screenshots: `Files/RiskDesk/uitest/<PLATFORM>_<login>_pending_<symbol>_*`.
+
+```
+powershell -File build/build.ps1 -Debug
+powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol EURUSD -Suite pending -TimeoutSec 600
+powershell -File build/run-uitest.ps1 -Platform mt4 -Login A1 -Server IG-DEMO -Symbol EURUSD -Suite pending -TimeoutSec 600
+powershell -File build/build.ps1
+```
+
+| Check | Covers |
+|---|---|
+| Lines for each of the four types (Buy Stop, Buy Limit, Sell Stop, Sell Limit): Pending Info `<type> · <lots> lot`, Lots = the lots computed from the raw valuation, entry label; Set Pending → exactly one order of that type at the Entry line with the SL line, TP by the inputs' mode, volume = Lots; green status with the risk and ticket; lines removed; screenshot `_pending_<ticket>` | T-13, F-08, F-09 |
+| The order drawn by the overlay: `RD_PO_<ticket>_EN/SL/TP` at the order's values, entry dash-dot / SL and TP dashed, width 1, overlay colours, selectable and listed; labels `Buy Stop 0.02 @ 1.11351`, `SL −€4.99 (0.10 %)`, `TP +€4.96 (R 1.00)`; every order drawn; an SL changed outside the overlay is followed; a deleted overlay line comes back, the order stays; the overlay goes with a deleted order; `InpShowPendingOverlay` off → nothing drawn | F-22 |
+| Overlay drops (OP-16): SL farther → modified, label and open-risk readout updated, amber "risk now x % (panel y %)"; TP dragged → only the TP; entry dragged up → SL and TP move by the same distance, risk unchanged; entry below Ask → refused and snapped back; SL so far that the risk passes the per-trade cap → refused with the numbers, snapped back; the same above the total cap (old risk replaced) → refused; an overlay line deleted with the Delete key → drawn again, order intact; screenshot `_modify_<ticket>` | T-39 |
+| Test orders on the chart symbol and on a second Market Watch symbol (placed through the gateway); Del Pending → only the chart symbol's are deleted, "Deleted n of n pending orders on EURUSD", screenshot; a second click → amber "No pending orders on EURUSD". When someone else's orders are on the symbol, the check limits Del Pending to the test's own (tool scope) | T-15, F-10 |
+| Entry half the stops level from Ask → red "Entry too close to Ask for a Buy Stop: needs >= 40 pts (0.00040), move it to …", nothing sent; SL half the stops level from the entry → refused likewise. On a symbol without a stops level only Pending Info "Invalid: Entry at market - use Buy" is checked (no click) | T-14, F-09 AC2, BC-07 |
+| Set Pending with market lines / without lines → red PF-5 reason; Risk 0.01 % with a far SL → red "Min lot … would risk"; `InpConfirmTrades` answered No → amber "cancelled - nothing was sent" | F-09, T-09 (pending), F-28 |
+| R/R 2: (a) No TP: no TP line, order without TP; (b) Auto R/R: no TP line, TP = entry + 2 × SL distance; (c) Manual TP line: starts at R/R 2, follows an SL drop, stays where it was dragged; order TP = line | T-08 (pending part) |
+| `InpPendingExpiryHours=24`: order expiry ≈ server time + 24 h (MT5 `SPECIFIED`, MT4 expiration), the status says when; a server refusing expiry would leave it without one with an amber note; an overlay drop keeps the expiry (G-08) | T-23, BC-08 |
+| Netting account only: with an open buy, a Buy Stop is placed after the merge confirmation; a Sell Limit is refused | BC-10 (D27) |
+
+T-23 as written needs a symbol whose probe shows no GTC; none of the six accounts has one (2026-11-12 probes: GTC everywhere, XAUUSD.eu.custom on A3/A5 lacks only DAY), so the suite checks the expiry the user asks for instead. A ladder fallback after a real `INVALID_EXPIRATION` stays with the P8 test hooks.
 
 ## 4. Account and symbol matrix (L4)
 
@@ -177,7 +204,7 @@ Format: **ID — goal** · steps · expected. "Status" means the panel status ba
 | T-30 | Netting (A6) | Buy, Buy again, Sell, Half Close, Risk Free | Merge confirm; opposite refused by default; half close reduces; RF on averaged price |
 | T-31 | Cent (A7) | Buy with 1 % | Lots correct; labels show USC and $ |
 | T-32 | Multi-chart | RiskDesk on 2 charts, trades on both | Open risk counts both; Full Close from one closes all |
-| T-33 | Chart extras | Close a few trades with `CTO_REMOVE`, then `CTO_KEEP`; toggle Candle Time; place 2 pending orders with overlay on, move one with MetaTrader's own trade level, delete one | Closed-trade arrows removed/kept (user drawings untouched); countdown correct at M1 (`mm:ss`), H4 (`hh:mm:ss`), W1 (`Nd hh:mm:ss`), gold, red in the last `InpCandleTimeWarnSec` seconds and at `00:00` when the market is closed, keeps running between ticks; overlay follows orders exactly; no lag |
+| T-33 | Chart extras | Close a few trades with `CTO_REMOVE`, then `CTO_KEEP`; toggle Candle Time; place 2 pending orders with overlay on, move one with MetaTrader's own trade level, delete one | Closed-trade arrows removed/kept (user drawings untouched); countdown correct at M1 (`mm:ss`), H4 (`hh:mm:ss`), W1 (`Nd hh:mm:ss`), gold, red in the last `InpCandleTimeWarnPct` (10) % of the candle (M5: from `00:30`, H1: from `06:00`) and at `00:00` when the market is closed, keeps running between ticks; overlay follows orders exactly; no lag |
 | T-34 | Screenshot naming | Several actions + camera button | Files named per F-19 |
 | T-35 | Ambiguous result | Debug build, `InpTestForceAmbiguous=true` | Log shows check-before-resend; exactly one position |
 | T-36 | Original-tool regressions | The owner recorded only "nothing happens, Experts and Journal empty" for the original (2026-11-12) and closed the topic. On every account: Add Line, Buy with RiskDesk on EURUSD, XAUUSD and an index | Each click opens the trade or shows a red reason with a log line; never nothing (R8) |

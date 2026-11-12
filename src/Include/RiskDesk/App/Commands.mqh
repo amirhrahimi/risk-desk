@@ -10,9 +10,11 @@
 //|           (OP-05), the camera button (OP-14), confirmations      |
 //|           (F-28, BC-10) and the button tooltips.                 |
 //|           Buy / Sell (OP-03/04): App/CommandsTrade.mqh.          |
-//| Status  : P4. Set Pending and Del Pending (P5) and the           |
-//|           management buttons (P6) answer amber "not implemented  |
-//|           yet" with the phase that brings them.                  |
+//|           Set Pending (OP-07), Del Pending (OP-08) and moving a  |
+//|           placed order by its overlay line (OP-16):              |
+//|           App/CommandsPending.mqh.                               |
+//| Status  : P5. The management buttons (P6) answer amber "not     |
+//|           implemented yet" with the phase that brings them.      |
 //+------------------------------------------------------------------+
 #ifndef RD_APP_COMMANDS_MQH
 #define RD_APP_COMMANDS_MQH
@@ -87,6 +89,13 @@ private:
                             SResult &r);
    void              LinesDone();
 
+   //--- App/CommandsPending.mqh (OP-07, OP-08, OP-16)
+   bool              SetPending(SResult &r);
+   bool              Placed(const string order, const SSymbolSpec &s, const SAccountSpec &acc, const STradePlan &plan,
+                            const STradeOutcome &out, string notes, SResult &r);
+   bool              DelPending(SResult &r);
+   static bool       SameLevel(const SSymbolSpec &s, const double a, const double b);
+
 public:
                      CCommands();
    void              Init(CSettings *cfg, CState *state, CPersistence *store, CTradeGateway *gw, CMoney *money,
@@ -94,6 +103,7 @@ public:
 
    bool              SetRisk(const string text, SResult &r);
    bool              Run(const EPanelButton b, SResult &r);
+   bool              MoveOrder(const ulong ticket, const ELineRole role, const double dropped, SResult &r);
    bool              TakeRaise();
    bool              TakeShot(string &action, ulong &ticket);
    string            LastConfirm() const { return m_lastConfirm; }
@@ -185,6 +195,10 @@ bool CCommands::Run(const EPanelButton b, SResult &r)
          return OpenMarket(SIDE_SELL, r);
       case PB_ADDPEND:
          return AddPendLine(r);
+      case PB_SETPEND:
+         return SetPending(r);
+      case PB_DELPEND:
+         return DelPending(r);
       case PB_SHOT:
          return CameraShot(r);
       default:
@@ -283,7 +297,7 @@ bool CCommands::AddLine(SResult &r)
 
 //+------------------------------------------------------------------+
 //| OP-05 Add Pend Line (F-07): Entry + SL (+ TP) lines; market      |
-//| lines are replaced. Set Pending places the order (phase P5).     |
+//| lines are replaced. Set Pending places the order (OP-07).        |
 //+------------------------------------------------------------------+
 bool CCommands::AddPendLine(SResult &r)
   {
@@ -325,7 +339,8 @@ bool CCommands::AddPendLine(SResult &r)
    RD_LOG_INFO("[OP-05] Entry line at " + RdFormatPrice(s, pl.entry) + ", SL line at " + RdFormatPrice(s, pl.sl) +
                (pl.tp > 0.0 ? ", TP line at " + RdFormatPrice(s, pl.tp) : "") + " (Ask " + RdFormatPrice(s, q.ask) + ")");
    return RdOk(r, note + "Entry line at " + RdFormatPrice(s, pl.entry) + ", SL line at " + RdFormatPrice(s, pl.sl) +
-               (pl.tp > 0.0 ? ", TP line at " + RdFormatPrice(s, pl.tp) : "") + " - drag them; Pending Info shows the order type");
+               (pl.tp > 0.0 ? ", TP line at " + RdFormatPrice(s, pl.tp) : "") +
+               " - drag them (Pending Info shows the order type), then Set Pending");
   }
 
 //+------------------------------------------------------------------+
@@ -438,7 +453,7 @@ string CCommands::Phase(const EPanelButton b)
 
 bool CCommands::Implemented(const EPanelButton b)
   {
-   return Phase(b) == "P4";
+   return Phase(b) == "P4" || Phase(b) == "P5";
   }
 
 //+------------------------------------------------------------------+
@@ -465,9 +480,11 @@ string CCommands::Tooltip(const EPanelButton b, const string symbol) const
          return "Draw the Entry and SL lines" + (m_cfg.tpMode == TPMODE_MANUAL_LINE ? " and the TP line" : "") +
                 " for a pending order on " + symbol;
       case PB_SETPEND:
-         return "Place the pending order shown under Pending Info on " + symbol;
+         return "Place the pending order shown under Pending Info on " + symbol + ": lots from Risk % and the Entry - SL distance" +
+                (m_cfg.tpMode == TPMODE_AUTO_RR ? ", TP at R/R " + RdNum(m_cfg.tpRR, 2) : "") +
+                (m_cfg.pendingExpiryHours > 0 ? ", expires after " + IntegerToString(m_cfg.pendingExpiryHours) + " h" : "");
       case PB_DELPEND:
-         return "Delete " + onSymbol + "pending order on " + symbol;
+         return "Delete " + onSymbol + "pending order on " + symbol + " (open positions stay)";
       case PB_RISKFREE:
          return "Move the SL of " + onSymbol + "position on " + symbol + " that is in profit to break-even";
       case PB_HALF:
@@ -490,5 +507,6 @@ string CCommands::RiskTooltip() const
   }
 
 #include "CommandsTrade.mqh"
+#include "CommandsPending.mqh"
 
 #endif // RD_APP_COMMANDS_MQH

@@ -102,6 +102,51 @@ void TestV24(CTestRunner &t)
   }
 
 //+------------------------------------------------------------------+
+//| OP-16 decision (CheckMove): V-24 through it, risk not raised,    |
+//| orders that do not count towards the open risk.                  |
+//+------------------------------------------------------------------+
+void TestCheckMove(CTestRunner &t)
+  {
+   t.Begin("OP-16 CheckMove (moved pending order)");
+   SAccountSpec acc;
+   TfAccount(acc, "USD", 10000.0);
+   SPlanSettings cfg;
+   cfg.Defaults();
+   SBudgetResult bud;
+   SResult r;
+   //--- V-24 through CheckMove: a RiskDesk order, old 300 replaced
+   ASSERT_TRUE("V-24 needs the open risk", CRiskBudget::MoveNeedsOpenRisk(true, 300.0, 450.0));
+   ASSERT_TRUE("V-24 450 allowed", CRiskBudget::CheckMove(acc, cfg, true, 800.0, 300.0, 450.0, bud, r));
+   ASSERT_NEAR("V-24 9.5 %", bud.totalPct, 9.5, 1e-9);
+   ASSERT_FALSE("V-24 600 refused", CRiskBudget::CheckMove(acc, cfg, true, 800.0, 300.0, 600.0, bud, r));
+   ASSERT_CONTAINS("V-24 numbers", r.message, "open 8.00 % - 3.00 % + 6.00 % > 10 % cap");
+   //--- per-trade cap on the new risk (T-39 "risk exceeds 10 %")
+   ASSERT_FALSE("1,200 refused per trade", CRiskBudget::CheckMove(acc, cfg, true, 300.0, 300.0, 1200.0, bud, r));
+   ASSERT_CONTAINS("per-trade message", r.message, "Risk 12.00 % ($1,200.00) is above the 10 % per-trade cap");
+   //--- a move that does not raise the risk is always allowed (also above a cap, also with the open risk unknown)
+   ASSERT_FALSE("no open risk needed when lower", CRiskBudget::MoveNeedsOpenRisk(true, 300.0, 250.0));
+   ASSERT_FALSE("no open risk needed when equal", CRiskBudget::MoveNeedsOpenRisk(true, 300.0, 300.0));
+   ASSERT_TRUE("lower risk allowed", CRiskBudget::CheckMove(acc, cfg, true, 99999.0, 300.0, 250.0, bud, r));
+   ASSERT_TRUE("equal risk allowed (entry moved)", CRiskBudget::CheckMove(acc, cfg, true, 0.0, 300.0, 300.0, bud, r));
+   ASSERT_NEAR("its % reported", bud.tradePct, 3.0, 1e-9);
+   ASSERT_TRUE("an order above the per-trade cap can be tightened",
+               CRiskBudget::CheckMove(acc, cfg, false, 0.0, 1500.0, 1300.0, bud, r));
+   //--- an order that is not counted (manual, other EA): per-trade cap only, open risk ignored
+   ASSERT_FALSE("other order: no open risk needed", CRiskBudget::MoveNeedsOpenRisk(false, 300.0, 900.0));
+   ASSERT_TRUE("other order 900 allowed although open risk is high",
+               CRiskBudget::CheckMove(acc, cfg, false, 9500.0, 300.0, 900.0, bud, r));
+   ASSERT_FALSE("other order 1,100 refused per trade", CRiskBudget::CheckMove(acc, cfg, false, 0.0, 300.0, 1100.0, bud, r));
+   //--- values that cannot be judged
+   double nan = MathSqrt(-1.0);
+   ASSERT_FALSE("new risk NaN refused", CRiskBudget::CheckMove(acc, cfg, true, 0.0, 300.0, nan, bud, r));
+   ASSERT_TRUE("old risk unknown: open risk needed", CRiskBudget::MoveNeedsOpenRisk(true, nan, 100.0));
+   ASSERT_TRUE("old risk unknown: checked like a new order",
+               CRiskBudget::CheckMove(acc, cfg, true, 500.0, nan, 100.0, bud, r));
+   ASSERT_NEAR("nothing replaced: 500 + 100", bud.totalRisk, 600.0, 1e-9);
+   ASSERT_FALSE("old risk unknown, total above the cap", CRiskBudget::CheckMove(acc, cfg, true, 950.0, nan, 100.0, bud, r));
+  }
+
+//+------------------------------------------------------------------+
 void TestToolTradesOnly(CTestRunner &t)
   {
    t.Begin("Open risk counts tool trades only (F-16 AC3)");
@@ -191,6 +236,7 @@ void RunRiskBudgetTests(CTestRunner &t)
    TestV16(t);
    TestV17(t);
    TestV24(t);
+   TestCheckMove(t);
    TestToolTradesOnly(t);
    TestPendingWithoutSl(t);
    TestPerTradeCapAndBase(t);

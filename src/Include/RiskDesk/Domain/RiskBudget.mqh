@@ -16,6 +16,10 @@
 //|                           added = post-trade position (BC-10)    |
 //|      moved tool order   : removed = its old risk, added = new    |
 //|      moved other order  : CheckPerTrade only                     |
+//|   3. CheckMove: the OP-16 decision for a moved order (both rows  |
+//|      above, and a move that does not raise the order's risk is  |
+//|      always allowed); MoveNeedsOpenRisk says when the caller     |
+//|      must list the open risk first.                              |
 //| Equality at a cap is allowed.                                    |
 //+------------------------------------------------------------------+
 #ifndef RD_DOMAIN_RISKBUDGET_MQH
@@ -66,9 +70,15 @@ public:
    static bool       Check(const SAccountSpec &acc, const SPlanSettings &cfg, const double openRisk,
                            const double removedRisk, const double addedRisk, const double tradeRisk,
                            SBudgetResult &bud, SResult &r);
+   static bool       MoveNeedsOpenRisk(const bool counted, const double oldRisk, const double newRisk);
+   static bool       CheckMove(const SAccountSpec &acc, const SPlanSettings &cfg, const bool counted,
+                               const double openRisk, const double oldRisk, const double newRisk,
+                               SBudgetResult &bud, SResult &r);
    static string     Readout(const SAccountSpec &acc, const SPlanSettings &cfg, const double openRisk,
                              ESeverity &sev);
   };
+
+#define RD_BUDGET_MONEY_EPS  1e-9   // a move "raises" the risk only by more than this
 
 //+------------------------------------------------------------------+
 //| Sum over tool positions of max(0, lossToSl) (at or beyond break- |
@@ -169,6 +179,56 @@ bool CRiskBudget::Check(const SAccountSpec &acc, const SPlanSettings &cfg, const
      }
    return RdOk(r, "Open risk after this trade " + RdFormatPct(bud.totalPct) + " / " +
                RdFormatCapPct(cfg.maxTotalRiskPct));
+  }
+
+//+------------------------------------------------------------------+
+//| OP-16: is the open risk of the account needed to judge the move? |
+//| Only when the order counts towards it (a RiskDesk order with     |
+//| InpIncludePendingInTotalRisk) and the move raises its risk.      |
+//+------------------------------------------------------------------+
+bool CRiskBudget::MoveNeedsOpenRisk(const bool counted, const double oldRisk, const double newRisk)
+  {
+   if(!MathIsValidNumber(oldRisk) || !MathIsValidNumber(newRisk))
+      return counted;
+   return counted && newRisk > oldRisk + RD_BUDGET_MONEY_EPS;
+  }
+
+//+------------------------------------------------------------------+
+//| OP-16 / 04 section 5: a placed order is moved, its lot unchanged.|
+//|   new risk <= old risk  -> allowed (no total can grow); the       |
+//|                            per-trade cap is not applied, so an   |
+//|                            order above it can still be tightened |
+//|   counted order         -> per-trade cap on the new risk, then   |
+//|                            total with the old risk replaced      |
+//|   other order           -> per-trade cap only (manual orders and |
+//|                            other EAs' are not in the open risk)  |
+//| counted: the order is in 'openRisk' (tool order, pending orders  |
+//| counted). openRisk is used only when MoveNeedsOpenRisk().        |
+//+------------------------------------------------------------------+
+bool CRiskBudget::CheckMove(const SAccountSpec &acc, const SPlanSettings &cfg, const bool counted,
+                            const double openRisk, const double oldRisk, const double newRisk,
+                            SBudgetResult &bud, SResult &r)
+  {
+   bud.Reset();
+   r.Reset();
+   if(!MathIsValidNumber(newRisk))
+      return RdFail(r, "The risk of the moved order cannot be valued");
+   if(MathIsValidNumber(oldRisk) && newRisk <= oldRisk + RD_BUDGET_MONEY_EPS)
+     {
+      bud.base = CRiskMath::RiskBase(cfg.riskBase, acc.balance, acc.equity);
+      bud.tradeRisk = MathMax(0.0, newRisk);
+      bud.tradePct = (bud.base > 0.0) ? bud.tradeRisk / bud.base * 100.0 : 0.0;
+      return RdOk(r, "Risk not raised by the move");
+     }
+   if(!counted)
+     {
+      if(!CheckPerTrade(acc, cfg, newRisk, bud, r))
+         return false;
+      return RdOk(r, "Per-trade cap only (the order does not count towards the open risk)");
+     }
+   // an old risk that cannot be valued replaces nothing: checked like a new order
+   double removed = MathIsValidNumber(oldRisk) ? oldRisk : 0.0;
+   return Check(acc, cfg, openRisk, removed, newRisk, newRisk, bud, r);
   }
 
 //+------------------------------------------------------------------+

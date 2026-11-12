@@ -68,7 +68,7 @@ allowed  ⇔  pctNew ≤ InpMaxRiskPerTradePct  AND  (openRisk + actualRisk) / b
 - Tool position with `sl == 0` → open risk is unknown → refuse new trades: "Position #123 (XAUUSD) has no SL – total risk cannot be computed".
 - Netting (BC-10): a same-direction add replaces the SL of the whole position, so the check uses the **post-trade** position: `(oldVol + lots)` at the new SL, minus the old position's contribution.
 - Equality at the cap is allowed (`≤`).
-- Moving a placed pending order (OP-16): the lot stays fixed and `pctNew` is the order's risk at the new entry/SL. For a tool order the old contribution is replaced, not added (`openRisk − oldRisk(o) + newRisk(o)`). Other orders (manual, other EAs) are checked against `InpMaxRiskPerTradePct` only.
+- Moving a placed pending order (OP-16): the lot stays fixed and `pctNew` is the order's risk at the new entry/SL. For a tool order the old contribution is replaced, not added (`openRisk − oldRisk(o) + newRisk(o)`). Other orders (manual, other EAs) are checked against `InpMaxRiskPerTradePct` only. A move that does not raise the order's risk is allowed without the caps (P5, D29; `CRiskBudget::CheckMove`).
 - Platform computes `lossToSl` per item (it needs `LossPerLot`), Domain sums and decides.
 
 ## 6. Market side validation (F-06)

@@ -259,9 +259,44 @@ bool CTradeGateway::DeletePending(const ulong ticket, SResult &r)
    c.side = o.side;
    int done = 0;
    if(!Send(op, GWACT_REMOVE, q, s, c, done, r))
+     {
+      // a delete refused for a ticket the terminal then drops was done already (06 section 3)
+      if(WaitUnlisted(ticket))
+        {
+         RD_LOG_INFO("[" + op + "] " + who + " already gone (" + r.message + ")");
+         return RdWarn(r, "Order " + who + " no longer exists");
+        }
       return false;
+     }
+   // the terminal can list a deleted order a moment longer (observed: Dukascopy MT4); wait, so the
+   // caller's next list (overlay, Del Pending again) no longer shows it
+   if(!WaitUnlisted(ticket))
+      RD_LOG_WARN("[" + op + "] " + who + " deleted, but the terminal still lists it");
    RD_LOG_INFO("[" + op + "] " + o.symbol + " done: " + who + " deleted");
    return RdOk(r, RdOrderText(o.side, o.kind) + " " + who + " deleted");
+  }
+
+// The ticket is in the terminal's list of open orders (what G-06 / G-07 read).
+bool CTradeGateway::OrderListed(const ulong ticket) const
+  {
+   for(int i = OrdersTotal() - 1; i >= 0; i--)
+      if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES) && (ulong)OrderTicket() == ticket)
+         return true;
+   return false;
+  }
+
+// Until the terminal no longer lists the ticket, at most about 2 s. True when it is gone.
+bool CTradeGateway::WaitUnlisted(const ulong ticket) const
+  {
+   for(int i = 0; i < 2 * RD_GW_SELECT_TRIES; i++)
+     {
+      if(!OrderListed(ticket))
+         return true;
+      if(IsStopped())
+         break;
+      Sleep(RD_GW_SELECT_SLEEP_MS);
+     }
+   return !OrderListed(ticket);
   }
 
 //+------------------------------------------------------------------+
@@ -300,6 +335,7 @@ bool CTradeGateway::ReadSelectedOrder(SOrder &o) const
    o.tp       = OrderTakeProfit();
    o.magic    = OrderMagicNumber();
    o.lossToSl = 0.0;
+   o.expiration = OrderExpiration();
    return true;
   }
 

@@ -3,6 +3,33 @@
 All notable changes to this project are documented here. Format: Keep a Changelog; versions: SemVer.
 
 ## [Unreleased]
+### Changed
+- Q20 answered: the candle countdown turns red when 10 % or less of the candle time is left, and at `00:00`. The input `InpCandleTimeWarnPct` (10, range 0–100, 0 = only at `00:00`) replaces `InpCandleTimeWarnSec` (60). The countdown itself comes in P7 (01 F-21, 05 §6, 07, 08 T-33).
+- Q22 answered: requotes stay as they are. There is one `InpSlippagePoints` for every symbol and broker, with no broker-specific settings, and a requote that outlasts the retries ends red with nothing opened (03 §3, 07).
+
+## [0.5.0] - 2026-11-12 - Phase P5: Pending orders
+### Added
+- Set Pending (OP-07, F-09, `App/CommandsPending.mqh`): the order type from the Entry/SL lines (04 §7), stops-level refusals naming the distance and the price to move to (BC-07), TP by mode (F-17), BC-05 valuation, lots from Entry − SL, MT5 volume limit, per-trade and total risk caps, margin at the entry price, `InpConfirmTrades`, G-02 with the BC-06 pending filling ladder, the BC-08 expiration ladder and SL verification (R7). Status `Buy Stop 0.02 EURUSD @1.11351 placed · risk €4.99 (0.10 %) · #2085419900` (+ `· expires … server time`); lines removed; screenshot `pending`. Netting accounts (BC-10, D27): an order in the position's direction is checked as the merged position and confirmed; an opposite one is refused unless `InpNettingAllowOpposite`.
+- Del Pending (OP-08, F-10): every pending order in chart scope (`InpScopeChartOps`; MT5 stop-limit orders included), tickets collected first, "Deleted 3 of 3 pending orders on EURUSD", amber with the reasons when some could not be deleted or were filled meanwhile; screenshot `delpending`.
+- Pending order overlay (F-22, `UI/PendingOverlay.mqh`, `App/ControllerOverlay.mqh`): every placed order in chart scope drawn as `RD_PO_<ticket>_EN/SL/TP` (entry dash-dot, SL/TP dashed, overlay colours) with labels `Buy Stop 0.02 @ 1.11351`, `SL −€4.99 (0.10 %)`, `TP +€4.96 (R 1.00)`; follows changes made anywhere (MetaTrader's trade levels, other tools), goes with the order, redraws a deleted line, `InpShowPendingOverlay` switches it.
+- Moving a placed order by dropping its overlay line (OP-16, ADR-014): entry moves the whole order, SL/TP only their level; order type, stops and freeze levels checked; the risk with the lot unchanged against the caps (old risk replaced for RiskDesk orders; a move that does not raise the risk is always allowed, D29); amber "risk now x % (panel y %)"; refused moves snap back; G-08 keeps the order's expiry; screenshot `modify`.
+- Domain: `CRiskBudget::CheckMove` / `MoveNeedsOpenRisk` with unit tests (632 checks). `SOrder.expiration`, filled by both gateways.
+- Debug pending self-test (`build/run-uitest.ps1 -Suite pending`, 08 §3f, `App/UiSelfTestPending*.mqh`): real pending orders far from the price on demo accounts only, covering T-13, T-14, T-15, T-23, T-39, F-22, the pending part of T-08, the Set Pending refusals and the netting confirmation.
+- `build/profile-guard.ps1`: the runners copy the terminal's chart profile before a run and restore it afterwards.
+- ADR-025; assumed details D27–D32; 08 §3f.
+
+### Fixed
+- G-05 (both platforms): Dukascopy MT4 kept listing a deleted order for a moment, so the overlay still drew it and a second Del Pending answered red "Ticket not found". The gateway now waits until the terminal drops the ticket, and a delete that fails for a ticket that is then gone counts as already deleted (amber).
+- Every unattended MT4 start (unit tests, scripts, self-tests) left one more copy of the owner's chart in the terminal's profile: MT4 keeps the startup chart as a temporary chart that takes a chart-file number without removing the old file (also the cause of the 74 charts seen in P4). The runners now put the profile back after each run; the two copies made by today's P5 runs were removed (backed up).
+
+### Changed
+- The panel self-test clicks Set Pending only after removing the pending lines and Del Pending only when no order is in its scope, so it still never trades.
+- 04 §5, 05 §6, 06 OP-07/OP-08/OP-16: the P5 details (ADR-025); 03 §3: what the P5 runs showed.
+
+### Verified
+- Both targets 0 errors / 0 warnings (release and debug). Unit tests 632 passed, 0 failed on MT4 and MT5 (0.5.0).
+- Pending self-test with real demo orders (08 §3f), 2026-11-12, 0 failed in every run: A1 IG MT4 (EURUSD, XAUUSD, US30: 38 checks each, incl. the T-14 stops-level refusals at 40 / 200 / 150 pts), A2 IC Markets EU MT4 (EURUSD, XAUUSD, US30: 37), A3 IC Markets EU MT5 (EURUSD, XAUUSD, US30: 37), A4 Dukascopy MT4 (EURUSD, XAUUSD, USA30.IDX, AUS.IDX: 37, after the G-05 fix), A5 Dukascopy MT5 (same four: 37), A6 MetaQuotes netting (EURUSD, XAUUSD: 39, incl. the netting checks). The G-05 change was re-run on A3, A4 and A5, and GatewaySmoke passed 12 of 12 on A4 and A5 (reports in `broker-profiles/`).
+- Panel self-test 66 passed, 0 failed on A1 and A3 (Set Pending / Del Pending clicks that send nothing); trade-basic 20 passed, 0 failed on A3 EURUSD (P4 regression).
 
 ## [0.4.0] - 2026-11-12 - Phase P4: Market orders
 ### Added

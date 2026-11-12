@@ -320,8 +320,9 @@ void CUiSelfTest::StepRisk()
 //| R8: every button answers with a status and a log line; the       |
 //| button pops back up. Buttons of later phases are amber "not      |
 //| implemented yet". The order (Add Line, Delete Line, then Buy and |
-//| Sell without lines) never sends an order. Then the cooldown      |
-//| (F-06 AC6).                                                      |
+//| Sell without lines, Set Pending after the pending lines were     |
+//| removed, Del Pending only when no order is in its scope) never   |
+//| sends an order. Then the cooldown (F-06 AC6).                    |
 //+------------------------------------------------------------------+
 void CUiSelfTest::StepButtons()
   {
@@ -329,6 +330,27 @@ void CUiSelfTest::StepButtons()
      {
       EPanelButton pb = (EPanelButton)b;
       string name = CPanel::ButtonName(pb);
+      if(pb == PB_SETPEND)
+        {
+         CLines::DeleteAll();   // Add Pend Line left its lines: Set Pending must not place an order
+         m_state.lineMode = LINES_NONE;
+        }
+      if(pb == PB_DELPEND)
+        {
+         STradeFilter f;
+         f.Reset();
+         f.symbol = _Symbol;
+         f.toolOnly = (m_cfg.scopeChartOps == SCOPE_TOOL_ON_SYMBOL);
+         f.includeStopLimit = true;
+         SOrder ord[];
+         SResult lr;
+         if(!m_gw.ListPending(f, ord, lr) || ArraySize(ord) > 0)
+           {
+            Line("INFO R8 Del Pending not clicked: it would delete " + IntegerToString(ArraySize(ord)) + " pending order(s) on " +
+                 _Symbol + " (the panel suite never trades; the pending suite checks it)");
+            continue;
+           }
+        }
       string before = m_status.Text();
       ClickObject(name);
       string text = m_status.Text();
@@ -337,6 +359,10 @@ void CUiSelfTest::StepButtons()
                       ((m_status.Severity() == SEV_WARN && StringFind(text, "not implemented yet") >= 0) || refused);
       if(pb == PB_BUY || pb == PB_SELL)
          answered = refused && StringFind(text, "no SL line") >= 0;
+      if(pb == PB_SETPEND)
+         answered = refused && StringFind(text, "no Entry and SL lines") >= 0;
+      if(pb == PB_DELPEND)
+         answered = m_status.Severity() == SEV_WARN && StringFind(text, "No ") == 0 && StringFind(text, "pending orders on") > 0;
       Check(answered && Prop(name, OBJPROP_STATE) == 0, "R8 " + CPanel::ButtonCaption(pb),
             RdSeverityText(m_status.Severity()) + " '" + text + "'");
      }

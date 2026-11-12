@@ -90,7 +90,7 @@ input bool              InpShowCandleTime            = true;              // Can
 input int               InpCandleTimeFontSize        = 10;                // Candle Time Font Size
 input color             InpColorCandleTime           = clrGold;           // Candle time colour
 input color             InpColorCandleTimeWarn       = clrRed;            // Candle time colour near the close
-input int               InpCandleTimeWarnSec         = 60;                // Candle time red below seconds (0 = only at 00:00)
+input int               InpCandleTimeWarnPct         = 10;                // Candle time red in the last % of the candle (0 = only at 00:00)
 input int               InpSlLossFontSize            = 10;                // SL Dollar Loss Font Size
 input bool              InpAutoScreenshot            = true;              // Automatic Screenshot After Actions
 input int               InpShotWidth                 = 0;                 // Screenshot width px (0 = chart size)
