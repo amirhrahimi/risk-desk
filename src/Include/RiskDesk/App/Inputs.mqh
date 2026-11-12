@@ -96,6 +96,7 @@ input bool              InpAutoScreenshot            = true;              // Aut
 input int               InpShotWidth                 = 0;                 // Screenshot width px (0 = chart size)
 input int               InpShotHeight                = 0;                 // Screenshot height px (0 = chart size)
 input bool              InpShowPendingOverlay        = true;              // Draw placed pending orders (drag to modify)
+input double            InpDefaultOffsetPct          = 15.0;              // Add Line: SL distance in % of the visible price range
 
 //--- Panel / Font
 #ifdef __MQL5__
@@ -107,6 +108,7 @@ input EFontPreset       InpFontPreset                = FONT_SEGOE_UI;     // Pan
 input int               InpFontSize                  = 8;                 // Font Size
 input double            InpScale                     = 1.0;               // Shape Size Scale (0.40 - 1.60)
 input bool              InpAutoFitPanel              = true;              // Auto fit panel size to chart/monitor
+input EPanelColumns     InpPanelColumns              = PANEL_COLUMNS_AUTO; // Panel columns
 input int               InpPanelX                    = 20;                // X Start
 input int               InpPanelY                    = 40;                // Y Start
 input bool              InpStartHidden               = false;             // Start with the panel hidden

@@ -15,7 +15,14 @@
 //|           - Refresh: quote, spread, prices on Buy/Sell, button   |
 //|             looks, idle readout, debounced ui.ini save, panel    |
 //|             self-repair; one ChartRedraw per cycle.              |
+//|           - planning lines (P4): dropped lines snap to the tick  |
+//|             grid and the manual TP line follows; manual deletion |
+//|             is detected; Lots / Pending Info / labels / dimmed   |
+//|             side from the live preview (OP-06, OP-15, F-18,      |
+//|             F-33); the panel is raised above new chart objects;  |
+//|             screenshots after commands (F-19).                   |
 //|           View model and idle readout: App/ControllerModel.mqh.  |
+//|           Preview and lines: App/ControllerPreview.mqh.          |
 //+------------------------------------------------------------------+
 #ifndef RD_APP_CONTROLLER_MQH
 #define RD_APP_CONTROLLER_MQH
@@ -30,16 +37,57 @@
 #include "..\Platform\Market.mqh"
 #include "..\Platform\Money.mqh"
 #include "..\Platform\TradeGateway.mqh"
+#include "..\Domain\Planner.mqh"
 #include "..\Services\Logger.mqh"
 #include "..\Services\Persistence.mqh"
+#include "..\Services\Screenshot.mqh"
 #include "..\UI\Theme.mqh"
 #include "..\UI\Layout.mqh"
 #include "..\UI\Widgets.mqh"
 #include "..\UI\Panel.mqh"
+#include "..\UI\Lines.mqh"
 #include "..\UI\StatusBar.mqh"
 #include "Settings.mqh"
 #include "State.mqh"
 #include "Commands.mqh"
+
+// What the planning lines mean right now (OP-06, OP-15, F-18, F-33).
+struct SPreview
+  {
+   string            key;             // inputs of the last computation (05 section 3: skip when unchanged)
+   string            lotsText;
+   bool              lotsWarn;
+   string            lotsTip;
+   string            pinfoText;
+   bool              pinfoWarn;
+   string            pinfoTip;
+   bool              dimBuy;
+   bool              dimSell;
+   string            buyWhy;
+   string            sellWhy;
+   string            label[RD_LINE_ROLES];
+   color             labelColor[RD_LINE_ROLES];
+
+   void              Reset()
+     {
+      key = "";
+      lotsText = "";
+      lotsWarn = false;
+      lotsTip = "";
+      pinfoText = "";
+      pinfoWarn = false;
+      pinfoTip = "";
+      dimBuy = false;
+      dimSell = false;
+      buyWhy = "";
+      sellWhy = "";
+      for(int i = 0; i < RD_LINE_ROLES; i++)
+        {
+         label[i] = "";
+         labelColor[i] = clrNONE;
+        }
+     }
+  };
 
 #define RD_CTL_SPEC_MS        60000   // symbol spec re-read (02 section 7.2: cached, refreshed every 60 s)
 #define RD_CTL_IDLE_MS        1000    // idle readout warnings
@@ -62,7 +110,11 @@ private:
    CPersistence     *m_store;
    CTradeGateway    *m_gw;
    CMoney           *m_money;
+   CLines           *m_lines;
 
+   SPreview          m_pv;
+   bool              m_tpWas;           // a TP line existed at the last refresh (manual deletion note)
+   bool              m_raiseWanted;     // chart objects were created: raise the panel in this refresh
    string            m_tips[PB_COUNT];
    SSymbolSpec       m_spec;
    bool              m_specOk;
@@ -90,11 +142,25 @@ private:
    void              ToggleHide();
    void              RiskEdited();
    static string     AgeText(const int seconds);
+   //--- App/ControllerPreview.mqh
+   void              SyncLines();
+   void              ComputePreview(const SQuote &q, const bool quoteOk);
+   void              PreviewMarket(const SLines &l, const SQuote &q, const SAccountSpec &acc, const SPlanSettings &p);
+   void              PreviewPending(const SLines &l, const SQuote &q, const SAccountSpec &acc, const SPlanSettings &p);
+   string            RiskLabel(const SAccountSpec &acc, const STradePlan &plan) const;
+   string            RewardLabel(const SAccountSpec &acc, const STradePlan &plan) const;
+   bool              ApplyLabels();
+   void              ApplyPreview(SPanelModel &m) const;
+   void              LineDropped(const ELineRole role);
+   void              TakeShot(SResult &r);
 
 public:
                      CController();
    void              Init(CSettings *cfg, CState *state, CPanel *panel, CStatusBar *status, CCommands *cmd,
-                          CLayout *layout, CRdRedraw *redraw, CPersistence *store, CTradeGateway *gw, CMoney *money);
+                          CLayout *layout, CRdRedraw *redraw, CPersistence *store, CTradeGateway *gw, CMoney *money,
+                          CLines *lines);
+   void              AdoptLines();
+   string            LotsTip() const { return m_pv.lotsTip; }
    void              OnChartEvent(const int id, const long &lparam, const double &dparam, const string &sparam);
    void              OnTimer();
    void              OnTick();
@@ -120,6 +186,10 @@ CController::CController()
    m_store = NULL;
    m_gw = NULL;
    m_money = NULL;
+   m_lines = NULL;
+   m_pv.Reset();
+   m_tpWas = false;
+   m_raiseWanted = false;
    m_specOk = false;
    m_specMsg = "";
    m_mismatch = "";
@@ -139,8 +209,12 @@ CController::CController()
 
 //+------------------------------------------------------------------+
 void CController::Init(CSettings *cfg, CState *state, CPanel *panel, CStatusBar *status, CCommands *cmd,
-                       CLayout *layout, CRdRedraw *redraw, CPersistence *store, CTradeGateway *gw, CMoney *money)
+                       CLayout *layout, CRdRedraw *redraw, CPersistence *store, CTradeGateway *gw, CMoney *money,
+                       CLines *lines)
   {
+   m_lines = lines;
+   m_pv.Reset();
+   m_raiseWanted = false;
    m_cfg = cfg;
    m_state = state;
    m_panel = panel;
@@ -191,6 +265,14 @@ void CController::OnChartEvent(const int id, const long &lparam, const double &d
      {
       if(CPanel::IsRiskEdit(sparam))
          RiskEdited();
+      return;
+     }
+   //--- a planning line was dropped (or its price typed in its properties dialog)
+   if(id == CHARTEVENT_OBJECT_DRAG || id == CHARTEVENT_OBJECT_CHANGE)
+     {
+      ELineRole role = LINEROLE_SL;
+      if(CLines::RoleOf(sparam, role))
+         LineDropped(role);
       return;
      }
    if(id == CHARTEVENT_MOUSE_MOVE)
@@ -275,8 +357,8 @@ void CController::OnTick()
   }
 
 //+------------------------------------------------------------------+
-//| 06 section 0 steps 1, 6, 7. P3 commands run instantly; the       |
-//| working look and busy flag are in place for P4-P6.               |
+//| 06 section 0 steps 1, 6, 7: guard, report, cleanup; then the     |
+//| screenshot the command asked for, after the redraw (F-19).       |
 //+------------------------------------------------------------------+
 void CController::Click(const EPanelButton b)
   {
@@ -315,8 +397,18 @@ void CController::Click(const EPanelButton b)
    m_cmd.Run(b, r);
    m_state.busy = false;
    m_state.busyButton = -1;
-   Report(r);
+   // T-25: requests are synchronous, so a second click made while a trade was being sent
+   // arrives only now; the cooldown counts from the end of the command as well.
+   m_state.lastClickAt[b] = GetTickCount();
+   if(m_cmd.TakeRaise())
+      m_raiseWanted = true;
+   m_pv.key = "";      // lines or positions may have changed
+   m_riskAt = 0;       // open risk read again (F-29)
+   m_idleAt = 0;
+   if(b != PB_SHOT)    // the camera reports where the file went
+      Report(r);
    Refresh();
+   TakeShot(r);
   }
 
 //+------------------------------------------------------------------+
@@ -420,10 +512,13 @@ void CController::ApplyFit()
   {
    m_fitPending = false;
    double before = m_layout.Scale();
+   int colsBefore = m_layout.Columns();
    if(!m_layout.Fit(m_chartW, m_chartH))
       return;
    m_panel.Relayout();
-   RD_LOG_INFO("Panel scale " + RdNum(before, 2) + " -> " + RdNum(m_layout.Scale(), 2) + " (chart " +
+   RD_LOG_INFO("Panel scale " + RdNum(before, 2) + " -> " + RdNum(m_layout.Scale(), 2) +
+               (colsBefore != m_layout.Columns() ? ", " + IntegerToString(colsBefore) + " -> " : ", ") +
+               (m_layout.Columns() == 2 ? "2 columns" : "1 column") + " (chart " +
                IntegerToString(m_chartW) + " x " + IntegerToString(m_chartH) + " px, Shape Size Scale " +
                RdNum(m_layout.UserScale(), 2) + (m_cfg.autoFitPanel ? ", auto-fit" : "") + ")");
   }
@@ -479,6 +574,19 @@ void CController::Refresh()
       m_idleAt = now;
       UpdateIdle(q, quoteOk);
      }
+   //--- planning lines: manual deletion, preview, labels; the panel above new objects
+   SyncLines();
+   ComputePreview(q, quoteOk);
+   // labels keep clear of the panel as it is shown now (ADR-024)
+   m_lines.SetAvoid(m_panel.ShownX(), m_panel.ShownY(), m_layout.Width(), m_layout.ShownHeight(m_panel.Collapsed()),
+                    m_layout.TerminalPx(RD_LY_LABEL_GAP));
+   if(ApplyLabels())
+      m_raiseWanted = true;
+   if(m_raiseWanted && !m_panel.Dragging())
+     {
+      m_raiseWanted = false;
+      m_panel.Raise();
+     }
    SPanelModel m;
    BuildModel(m, q, quoteOk);
    m_status.Fill(m, m_panel.StatusWidth());
@@ -488,5 +596,6 @@ void CController::Refresh()
   }
 
 #include "ControllerModel.mqh"
+#include "ControllerPreview.mqh"
 
 #endif // RD_APP_CONTROLLER_MQH

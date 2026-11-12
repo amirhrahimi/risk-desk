@@ -93,7 +93,7 @@ Rules:
 | Module | Responsibility |
 |---|---|
 | Theme | Colours, fonts, sizes (from Settings) |
-| Layout | Scaled geometry (scale × DPI/96, scale reduced by auto-fit F-34); computes every widget rectangle from a y-cursor |
+| Layout | Scaled geometry (scale × DPI/96, scale reduced by auto-fit F-34), one or two columns (ADR-023); computes every widget rectangle from a y-cursor |
 | Widgets | Thin wrappers over chart objects: `CRdButton`, `CRdEdit`, `CRdLabel`, `CRdRect`. Create/update only when a property changed (dirty flags) |
 | Panel | Builds the panel (05-ui-spec §2), drag, hide, clamp-to-view, exposes `Render(SPanelModel&)` |
 | Lines | Create/adopt/delete SL/TP/Entry lines and their text labels; read prices |

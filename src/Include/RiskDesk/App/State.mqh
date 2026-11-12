@@ -30,8 +30,10 @@ public:
    int               inputY;
    bool              uiDirty;           // save ui.ini when 1 s has passed since uiDirtyAt
    uint              uiDirtyAt;
-   //--- lines (P4/P5)
+   //--- lines (05 section 5)
    ELineMode         lineMode;
+   //--- last screenshot written (F-19), "" = none in this run
+   string            lastShot;
    //--- commands (06 section 0)
    bool              busy;
    int               busyButton;        // EPanelButton while busy, -1 otherwise
@@ -53,6 +55,7 @@ public:
       uiDirty = false;
       uiDirtyAt = 0;
       lineMode = LINES_NONE;
+      lastShot = "";
       busy = false;
       busyButton = -1;
       for(int i = 0; i < PB_COUNT; i++)

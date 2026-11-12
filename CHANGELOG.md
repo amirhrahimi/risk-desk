@@ -4,6 +4,36 @@ All notable changes to this project are documented here. Format: Keep a Changelo
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-12 - Phase P4: Market orders
+### Added
+- Planning lines (`UI/Lines.mqh`, 05 §5): SL line (+ TP line in Manual TP line mode) for market orders, Entry + SL (+ TP) for pending orders; created selected, adopted after a timeframe change or restart, snapped to the tick grid when dropped; labels right of the current candle (F-18): `SL  -$5.74 (0.06 %) · 0.02 lot · 287 pts`, `TP  +$11.48 (R 2.00) · 574 pts`, `ENTRY  Buy Stop  1.11288`, amber when invalid or below the minimum lot. A line deleted by hand drops to a consistent mode with an amber note. The panel stays drawn above the lines.
+- Add Line (OP-01), Delete Line (OP-02), Add Pend Line (OP-05) with the default placement of 05 §5 (at least the stops level away; clamped into view without crossing the price); the manual TP line follows SL/Entry drops at the R/R distance until the user drags it (`InpTpFollowsSl`).
+- Live preview (OP-15, OP-06): Lots for the side the SL implies, `—` when invalid, red `0.003 < 0.01` below the minimum lot; Pending Info `Buy Stop · 0.01 lot` or `Invalid: …`; Buy or Sell dimmed when the lines make that side invalid (F-33), the tooltip says why.
+- Buy / Sell (OP-03/04, `App/CommandsTrade.mqh`): permissions, spec, quote, Risk %, lines, side and stops-level validation, BC-05 valuation, commission (F-30), MT5 volume limit, lots rounded down, per-trade and total risk caps with the numbers (F-16, a RiskDesk position without SL blocks new trades), margin pre-check with needed / free / max lots and optional reduce-to-margin (F-31), netting (BC-10: same-direction add confirmed and checked as the merged position; opposite refused unless `InpNettingAllowOpposite`, then close + open), `InpConfirmTrades`, G-01. Status with the risk at the fill price and the ticket; lines removed (unless kept); screenshot.
+- Screenshots (`Services/Screenshot.mqh`, F-19 / OP-14): after Buy/Sell and from the camera button, `Files/RiskDesk/Screenshots/<login>_<symbol>_<TF>_<yyyy-mm-dd_HH-MM-SS>_<action>_<ticket>.png`.
+- Input `InpDefaultOffsetPct` (15 %, 05 §5; was missing from 07).
+- `Platform/Market.mqh`: `InSession` (trading sessions of the terminal). `Platform/History.mqh`: `grossProfit` of a closed trade.
+- Domain: `CPlanner::MarketLines`, `PendingLines`, `FollowTp` with unit tests (611 checks).
+- Debug trade self-test (`App/UiSelfTestTrade*.mqh`, `build/run-uitest.ps1 -Suite trade | trade-basic [-Permissions off]`, 08 §3e): real orders on demo accounts only (R13), own magic, every test position closed again; covers T-03…T-09, T-11, T-12, T-25…T-28, F-16 AC3, F-28 (confirm trades), F-33 and the netting confirmations.
+- ADR-022; assumed details D21–D26; 08 §3e.
+- Two-column panel (ADR-023, owner's T-24 feedback): input `InpPanelColumns` = Auto (default) / One / Two. Auto shows two columns (Risk %…Set Pending on the left; Pending Info, Del Pending…Full Close on the same rows on the right; title and status across both) when one column would have to shrink below 85 % of Shape Size Scale to fit the chart. A1's 429 px chart: two columns at scale 0.92 instead of one at 0.59.
+- Line labels keep clear of the panel (ADR-024, owner): a label the panel would cover is drawn left of the panel (right of it when there is no room on the left).
+
+### Fixed
+- MT4: dimmed buttons were drawn almost white: MQL4 evaluates `(c & 0xFF) - (d & 0xFF)` unsigned, so the colour blend wrapped around (`CTheme::Blend`).
+- A second click made while a slow order was being sent (synchronous requests) could pass the click cooldown; the cooldown now also counts from the end of the command (T-25).
+- Status bar: the line wrap was cached by font size only; a font preset change kept the old wrap (text wider than the panel).
+- Lots and Pending Info cut their text when the field was narrow ("Buy Stop · 0.27" without "lot"); they now get a smaller font like the buttons. The status wrap no longer starts a line with a unit ("% / 10 %").
+- 11: the assumed-details table broke after D20 (a blank line before D21).
+
+### Changed
+- 09: Add Pend Line and Pending Info (display) moved from P5 to P4 (T-03 needs them); 05 §5 placement and label anchoring refined; 07 lists `InpDefaultOffsetPct`.
+- `build/run-uitest.ps1`: `-Suite panel | trade | trade-basic`, `-Permissions on | off`; trade reports are named after the symbol. It warns when a run makes the terminal's profile grow (MT4 had collected one chart per start), and a window capture shows the test chart (brought to the front first).
+
+### Verified
+- Both targets 0 errors / 0 warnings (release and debug). Unit tests 611 passed, 0 failed on MT4 and MT5.
+- Trade self-test with real demo orders through the panel's buttons (08 §3e), 2026-11-12: A1 IG MT4 (EURUSD, XAUUSD, US30), A2 IC Markets EU MT4 (EURUSD, XAUUSD, US30), A3 IC Markets EU MT5 (EURUSD, XAUUSD, US30, SA40), A4 Dukascopy MT4 (EURUSD, XAUUSD, USA30.IDX, AUS.IDX), A5 Dukascopy MT5 (same four), A6 MetaQuotes netting (EURUSD, XAUUSD): every run 0 failed in its final form (full suite 32–35 checks, basic 18–19), including T-26 (Algo Trading off, A1 and A3) and T-27 (SA40 outside its session, A3). IG gold needed `InpSlippagePoints` 60 (Q22). Panel self-test 66 passed, 0 failed on A1 and A3 (with the two-column checks).
+
 ## [0.3.0] - 2026-11-12 - Phase P3: UI shell
 ### Added
 - The panel (05-ui-spec, ADR-021): title with accent, hide/show toggle, Risk % and Lots fields, the eleven trading buttons, Pending Info, spread, a 3-line status bar and the camera button, built only from standard chart objects. Drag by the move handle (chart scrolling off while dragging), clamp so the whole panel stays in view, DPI scaling (scale × DPI / 96, fonts × scale with a 6 pt floor), auto-fit to the chart size (F-34, debounced 300 ms, grows back up to Shape Size Scale), six font presets, all colour inputs, tooltips that say what each button affects, live Ask/Bid on Buy/Sell, spread in points or pips with an optional amber threshold.

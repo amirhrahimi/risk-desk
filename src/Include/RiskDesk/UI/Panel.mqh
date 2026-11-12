@@ -78,6 +78,7 @@ public:
    void              Init(CLayout *layout, CTheme *theme, CRdRedraw *redraw);
    bool              Build();
    void              Destroy();
+   bool              Raise();
    bool              ObjectsOk() const;
    void              Relayout();
 
@@ -198,6 +199,22 @@ void CPanel::Destroy()
    for(int i = 0; i < PI_COUNT; i++)
       m_w[i].Destroy();
    m_built = false;
+  }
+
+//+------------------------------------------------------------------+
+//| Chart objects are drawn in creation order (ADR-021): the SL/TP   |
+//| lines and labels created after the panel would be drawn across   |
+//| it. Creating the panel objects again puts the panel on top. The  |
+//| next Render writes every text and colour again (caches cleared). |
+//+------------------------------------------------------------------+
+bool CPanel::Raise()
+  {
+   if(!m_built || m_dragging)
+      return false;
+   for(int i = 0; i < PI_COUNT; i++)
+      ObjectDelete(0, ItemName((EPanelItem)i));
+   m_refit = true;
+   return Build();
   }
 
 bool CPanel::ObjectsOk() const
@@ -460,7 +477,8 @@ void CPanel::Render(const SPanelModel &m)
    m_w[PI_RISK].SetTooltip(m.riskTip);
    m_w[PI_RISK_CAP].SetTooltip(m.riskTip);
 
-   m_w[PI_LOTS].SetText(m.lotsText);
+   // read-only fields: a smaller font rather than a cut text (T-24: "Buy Stop · 0.27" lost its "lot")
+   FitText(PI_LOTS, m_theme.fontBody, body, m.lotsText);
    m_w[PI_LOTS].SetColors(m.lotsWarn ? m_theme.statusError : m_theme.text, m_theme.fieldBg, m_theme.fieldBorder);
    m_w[PI_LOTS].SetTooltip(m.lotsTip);
    m_w[PI_LOTS_CAP].SetTooltip(m.lotsTip);
@@ -487,7 +505,7 @@ void CPanel::Render(const SPanelModel &m)
       m_w[item].SetTooltip(m.buttonTip[b]);
      }
 
-   m_w[PI_PINFO].SetText(m.pinfoText);
+   FitText(PI_PINFO, m_theme.fontBody, body, m.pinfoText);
    m_w[PI_PINFO].SetColors(m.pinfoWarn ? m_theme.statusWarn : m_theme.text, m_theme.fieldBg, m_theme.fieldBorder);
    m_w[PI_PINFO].SetTooltip(m.pinfoTip);
    m_w[PI_PINFO_CAP].SetTooltip(m.pinfoTip);

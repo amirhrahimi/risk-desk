@@ -438,8 +438,125 @@ void TestMovePendingLevels(CTestRunner &t)
   }
 
 //+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
+//| 05 section 5 default placement of Add Line (P4).                 |
+//+------------------------------------------------------------------+
+void TestMarketLinePlacement(CTestRunner &t)
+  {
+   t.Begin("Add Line placement (05 section 5)");
+   SSymbolSpec s;
+   TfFx(s);
+   SPlanSettings cfg;
+   cfg.Defaults();
+   SQuote q;
+   TfQuote(q, 1.10000, 1.10010);
+   SLinePlacement p;
+   SResult r;
+   bool ok = CPlanner::MarketLines(q, 1.09000, 1.11000, 15.0, s, cfg, p, r);
+   ASSERT_TRUE("placed", ok);
+   ASSERT_NEAR("O = 15 % of range", p.offset, 0.003, 1e-12);
+   ASSERT_NEAR("SL = Bid - O", p.sl, 1.09700, 1e-12);
+   ASSERT_NEAR("no TP line in Auto R/R mode", p.tp, 0.0, 1e-12);
+   cfg.tpMode = TPMODE_MANUAL_LINE;
+   CPlanner::MarketLines(q, 1.09000, 1.11000, 15.0, s, cfg, p, r);
+   ASSERT_NEAR("manual TP = Ask + RR x (Ask - SL)", p.tp, 1.10320, 1e-12);
+   cfg.tpMode = TPMODE_AUTO_RR;
+
+   //--- clamped 5 % inside the low edge
+   TfQuote(q, 1.09920, 1.09930);
+   CPlanner::MarketLines(q, 1.09900, 1.10100, 15.0, s, cfg, p, r);
+   ASSERT_NEAR("SL below view -> lo + 5 %", p.sl, 1.09910, 1e-12);
+   //--- the clamp would cross the price: not applied
+   TfQuote(q, 1.09905, 1.09915);
+   CPlanner::MarketLines(q, 1.09900, 1.10100, 15.0, s, cfg, p, r);
+   ASSERT_NEAR("clamp above Bid not applied", p.sl, 1.09875, 1e-12);
+   //--- at least the stops level + 2 ticks
+   s.stopsLevel = 40;
+   TfQuote(q, 1.10000, 1.10010);
+   CPlanner::MarketLines(q, 1.09900, 1.10100, 15.0, s, cfg, p, r);
+   ASSERT_NEAR("O raised to stops + 2 ticks", p.offset, 0.00042, 1e-12);
+   ASSERT_NEAR("SL outside the stops level", p.sl, 1.09958, 1e-12);
+   s.stopsLevel = 0;
+   //--- unknown range: 0.5 % of the price
+   CPlanner::MarketLines(q, 0.0, 0.0, 15.0, s, cfg, p, r);
+   ASSERT_NEAR("fallback range", p.range, 0.0, 1e-12);
+   ASSERT_NEAR("SL from 0.5 % of price", p.sl, 1.09917, 1e-12);
+  }
+
+void TestPendingLinePlacement(CTestRunner &t)
+  {
+   t.Begin("Add Pend Line placement (05 section 5)");
+   SSymbolSpec s;
+   TfFx(s);
+   SPlanSettings cfg;
+   cfg.Defaults();
+   cfg.tpMode = TPMODE_MANUAL_LINE;
+   cfg.tpRR = 2.0;
+   SQuote q;
+   TfQuote(q, 1.10000, 1.10010);
+   SLinePlacement p;
+   SResult r;
+   bool ok = CPlanner::PendingLines(q, 1.09000, 1.11000, 15.0, s, cfg, p, r);
+   ASSERT_TRUE("placed", ok);
+   ASSERT_NEAR("Entry = Ask + O", p.entry, 1.10310, 1e-12);
+   ASSERT_NEAR("SL = Entry - 1.5 O", p.sl, 1.09860, 1e-12);
+   ASSERT_NEAR("TP above view -> hi - 5 %", p.tp, 1.10900, 1e-12);
+   SSymbolSpec gold;
+   TfSpec(gold, "XAUUSD", 2, 0.01, 0.01, 1.0, 0.01, 0.01, 100.0);
+   TfQuote(q, 4000.00, 4000.30);
+   cfg.tpMode = TPMODE_NONE;
+   CPlanner::PendingLines(q, 3900.0, 4100.0, 15.0, gold, cfg, p, r);
+   ASSERT_NEAR("gold entry", p.entry, 4030.30, 1e-9);
+   ASSERT_NEAR("gold SL", p.sl, 3985.30, 1e-9);
+   ASSERT_NEAR("no TP line without Manual TP line", p.tp, 0.0, 1e-12);
+   SLines l;
+   TfLines(l, LINES_PENDING, p.entry, p.sl, 0.0);
+   SPlanSettings plan;
+   plan.Defaults();
+   STradePlan tp;
+   ok = CPlanner::Pending(l, q, gold, plan, tp, r);
+   ASSERT_TRUE("default pending lines classify", ok);
+   ASSERT_EQ_STR("as a Buy Stop", RdOrderText(tp.side, tp.kind), "Buy Stop");
+  }
+
+void TestFollowTp(CTestRunner &t)
+  {
+   t.Begin("Manual TP line follows the SL (F-17 AC3)");
+   SSymbolSpec s;
+   TfFx(s);
+   SPlanSettings cfg;
+   cfg.Defaults();
+   cfg.tpMode = TPMODE_MANUAL_LINE;
+   cfg.tpRR = 2.0;
+   SQuote q;
+   TfQuote(q, 1.10000, 1.10010);
+   SLines l;
+   double tp = 0.0;
+   SResult r;
+   TfLines(l, LINES_MARKET, 0.0, 1.09800, 1.10100);
+   ASSERT_TRUE("buy side", CPlanner::FollowTp(l, q, s, cfg, tp, r));
+   ASSERT_NEAR("TP = Ask + 2 x (Ask - SL)", tp, 1.10430, 1e-12);
+   TfLines(l, LINES_MARKET, 0.0, 1.10300, 1.09900);
+   ASSERT_TRUE("sell side", CPlanner::FollowTp(l, q, s, cfg, tp, r));
+   ASSERT_NEAR("TP = Bid - 2 x (SL - Bid)", tp, 1.09400, 1e-12);
+   TfLines(l, LINES_MARKET, 0.0, 1.10005, 1.10100);
+   ASSERT_FALSE("SL inside the spread: no side", CPlanner::FollowTp(l, q, s, cfg, tp, r));
+   cfg.tpRR = 1.5;
+   TfLines(l, LINES_PENDING, 1.10300, 1.10100, 0.0);
+   ASSERT_TRUE("pending long", CPlanner::FollowTp(l, q, s, cfg, tp, r));
+   ASSERT_NEAR("TP = Entry + 1.5 x (Entry - SL)", tp, 1.10600, 1e-12);
+   TfLines(l, LINES_PENDING, 1.09800, 1.10000, 0.0);
+   ASSERT_TRUE("pending short", CPlanner::FollowTp(l, q, s, cfg, tp, r));
+   ASSERT_NEAR("TP = Entry - 1.5 x (SL - Entry)", tp, 1.09500, 1e-12);
+   TfLines(l, LINES_PENDING, 1.09800, 1.09800, 0.0);
+   ASSERT_FALSE("entry = SL", CPlanner::FollowTp(l, q, s, cfg, tp, r));
+  }
+
 void RunPlannerTests(CTestRunner &t)
   {
+   TestMarketLinePlacement(t);
+   TestPendingLinePlacement(t);
+   TestFollowTp(t);
    TestV19(t);
    TestV20(t);
    TestV23(t);

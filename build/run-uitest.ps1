@@ -8,20 +8,30 @@
     in a DEBUG build: run 'build.ps1 -Debug' first, and 'build.ps1' afterwards to
     put the release build back.
 
+    Suites (-Suite):
+      panel        (default) the P3 panel checks; never trades.
+      trade        the P4 trade checks: Add Line / Add Pend Line / Delete Line,
+                   Lots preview, Buy / Sell with REAL orders on a DEMO account
+                   only (rule R13, checked by the EA), magic 772288, every test
+                   position closed again. One run per symbol.
+      trade-basic  the trade checks without T-08/T-11/T-12/T-25 and netting:
+                   for the extra symbols of an account (XAUUSD, an index).
+
     The runner
       1. writes the one-time request file MQLx\Files\RiskDesk\uitest.request
-         (without it the self-test input is ignored, so a chart left in a
-         profile never re-runs the test),
+         with the suite (without it the self-test input is ignored, so a chart
+         left in a profile never re-runs the test),
       2. starts the terminal with a startup configuration that logs into
          -Login on -Server (saved password; none is passed or stored), opens a
          chart of -Symbol and attaches Experts\RiskDesk\RiskDesk with
          InpTestUiSelfTest=true (a .set file in the Presets folder),
-      3. waits for MQLx\Files\RiskDesk\uitest\<PLATFORM>_<login>_report.txt; the
-         EA removes itself and closes the terminal when it is done,
+      3. waits for MQLx\Files\RiskDesk\uitest\<PLATFORM>_<login>_report.txt
+         (trade suites: <PLATFORM>_<login>_trade_<symbol>_report.txt); the EA
+         removes itself and closes the terminal when it is done,
       4. copies the report and the screenshots to -OutDir and prints the report.
     Exit code 0 when the report says "0 failed".
 
-    The self-test never trades; it keeps ui.ini / acct_*.ini in the sandbox
+    The panel suite never trades. Both keep ui.ini / acct_*.ini in the sandbox
     MQLx\Files\RiskDesk\uitest\store (the owner's saved state is not touched).
     T-21 needs two runs on the same terminal: the second checks, after the real
     restart, what the first saved.
@@ -31,6 +41,8 @@
 .EXAMPLE
     powershell -File build/build.ps1 -Debug -Target mt5
     powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol EURUSD
+    powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol EURUSD -Suite trade
+    powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol XAUUSD -Suite trade-basic
     powershell -File build/build.ps1
 #>
 param(
@@ -40,6 +52,12 @@ param(
     [Parameter(Mandatory = $true)][string]$Symbol,
     [string]$Inputs = '',            # extra EA inputs 'Key=Value;Key=Value'
     [string]$Period = 'H1',
+    [ValidateSet('panel', 'trade', 'trade-basic')][string]$Suite = 'panel',
+    # T-26: 'off' starts the terminal with Algo/AutoTrading switched off (MT5 [Experts] Enabled=0,
+    # MT4 ExpertsTrades=false; tested in P4 - MT5 AllowLiveTrading=0 and MT4 ExpertsEnable=false
+    # did not stop the startup EA from trading). The terminal keeps the setting: the next normal
+    # run switches it on again.
+    [ValidateSet('on', 'off')][string]$Permissions = 'on',
     [string]$OutDir = (Join-Path $env:TEMP 'RiskDesk-uitest'),
     [int]$TimeoutSec = 240
 )
@@ -73,7 +91,7 @@ $filesDir = Join-Path $data "$mql\Files\RiskDesk"
 $testDir = Join-Path $filesDir 'uitest'
 if (-not (Test-Path -LiteralPath $filesDir)) { New-Item -ItemType Directory -Path $filesDir -Force | Out-Null }
 $request = Join-Path $filesDir 'uitest.request'
-[IO.File]::WriteAllText($request, "requested by build/run-uitest.ps1 $(Get-Date -Format s)`r`n", [Text.Encoding]::ASCII)
+[IO.File]::WriteAllText($request, "requested by build/run-uitest.ps1 $(Get-Date -Format s)`r`nsuite=$Suite`r`n", [Text.Encoding]::ASCII)
 
 #--- EA inputs: a .set file in the Presets folder
 $setName = "RiskDesk-uitest-$PID.set"
@@ -92,13 +110,15 @@ foreach ($d in $dirs) {
 
 #--- startup configuration (no password: the terminal's saved one is used)
 $ini = Join-Path $env:TEMP "RiskDesk-run-uitest-$PID.ini"
+$algo = if ($Permissions -eq 'off') { 0 } else { 1 }
 if ($Platform -eq 'mt5') {
     $lines = @('[Common]', "Login=$Login", "Server=$Server",
-               '[Experts]', 'AllowLiveTrading=1', 'AllowDllImport=0', 'Enabled=1',
+               '[Experts]', 'AllowLiveTrading=1', 'AllowDllImport=0', "Enabled=$algo",
                '[StartUp]', 'Expert=RiskDesk\RiskDesk', "ExpertParameters=$setName", "Symbol=$Symbol", "Period=$Period")
     $arguments = @("/config:`"$ini`"")
 } else {
-    $lines = @("Login=$Login", "Server=$Server", 'ExpertsEnable=true', 'ExpertsTrades=true', 'ExpertsDllImport=false',
+    $trades = if ($algo -eq 1) { 'true' } else { 'false' }
+    $lines = @("Login=$Login", "Server=$Server", 'ExpertsEnable=true', "ExpertsTrades=$trades", 'ExpertsDllImport=false',
                'Expert=RiskDesk\RiskDesk', "ExpertParameters=$setName", "Symbol=$Symbol", "Period=$Period")
     $arguments = @("`"$ini`"")
 }
@@ -141,6 +161,13 @@ $captureRequest = Join-Path $testDir 'capture.request'
 Remove-Item -LiteralPath $captureRequest -Force -ErrorAction SilentlyContinue
 
 $reportName = "${tag}_${Login}_report.txt"
+$filePrefix = "${tag}_${Login}_"
+if ($Suite -ne 'panel') {
+    # the EA names the trade reports after the symbol: / \ : * ? " < > | and spaces become _
+    $safe = ($Symbol -replace '[\\/:*?"<>| ]', '_')
+    $reportName = "${tag}_${Login}_trade_${safe}_report.txt"
+    $filePrefix = "${tag}_${Login}_trade_${safe}_"
+}
 function Get-FreshReport([datetime]$since) {
     $p = Join-Path $testDir $reportName
     if (-not (Test-Path -LiteralPath $p)) { return $null }
@@ -149,7 +176,21 @@ function Get-FreshReport([datetime]$since) {
     return $null
 }
 
-Write-Host "RUN   $Platform $Login@$Server  RiskDesk panel self-test on $Symbol $Period  inputs: $($setLines -join ';')"
+#--- the terminal saves its open charts into the active profile when it closes. MT4 once grew its
+#--- profile by one chart per start (a chart01.CHR with an upper-case extension was loaded as an
+#--- extra chart every time): count the profile's charts before and after, and say so if it grew.
+function Get-ProfileCharts {
+    $dir = $null
+    if ($Platform -eq 'mt4') {
+        $last = Join-Path $data 'profiles\lastprofile.ini'
+        $name = if (Test-Path -LiteralPath $last) { ([string](Get-Content -LiteralPath $last -TotalCount 1)).Trim() } else { 'default' }
+        $dir = Join-Path $data "profiles\$name"
+    } else { $dir = Join-Path $data 'MQL5\Profiles\Charts\Default' }
+    if (-not (Test-Path -LiteralPath $dir)) { return @($dir, -1) }
+    return @($dir, @(Get-ChildItem -LiteralPath $dir -File | Where-Object { $_.Extension -ieq '.chr' }).Count)
+}
+$profileBefore = Get-ProfileCharts
+Write-Host "RUN   $Platform $Login@$Server  RiskDesk self-test '$Suite' on $Symbol $Period  permissions: $Permissions  inputs: $($setLines -join ';')"
 $started = (Get-Date).AddSeconds(-1)
 $found = $null
 try {
@@ -189,9 +230,13 @@ if (-not $found) {
 }
 if (-not (Test-Path -LiteralPath $OutDir)) { New-Item -ItemType Directory -Path $OutDir -Force | Out-Null }
 $copied = 0
-Get-ChildItem -LiteralPath $testDir -Filter "${tag}_${Login}_*" -File | Where-Object { $_.LastWriteTime -ge $started } | ForEach-Object {
+Get-ChildItem -LiteralPath $testDir -Filter "${filePrefix}*" -File | Where-Object { $_.LastWriteTime -ge $started } | ForEach-Object {
     Copy-Item -LiteralPath $_.FullName -Destination $OutDir -Force
     $copied++
+}
+$profileAfter = Get-ProfileCharts
+if ($profileBefore[1] -ge 0 -and $profileAfter[1] -gt $profileBefore[1]) {
+    Write-Host "WARN  the terminal's profile $($profileAfter[0]) grew from $($profileBefore[1]) to $($profileAfter[1]) charts during this run"
 }
 Get-Content -LiteralPath $found.FullName | ForEach-Object { Write-Host $_ }
 Write-Host "OK    $copied file(s) copied to $OutDir"

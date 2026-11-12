@@ -78,6 +78,7 @@ private:
    CController       m_ctl;
    CTradeGateway     m_gw;
    CMoney            m_money;
+   CLines            m_lines;
    bool              m_running;
    bool              m_mouseEventsWere;
    bool              m_foregroundWas;   // "Chart on foreground" before RiskDesk switched it off
@@ -89,6 +90,7 @@ private:
    void              LoadUiState();
    string            CheckChartSymbol();
    void              ConfigureTheme();
+   void              ConfigureLines();
 
 public:
                      CApp() { m_running = false; m_mouseEventsWere = false; m_foregroundWas = false; }
@@ -121,7 +123,8 @@ int CApp::Init()
    if(m_cfg.testUiSelfTest && !selfTest)
       RD_LOG_WARN("TEST: panel self-test input is on, but no request file " + CUiSelfTest::RequestFile() + " - ignored");
    if(selfTest)
-      m_store.SetDir(CUiSelfTest::StoreDir());   // the owner's ui.ini / acct_*.ini are never touched
+      // the owner's ui.ini / acct_*.ini are never touched
+      m_store.SetDir(CUiSelfTest::StoreDirFor(m_selfTest.Active() ? m_selfTest.Suite() : CUiSelfTest::RequestedSuite()));
 #endif
    // No saved state is read or written in the Strategy Tester.
    m_store.Enable(!RdIsTester());
@@ -132,14 +135,18 @@ int CApp::Init()
    string symbolNote = CheckChartSymbol();
 
    ConfigureTheme();
-   m_layout.Configure(m_cfg.scale, m_cfg.autoFitPanel, RdTerminalDpi(), m_cfg.fontSize, m_theme.fontBody, m_theme.fontTitle);
+   m_layout.Configure(m_cfg.scale, m_cfg.autoFitPanel, m_cfg.panelColumns, RdTerminalDpi(), m_cfg.fontSize,
+                      m_theme.fontBody, m_theme.fontTitle);
    m_status.Init(GetPointer(m_layout), GetPointer(m_theme), m_cfg.statusHoldSec);
    m_panel.Init(GetPointer(m_layout), GetPointer(m_theme), GetPointer(m_redraw));
    m_panel.SetWanted(m_state.panelX, m_state.panelY);
    m_panel.SetCollapsed(m_state.hidden);
-   m_cmd.Init(GetPointer(m_cfg), GetPointer(m_state), GetPointer(m_store));
+   ConfigureLines();
+   m_cmd.Init(GetPointer(m_cfg), GetPointer(m_state), GetPointer(m_store), GetPointer(m_gw), GetPointer(m_money),
+              GetPointer(m_lines));
    m_ctl.Init(GetPointer(m_cfg), GetPointer(m_state), GetPointer(m_panel), GetPointer(m_status), GetPointer(m_cmd),
-              GetPointer(m_layout), GetPointer(m_redraw), GetPointer(m_store), GetPointer(m_gw), GetPointer(m_money));
+              GetPointer(m_layout), GetPointer(m_redraw), GetPointer(m_store), GetPointer(m_gw), GetPointer(m_money),
+              GetPointer(m_lines));
    m_ctl.ChartSizeChanged();   // chart size + auto-fit before the objects exist
 
    ResetLastError();
@@ -160,6 +167,7 @@ int CApp::Init()
    long login = CAccountSpec::Login();
    if(login > 0 && login != m_state.riskLogin)
       m_ctl.LoadRisk(login);
+   m_ctl.AdoptLines();   // F-23: the planning lines on the chart decide the mode
 
    //--- first message (rule R8: the user sees what happened)
    SResult r;
@@ -173,7 +181,7 @@ int CApp::Init()
       else
          if(firstRun)
             RdOk(r, RD_PRODUCT + " " + RD_VERSION + " ready - risk " + RdFormatPct(m_state.riskPct) +
-                 " per trade. Trading buttons arrive in phases P4-P6");
+                 " per trade. Add Line, drag the SL, then Buy or Sell");
    if(r.message != "")
       m_ctl.Report(r);
 
@@ -182,7 +190,8 @@ int CApp::Init()
    if(selfTest && !m_selfTest.Active())
       m_selfTest.Start(GetPointer(m_cfg), GetPointer(m_state), GetPointer(m_theme), GetPointer(m_layout),
                        GetPointer(m_panel), GetPointer(m_status), GetPointer(m_ctl), GetPointer(m_redraw),
-                       GetPointer(m_store));
+                       GetPointer(m_store), GetPointer(m_gw), GetPointer(m_money), GetPointer(m_cmd),
+                       GetPointer(m_lines));
 #endif
    m_ctl.Refresh();
    return INIT_SUCCEEDED;
@@ -345,6 +354,24 @@ void CApp::ConfigureTheme()
    m_theme.SetButton(PB_CHARTCLOSE, m_cfg.colorChartClose, m_cfg.colorText);
    m_theme.SetButton(PB_FULLCLOSE, m_cfg.colorFullClose, m_cfg.colorText);
    m_theme.SetButton(PB_SHOT, m_cfg.colorBg, m_cfg.colorText);
+  }
+
+//+------------------------------------------------------------------+
+//| 05 section 5 line look from the Colors / Chart extras inputs.    |
+//+------------------------------------------------------------------+
+void CApp::ConfigureLines()
+  {
+   SLineStyle ls;
+   ls.Defaults();
+   ls.sl = m_cfg.colorSL;
+   ls.tp = m_cfg.colorTP;
+   ls.entry = m_cfg.colorEntry;
+   ls.slLabel = m_cfg.colorSlLoss;
+   ls.width = m_cfg.lineWidth;
+   ls.labelSize = m_cfg.slLossFontSize;
+   ls.labelFont = m_theme.fontBody;
+   ls.tpRR = m_cfg.tpRR;
+   m_lines.Init(ls, GetPointer(m_redraw));
   }
 
 //+------------------------------------------------------------------+

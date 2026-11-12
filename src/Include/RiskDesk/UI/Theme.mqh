@@ -42,6 +42,33 @@ enum EButtonLook
 
 #define RD_THEME_DIM_FACTOR   0.40
 
+//+------------------------------------------------------------------+
+//| Characters for texts drawn by chart objects and for status       |
+//| messages. MT4 draws object text in the ANSI code page (ADR-021): |
+//| the minus sign U+2212 becomes "?" there, the middle dot U+00B7   |
+//| and the em dash U+2014 survive.                                  |
+//+------------------------------------------------------------------+
+string RdGlyphMinus()
+  {
+   return RD_OBJ_TEXT_UNICODE ? ShortToString((ushort)0x2212) : "-";
+  }
+
+string RdGlyphDot()
+  {
+   return ShortToString((ushort)0x00B7);
+  }
+
+string RdGlyphDash()
+  {
+   return ShortToString((ushort)0x2014);
+  }
+
+// " . " between the parts of a message: "Buy 0.50 EURUSD @1.10012 . risk $100.00 (1.00 %)"
+string RdSep()
+  {
+   return " " + RdGlyphDot() + " ";
+  }
+
 class CTheme
   {
 public:
@@ -216,9 +243,18 @@ color CTheme::Blend(const color from, const color to, const double f)
    double k = MathMax(0.0, MathMin(1.0, f));
    int c1 = (int)from;
    int c2 = (int)to;
-   int r = (int)MathRound((c1 & 0xFF) + (((c2 & 0xFF) - (c1 & 0xFF)) * k));
-   int g = (int)MathRound(((c1 >> 8) & 0xFF) + ((((c2 >> 8) & 0xFF) - ((c1 >> 8) & 0xFF)) * k));
-   int b = (int)MathRound(((c1 >> 16) & 0xFF) + ((((c2 >> 16) & 0xFF) - ((c1 >> 16) & 0xFF)) * k));
+   // Channels into signed ints first: MQL4 types an expression with a hex literal such as
+   // (c & 0xFF) as unsigned, so "(c2 & 0xFF) - (c1 & 0xFF)" wrapped around instead of going
+   // negative and every dimmed button came out almost white (found in P4).
+   int r1 = (c1 & 255);
+   int g1 = ((c1 >> 8) & 255);
+   int b1 = ((c1 >> 16) & 255);
+   int r2 = (c2 & 255);
+   int g2 = ((c2 >> 8) & 255);
+   int b2 = ((c2 >> 16) & 255);
+   int r = (int)MathRound(r1 + (r2 - r1) * k);
+   int g = (int)MathRound(g1 + (g2 - g1) * k);
+   int b = (int)MathRound(b1 + (b2 - b1) * k);
    return (color)(r | (g << 8) | (b << 16));
   }
 

@@ -38,6 +38,55 @@ void CUiSelfTest::CheckTextFits(const string where)
          bad = RdJoin(bad, name + " '" + text + "' " + IntegerToString(w) + " px in " +
                       IntegerToString(Prop(name, OBJPROP_XSIZE)), "; ");
      }
+   //--- the read-only fields shrink their font too (T-24: "Buy Stop · 0.27" had lost its "lot")
+   string fields[] = {"RD_E_LOTS", "RD_E_PINFO"};
+   for(int i = 0; i < ArraySize(fields); i++)
+     {
+      int w = 0;
+      int h = 0;
+      CLayout::TextSize(ObjectGetString(0, fields[i], OBJPROP_FONT), Prop(fields[i], OBJPROP_FONTSIZE),
+                        ObjectGetString(0, fields[i], OBJPROP_TEXT), w, h);
+      checked++;
+      if(w > Prop(fields[i], OBJPROP_XSIZE) - 2)
+         bad = RdJoin(bad, fields[i] + " '" + ObjectGetString(0, fields[i], OBJPROP_TEXT) + "' " + IntegerToString(w) +
+                      " px in " + IntegerToString(Prop(fields[i], OBJPROP_XSIZE)), "; ");
+     }
+   //--- ADR-023: every widget inside the background, none on top of another; two columns: rows level
+   EPanelItem items[] = {PI_HIDE, PI_RISK_CAP, PI_RISK, PI_LOTS_CAP, PI_LOTS, PI_ADDLINE, PI_DELLINE, PI_BUY, PI_SELL,
+                         PI_ADDPEND, PI_SETPEND, PI_PINFO_CAP, PI_PINFO, PI_DELPEND, PI_RISKFREE, PI_HALF,
+                         PI_CHARTCLOSE, PI_FULLCLOSE, PI_SPREAD, PI_STATUS1, PI_STATUS2, PI_STATUS3};
+   SRect bg;
+   m_layout.Rect(PI_BG, bg);
+   for(int i = 0; i < ArraySize(items); i++)
+     {
+      SRect a;
+      m_layout.Rect(items[i], a);
+      checked++;
+      if(a.x < bg.x || a.y < bg.y || a.x + a.w > bg.x + bg.w || a.y + a.h > bg.y + bg.h)
+         bad = RdJoin(bad, CPanel::ItemName(items[i]) + " outside the panel", "; ");
+      for(int j = i + 1; j < ArraySize(items); j++)
+        {
+         SRect b;
+         m_layout.Rect(items[j], b);
+         if(a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h)
+            bad = RdJoin(bad, CPanel::ItemName(items[i]) + " overlaps " + CPanel::ItemName(items[j]), "; ");
+        }
+     }
+   if(m_layout.Columns() == 2)
+     {
+      EPanelItem lft[] = {PI_RISK, PI_LOTS, PI_ADDLINE, PI_DELLINE, PI_BUY, PI_SELL, PI_ADDPEND};
+      EPanelItem rgt[] = {PI_PINFO_CAP, PI_PINFO, PI_DELPEND, PI_RISKFREE, PI_HALF, PI_CHARTCLOSE, PI_FULLCLOSE};
+      for(int i = 0; i < ArraySize(lft); i++)
+        {
+         SRect a;
+         SRect b;
+         m_layout.Rect(lft[i], a);
+         m_layout.Rect(rgt[i], b);
+         checked++;
+         if(a.y != b.y || a.h != b.h)
+            bad = RdJoin(bad, CPanel::ItemName(rgt[i]) + " not level with " + CPanel::ItemName(lft[i]), "; ");
+        }
+     }
    //--- status lines must stay inside the panel
    int bgRight = Prop("RD_P_BG", OBJPROP_XDISTANCE) + Prop("RD_P_BG", OBJPROP_XSIZE);
    for(int i = 1; i <= RD_STATUS_LINES; i++)
@@ -78,7 +127,8 @@ void CUiSelfTest::CheckTextFits(const string where)
       bad = RdJoin(bad, "'Risk %' " + IntegerToString(capW) + " px in a " + IntegerToString(r.w) + " px column", "; ");
    Check(bad == "", "text fit " + where, IntegerToString(checked) + " texts checked, scale " + RdNum(m_layout.Scale(), 2) +
          ", body font " + m_theme.fontBody + " " + IntegerToString(m_layout.FontBody()) + " pt, panel " +
-         IntegerToString(m_layout.Width()) + " x " + IntegerToString(m_layout.Height()) + " px, line height - button height " +
+         IntegerToString(m_layout.Width()) + " x " + IntegerToString(m_layout.Height()) + " px, " +
+         IntegerToString(m_layout.Columns()) + (m_layout.Columns() == 2 ? " columns" : " column") + ", line height - button height " +
          IntegerToString(tallest) + " px" + (bad == "" ? "" : " - overflow: " + bad));
   }
 
@@ -94,36 +144,77 @@ void CUiSelfTest::CheckFitMath()
    int dpi = RdTerminalDpi();
    int heights[] = {200, 260, 320, 400, 480, 560, 640, 720, 800, 900, 1000, 1200, 1600};
    int widths[] = {150, 260, 400, 1200};
-   string bad = "";
-   string table = "";
-   for(int wi = 0; wi < ArraySize(widths); wi++)
-      for(int hi = 0; hi < ArraySize(heights); hi++)
-        {
-         probe.Configure(1.6, true, dpi, m_cfg.fontSize, m_theme.fontBody, m_theme.fontTitle);
-         probe.Fit(widths[wi], heights[hi]);
-         double s = probe.Scale();
-         bool fits = probe.HeightAt(s) <= heights[hi] - RD_LY_FIT_MARGIN && probe.WidthAt(s) <= widths[wi] - RD_LY_FIT_MARGIN;
-         bool ok = s <= 1.6 + 1e-9 && s >= RD_LY_MIN_SCALE - 1e-9 && (fits || MathAbs(s - RD_LY_MIN_SCALE) < 1e-9);
-         //--- one step larger would not fit (the largest fitting scale was chosen)
-         if(ok && s < 1.6 - 1e-9 && s > RD_LY_MIN_SCALE + 1e-9)
-            ok = probe.HeightAt(s + 0.01) > heights[hi] - RD_LY_FIT_MARGIN || probe.WidthAt(s + 0.01) > widths[wi] - RD_LY_FIT_MARGIN;
-         if(!ok)
-            bad = RdJoin(bad, IntegerToString(widths[wi]) + "x" + IntegerToString(heights[hi]) + " -> " + RdNum(s, 2), ", ");
-         if(widths[wi] == 1200)
-            table = RdJoin(table, IntegerToString(heights[hi]) + ":" + RdNum(s, 2), " ");
-        }
-   Check(bad == "", "T-37 fit math", "scale by chart height (width 1200): " + table + (bad == "" ? "" : " - wrong: " + bad));
+   EPanelColumns modes[] = {PANEL_COLUMNS_ONE, PANEL_COLUMNS_TWO};
+   for(int mi = 0; mi < ArraySize(modes); mi++)
+     {
+      string bad = "";
+      string table = "";
+      for(int wi = 0; wi < ArraySize(widths); wi++)
+         for(int hi = 0; hi < ArraySize(heights); hi++)
+           {
+            probe.Configure(1.6, true, modes[mi], dpi, m_cfg.fontSize, m_theme.fontBody, m_theme.fontTitle);
+            probe.Fit(widths[wi], heights[hi]);
+            double s = probe.Scale();
+            bool fits = probe.HeightAt(s) <= heights[hi] - RD_LY_FIT_MARGIN && probe.WidthAt(s) <= widths[wi] - RD_LY_FIT_MARGIN;
+            bool ok = s <= 1.6 + 1e-9 && s >= RD_LY_MIN_SCALE - 1e-9 && (fits || MathAbs(s - RD_LY_MIN_SCALE) < 1e-9) &&
+                      probe.Columns() == mi + 1;
+            //--- one step larger would not fit (the largest fitting scale was chosen)
+            if(ok && s < 1.6 - 1e-9 && s > RD_LY_MIN_SCALE + 1e-9)
+               ok = probe.HeightAt(s + 0.01) > heights[hi] - RD_LY_FIT_MARGIN || probe.WidthAt(s + 0.01) > widths[wi] - RD_LY_FIT_MARGIN;
+            if(!ok)
+               bad = RdJoin(bad, IntegerToString(widths[wi]) + "x" + IntegerToString(heights[hi]) + " -> " + RdNum(s, 2), ", ");
+            if(widths[wi] == 1200)
+               table = RdJoin(table, IntegerToString(heights[hi]) + ":" + RdNum(s, 2), " ");
+           }
+      Check(bad == "", mi == 0 ? "T-37 fit math" : "T-37 fit math 2 columns",
+            "scale by chart height (width 1200): " + table + (bad == "" ? "" : " - wrong: " + bad));
+     }
 
-   probe.Configure(1.6, true, dpi, m_cfg.fontSize, m_theme.fontBody, m_theme.fontTitle);
+   probe.Configure(1.6, true, PANEL_COLUMNS_ONE, dpi, m_cfg.fontSize, m_theme.fontBody, m_theme.fontTitle);
    probe.Fit(1200, 300);
    double small = probe.Scale();
    probe.Fit(1200, 2000);
    Check(small < 1.6 && MathAbs(probe.Scale() - 1.6) < 1e-9, "T-37 grows back",
          "300 px -> " + RdNum(small, 2) + ", then 2000 px -> " + RdNum(probe.Scale(), 2));
 
-   probe.Configure(1.6, false, dpi, m_cfg.fontSize, m_theme.fontBody, m_theme.fontTitle);
+   probe.Configure(1.6, false, PANEL_COLUMNS_ONE, dpi, m_cfg.fontSize, m_theme.fontBody, m_theme.fontTitle);
    probe.Fit(1200, 300);
    Check(MathAbs(probe.Scale() - 1.6) < 1e-9, "T-37 auto-fit off", "300 px chart keeps scale " + RdNum(probe.Scale(), 2));
+
+   //--- ADR-023 Auto: one column unless it fits only below 85 % of Shape Size Scale and two columns get a larger
+   //    scale (or, both at 0.40, one column is cut off and two columns fit the width)
+   CLayout one;
+   CLayout two;
+   string badAuto = "";
+   string tableAuto = "";
+   int autoWidths[] = {400, 1200};
+   for(int wi = 0; wi < ArraySize(autoWidths); wi++)
+      for(int hi = 0; hi < ArraySize(heights); hi++)
+        {
+         one.Configure(1.0, true, PANEL_COLUMNS_ONE, dpi, m_cfg.fontSize, m_theme.fontBody, m_theme.fontTitle);
+         two.Configure(1.0, true, PANEL_COLUMNS_TWO, dpi, m_cfg.fontSize, m_theme.fontBody, m_theme.fontTitle);
+         probe.Configure(1.0, true, PANEL_COLUMNS_AUTO, dpi, m_cfg.fontSize, m_theme.fontBody, m_theme.fontTitle);
+         one.Fit(autoWidths[wi], heights[hi]);
+         two.Fit(autoWidths[wi], heights[hi]);
+         probe.Fit(autoWidths[wi], heights[hi]);
+         bool cutOff = MathAbs(two.Scale() - one.Scale()) < 1e-9 && one.Height() > heights[hi] - RD_LY_FIT_MARGIN &&
+                       two.Width() <= autoWidths[wi] - RD_LY_FIT_MARGIN;
+         bool wantTwo = one.Scale() < RD_LY_TWO_COL_BELOW - 1e-9 && (two.Scale() > one.Scale() + 1e-9 || cutOff);
+         double wantScale = wantTwo ? two.Scale() : one.Scale();
+         string got = IntegerToString(probe.Columns()) + "c " + RdNum(probe.Scale(), 2);
+         if(probe.Columns() != (wantTwo ? 2 : 1) || MathAbs(probe.Scale() - wantScale) > 1e-9)
+            badAuto = RdJoin(badAuto, IntegerToString(autoWidths[wi]) + "x" + IntegerToString(heights[hi]) + " -> " + got, ", ");
+         if(autoWidths[wi] == 1200)
+            tableAuto = RdJoin(tableAuto, IntegerToString(heights[hi]) + ":" + got, " ");
+        }
+   Check(badAuto == "", "columns auto", "Shape Size Scale 1.00, width 1200: " + tableAuto +
+         (badAuto == "" ? "" : " - wrong: " + badAuto));
+   probe.Configure(1.6, false, PANEL_COLUMNS_AUTO, dpi, m_cfg.fontSize, m_theme.fontBody, m_theme.fontTitle);
+   probe.Fit(1200, 300);
+   int colsShort = probe.Columns();
+   probe.Fit(1200, 2000);
+   Check(colsShort == 2 && probe.Columns() == 1 && MathAbs(probe.Scale() - 1.6) < 1e-9, "columns auto, auto-fit off",
+         "scale 1.60: 300 px chart -> " + IntegerToString(colsShort) + " columns, 2000 px -> " + IntegerToString(probe.Columns()));
   }
 
 //+------------------------------------------------------------------+
@@ -226,21 +317,31 @@ void CUiSelfTest::StepRisk()
   }
 
 //+------------------------------------------------------------------+
-//| R8: every button answers with an amber status and a log line;    |
-//| the button pops back up. Then the cooldown (F-06 AC6).           |
+//| R8: every button answers with a status and a log line; the       |
+//| button pops back up. Buttons of later phases are amber "not      |
+//| implemented yet". The order (Add Line, Delete Line, then Buy and |
+//| Sell without lines) never sends an order. Then the cooldown      |
+//| (F-06 AC6).                                                      |
 //+------------------------------------------------------------------+
 void CUiSelfTest::StepButtons()
   {
    for(int b = 0; b < PB_COUNT; b++)
      {
-      string name = CPanel::ButtonName((EPanelButton)b);
+      EPanelButton pb = (EPanelButton)b;
+      string name = CPanel::ButtonName(pb);
+      string before = m_status.Text();
       ClickObject(name);
       string text = m_status.Text();
       bool refused = m_status.Severity() == SEV_ERROR && StringFind(text, "refused") >= 0;
-      bool ok = ((m_status.Severity() == SEV_WARN && StringFind(text, "not implemented yet") >= 0) || refused) &&
-                Prop(name, OBJPROP_STATE) == 0;
-      Check(ok, "R8 " + CPanel::ButtonCaption((EPanelButton)b), RdSeverityText(m_status.Severity()) + " '" + text + "'");
+      bool answered = CCommands::Implemented(pb) ? (text != "" && (text != before || pb == PB_DELLINE)) :
+                      ((m_status.Severity() == SEV_WARN && StringFind(text, "not implemented yet") >= 0) || refused);
+      if(pb == PB_BUY || pb == PB_SELL)
+         answered = refused && StringFind(text, "no SL line") >= 0;
+      Check(answered && Prop(name, OBJPROP_STATE) == 0, "R8 " + CPanel::ButtonCaption(pb),
+            RdSeverityText(m_status.Severity()) + " '" + text + "'");
      }
+   CLines::DeleteAll();   // Add Pend Line left its lines
+   m_state.lineMode = LINES_NONE;
    string before = m_status.Text();
    ClickObject("RD_B_BUY");   // clicked a moment ago: within the cooldown
    Check(m_status.Text() == before && Prop("RD_B_BUY", OBJPROP_STATE) == 0, "T-25 cooldown",
@@ -395,23 +496,22 @@ void CUiSelfTest::StepRestartCheck()
   }
 
 //+------------------------------------------------------------------+
-//| T-20: a planning line (stand-in for P4's SL line), Risk % 0.75,  |
-//| panel hidden; then a timeframe change.                           |
+//| T-20: the SL line of Add Line, Risk % 0.75, panel hidden; then a |
+//| timeframe change.                                                |
 //+------------------------------------------------------------------+
 void CUiSelfTest::StepTfChange()
   {
-   ApplyLook(m_cfg.scale, m_cfg.autoFitPanel, m_cfg.fontPreset);
+   ApplyLook(m_cfg.scale, m_cfg.autoFitPanel, m_cfg.fontPreset, m_cfg.panelColumns);
    m_origSymbol = _Symbol;
    m_origPeriod = (ENUM_TIMEFRAMES)_Period;
-   SQuote q;
-   CMarket::Quote(_Symbol, q);
-   ObjectCreate(0, "RD_LN_SL", OBJ_HLINE, 0, 0, (q.bid > 0.0) ? q.bid * 0.99 : 1.0);
+   ClickObject(CPanel::ButtonName(PB_ADDLINE));
    Edit("0,75");
    ClickObject("RD_P_HIDE");
    m_t20X = m_state.panelX;
    m_t20Y = m_state.panelY;
    m_t20Risk = m_state.riskPct;
    m_objCount = CountObjects("RD_");
+   m_t20Lines = CountObjects(RD_LINE_PREFIX) + CountObjects(RD_LINE_LABEL_PREFIX);
    m_tfPeriod = (m_origPeriod == PERIOD_M15) ? PERIOD_M30 : PERIOD_M15;
    m_waits = 0;
    Line("T-20 setup: line RD_LN_SL, Risk % " + RdNum(m_t20Risk, 2) + ", panel hidden, " + IntegerToString(m_objCount) +
@@ -458,7 +558,7 @@ bool CUiSelfTest::StepSymbolCheck()
    if(_Symbol != m_otherSymbol && m_waits++ < 20)
       return false;
    int n = CountObjects("RD_");
-   bool ok = _Symbol == m_otherSymbol && ObjectFind(0, "RD_LN_SL") < 0 && n == m_objCount - 1 &&
+   bool ok = _Symbol == m_otherSymbol && ObjectFind(0, "RD_LN_SL") < 0 && n == m_objCount - m_t20Lines &&
              ObjectGetString(0, "RD_S_CHART", OBJPROP_TEXT) == _Symbol && m_state.hidden &&
              m_state.panelX == m_t20X && m_state.panelY == m_t20Y && MathAbs(m_state.riskPct - m_t20Risk) < 1e-9 &&
              StringFind(m_status.Text(), "Lines removed") == 0;
@@ -477,7 +577,8 @@ bool CUiSelfTest::StepBack()
       return false;
    Check(_Symbol == m_origSymbol && _Period == m_origPeriod, "T-20 back", "chart back on " + _Symbol + " " +
          EnumToString((ENUM_TIMEFRAMES)_Period));
-   ObjectDelete(0, "RD_LN_SL");
+   CLines::DeleteAll();
+   m_state.lineMode = LINES_NONE;
    if(m_state.hidden)
       ClickObject("RD_P_HIDE");
    Edit(DoubleToString(m_cfg.defaultRiskPct, 2));
@@ -491,7 +592,7 @@ bool CUiSelfTest::StepBack()
 //+------------------------------------------------------------------+
 void CUiSelfTest::StepSaveState()
   {
-   ApplyLook(m_cfg.scale, m_cfg.autoFitPanel, m_cfg.fontPreset);
+   ApplyLook(m_cfg.scale, m_cfg.autoFitPanel, m_cfg.fontPreset, m_cfg.panelColumns);
    Edit("0,75");
    Drag(60 - m_panel.ShownX(), 30 - m_panel.ShownY());
    ClickObject("RD_P_HIDE");
@@ -530,7 +631,7 @@ void CUiSelfTest::StepSavedFiles()
 //+------------------------------------------------------------------+
 void CUiSelfTest::StepChartLookOn()
   {
-   ApplyLook(m_cfg.scale, m_cfg.autoFitPanel, m_cfg.fontPreset);
+   ApplyLook(m_cfg.scale, m_cfg.autoFitPanel, m_cfg.fontPreset, m_cfg.panelColumns);
    m_panel.SetWanted(m_homeX, m_homeY);
    m_state.panelX = m_homeX;
    m_state.panelY = m_homeY;
@@ -567,6 +668,8 @@ void CUiSelfTest::StepChartLookCheck()
 //+------------------------------------------------------------------+
 void CUiSelfTest::RequestWindowCapture(const string name)
   {
+   // the capture shows the terminal's front chart: make it this one (other charts may be open)
+   ChartSetInteger(0, CHART_BRING_TO_TOP, true);
    ChartRedraw(0);
    int h = FileOpen(CapturePath(), FILE_WRITE | FILE_TXT | FILE_ANSI);
    if(h == INVALID_HANDLE)

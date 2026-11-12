@@ -251,6 +251,7 @@ Orig inputs "Pending Overlay Entry / SL / TP Line Color" (LimeGreen / Red / Red)
 Orig input "Auto fit panel size to chart/monitor" (true).
 - AC1 When on, the effective scale is reduced automatically so the whole panel fits inside the chart height (and width), on init and on every chart resize; it never grows above `InpScale`.
 - AC2 DPI ("monitor") scaling is always applied (05 §1); auto-fit adds the chart-size constraint on top. See Q17.
+- AC3 [NEW] (owner, T-24 feedback) With `InpPanelColumns=Auto`, a chart too short for one readable column shows the panel in two columns instead of shrinking it below 85 % of `InpScale`; `One` / `Two` force the layout (05 §1, ADR-023).
 
 ## 7. Non-functional requirements
 

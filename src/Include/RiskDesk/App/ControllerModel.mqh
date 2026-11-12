@@ -142,6 +142,7 @@ void CController::BuildModel(SPanelModel &m, const SQuote &q, const bool quoteOk
       m.buttonText[PB_BUY] = "Buy " + DoubleToString(q.ask, digits);
       m.buttonText[PB_SELL] = "Sell " + DoubleToString(q.bid, digits);
      }
+   ApplyPreview(m);
   }
 
 string CController::AgeText(const int seconds)

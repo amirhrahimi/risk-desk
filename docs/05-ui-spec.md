@@ -45,12 +45,38 @@ The UI is built only from standard chart objects (`OBJ_RECTANGLE_LABEL`, `OBJ_LA
 
 Layout computes every rectangle from a running y-cursor; nothing is positioned with hand-typed absolute coordinates.
 
+### Two columns (ADR-023, [NEW] `InpPanelColumns`)
+For short charts (small window, low resolution, high Windows scaling) the panel can be shown in two columns, so it can stay larger than one tall column could:
+
+```
+                         ✥
+ ┌──────────────────────────────────────────────────────┐
+ │ RiskDesk                                         [–] │
+ │ Risk %  [ 1.00           ]        Pending Info       │
+ │ Lots    [ 0.50           ]  [ Buy Stop · 0.35 lot  ] │
+ │ [        Add Line        ]  [      Del Pending     ] │
+ │ [       Delete Line      ]  [       Risk Free      ] │
+ │ [      Buy 1.10012       ]  [      Half Close      ] │
+ │ [      Sell 1.10000      ]  [      Chart Close     ] │
+ │ [      Add Pend Line     ]  [      Full Close      ] │
+ │ [       Set Pending      ]                           │
+ │ Spread: 7 pts                                        │
+ │ ✔ Buy 0.50 EURUSD #123456 · risk $100.00 (1.00 %)    │
+ └──────────────────────────────────────────────────────┘
+                         📷
+```
+- Width 2 × 160 − 8 = 312 px before scaling: two columns of 144 px, 8 px apart. The title row and the status area span both columns (fewer status lines wrap); the handle and the camera stay centred.
+- The right column uses the left column's rows, so the rows stay level at every scale. Set Pending's neighbour is empty.
+- `InpPanelColumns`: `Auto` (default), `One`, `Two`. Auto with auto-fit on: one column, unless one column would have to shrink below **85 %** of `InpScale` to fit the chart; then two columns if they reach a larger scale (or, both at 0.40, one column is cut off and two columns fit the width). Auto with auto-fit off: two columns when one column is taller than the chart and two columns fit its width. Decided again on every chart resize, together with the scale.
+- A hidden panel keeps its width, so the show/hide button does not move.
+
 ### Scaling
-- `scale = InpScale` (0.40–1.60); with `InpAutoFitPanel` (F-34): `scale = min(InpScale, fitScale)` where `fitScale` is the largest scale at which the full panel (handle to camera button) fits inside `CHART_HEIGHT_IN_PIXELS` and `CHART_WIDTH_IN_PIXELS` minus 10 px margins. Recompute on init and on `CHARTEVENT_CHART_CHANGE` (debounced 300 ms).
+- `scale = InpScale` (0.40–1.60); with `InpAutoFitPanel` (F-34): `scale = min(InpScale, fitScale)` where `fitScale` is the largest scale at which the full panel (handle to camera button) fits inside `CHART_HEIGHT_IN_PIXELS` and `CHART_WIDTH_IN_PIXELS` minus 10 px margins, in the columns chosen above. Recompute on init and on `CHARTEVENT_CHART_CHANGE` (debounced 300 ms).
 - `pxScale = scale × TerminalInfoInteger(TERMINAL_SCREEN_DPI) / 96`. Multiply every pixel distance/size by `pxScale`.
 - Font point sizes are multiplied by `scale` only (the terminal already applies DPI to fonts); minimum 6 pt.
 - Verify with T-24 at 100 %, 150 %, 200 % Windows scaling and T-37 (small chart window); adjust if text overflows (use `TextSetFont` + `TextGetSize` to measure).
 - Rows are never shorter than one line of their text, and the caption column never narrower than "Risk %": below about scale 0.7 the fonts stay at 6 pt while the geometry keeps shrinking, so those rows grow and push the rows below them down; auto-fit uses the resulting height (ADR-021).
+- Button texts and the read-only fields (Lots, Pending Info) get a smaller font, down to 6 pt, rather than a cut text (ADR-023). The status bar never starts a line with a unit (`%`, `pts`, `pips`, `lot`, `lots`).
 
 ## 2. Default theme (all overridable in 07-settings)
 
@@ -109,16 +135,18 @@ Every button has an `OBJPROP_TOOLTIP` that says exactly what it affects, e.g. "C
 MetaTrader draws dash/dot styles only at width 1; width > 1 is always solid.
 
 ### Default placement
-`range = CHART_PRICE_MAX − CHART_PRICE_MIN` of the main window (fallback: 0.5 % of price if 0); `O = InpDefaultOffsetPct / 100 × range` (default 15 %).
+`range = CHART_PRICE_MAX − CHART_PRICE_MIN` of the main window (fallback: 0.5 % of price if 0); `O = InpDefaultOffsetPct / 100 × range` (default 15 %), but at least the stops level + 2 ticks, so a default line is never "too close" (P4, ADR-022).
 - **Add Line:** SL = Bid − O. TP line (Manual TP line mode only) = Ask + `InpTpRR` × (Ask − SL).
 - **Add Pend Line:** Entry = Ask + O; SL = Entry − 1.5·O. TP line (Manual TP line mode only) = Entry + `InpTpRR` × (Entry − SL).
 - Manual TP line with `InpTpFollowsSl=true` [NEW]: whenever the SL (or Entry) line is dropped, the TP line moves to entry ± `InpTpRR` × |entry − SL| (market mode: entry = current Ask/Bid for the side at that moment), until the user drags the TP line itself; after that it stays where it was dropped and its label shows the new R. Recomputed on drops only, never on ticks. `false` = the original's behaviour (never follows).
 - No TP line in No TP and Auto R/R modes (F-17).
-- Any line that would fall outside the visible range is clamped to 5 % inside the nearest edge.
-- Normalize to tick size. Lines are created **selected** so the user can drag at once.
+- Any line that would fall outside the visible range is clamped to 5 % inside the nearest edge, unless the clamp would put it on the wrong side of the price or inside the stops level; then it stays out of view on the correct side. No clamping while the price itself is out of view (chart scrolled back).
+- Normalize to tick size (rounded away from the price). Lines are created **selected** so the user can drag at once. A dropped line snaps to the tick grid, so what the user sees is what is sent.
+- Whether the user has dragged the TP line (it then stops following) is kept in the TP line's tooltip, so it survives a restart with the line (ADR-022).
+- Chart objects are drawn in creation order: after RiskDesk creates a line or label, the panel's objects are created again so the panel stays on top (ADR-022).
 
 ### Line labels (F-18)
-`OBJ_TEXT` named `RD_LT_*`, anchored `ANCHOR_LEFT_LOWER` at time = open time of the current bar + 3 × `PeriodSeconds()`, price = line price. SL label: `InpColorSlLoss` (white), `InpSlLossFontSize` (10). TP/Entry labels: line colour, same size. Updated on drag, on timer and on new bar.
+`OBJ_TEXT` named `RD_LT_*`, anchored `ANCHOR_LEFT_LOWER` at time = open time of the current bar + 3 × `PeriodSeconds()`, price = line price, when the chart has its right margin (`CHART_SHIFT`); without it, anchored `ANCHOR_RIGHT_LOWER` at the current bar so the text stays in view (P4). Where the panel (as shown, handle to camera) would cover a label, the label goes left of the panel, right-aligned on the last bar that keeps it 6 px (× DPI/96) clear; without room on the left it goes right of the panel when it ends before the price scale, else it stays (ADR-024, owner). Re-placed on every refresh, so it follows panel drags, scrolling and zoom. SL label: `InpColorSlLoss` (white), `InpSlLossFontSize` (10). TP/Entry labels: line colour, same size, font of the panel. Updated on drag, on timer and on new bar. MT4 shows `-` for the minus sign (ANSI, ADR-021).
 
 | Label | Format |
 |---|---|
@@ -126,6 +154,7 @@ MetaTrader draws dash/dot styles only at width 1; width > 1 is always solid.
 | TP | `TP  +$200.00 (R 2.00) · 400 pts` |
 | Entry | `ENTRY  Buy Stop  1.10250` |
 | Invalid | `SL  (invalid: above Bid for a buy)` in amber |
+| Below the minimum lot | `SL  min lot 1 risks €60.00 (1.20 %) · 200 pts` in amber; Lots field `0.83 < 1` in red (the computed lot, F-03 AC3) |
 
 ### Mode rules
 - `LINES_NONE → Add Line → LINES_MARKET`; `→ Add Pend Line → LINES_PENDING`.
