@@ -3,6 +3,8 @@
 All notable changes to this project are documented here. Format: Keep a Changelog; versions: SemVer.
 
 ## [Unreleased]
+### Changed
+- The EA sits directly under Expert Advisors in the Navigator, no longer in a `RiskDesk` sub-folder (ADR-028): source moved to `src/Experts/RiskDesk.mq4/.mq5`; `build.ps1` copies the compiled EA into each terminal's `MQLx\Experts`; `install-junctions.ps1` links only Scripts and Include and removes the old `Experts\RiskDesk` junction; `run-uitest.ps1` starts `Expert=RiskDesk`.
 
 ## [0.7.0] - 2026-11-13 - Phase P7: Extras
 ### Added

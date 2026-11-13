@@ -4,11 +4,14 @@
 
 .DESCRIPTION
     For each terminal listed in $Terminals in build/paths.local.ps1, creates
-    three directory junctions inside its MQL4 or MQL5 folder:
+    two directory junctions inside its MQL4 or MQL5 folder:
 
-        MQLx\Experts\RiskDesk  ->  <repo>\src\Experts\RiskDesk
         MQLx\Scripts\RiskDesk  ->  <repo>\src\Scripts\RiskDesk
         MQLx\Include\RiskDesk  ->  <repo>\src\Include\RiskDesk
+
+    The EA is not linked: it sits in the root of MQLx\Experts (no sub-folder in
+    the Navigator), and build.ps1 copies the compiled RiskDesk.ex4/.ex5 there.
+    The former MQLx\Experts\RiskDesk junction to this repository is removed.
 
     One build (build.ps1) then serves every terminal. Idempotent: links that
     already point to the repo are left alone, links pointing elsewhere are
@@ -43,7 +46,6 @@ $RepoRoot = Split-Path -Parent $PSScriptRoot
 if (-not $PathsFile) { $PathsFile = Join-Path $PSScriptRoot 'paths.local.ps1' }
 
 $Links = @(
-    @{ Sub = 'Experts\RiskDesk'; Source = 'src\Experts\RiskDesk' }
     @{ Sub = 'Scripts\RiskDesk'; Source = 'src\Scripts\RiskDesk' }
     @{ Sub = 'Include\RiskDesk'; Source = 'src\Include\RiskDesk' }
 )
@@ -127,6 +129,16 @@ foreach ($t in $Terminals) {
         Write-Action 'ERROR' "$mqlDir not found. DataPath must be the folder that contains $mql (File > Open Data Folder)."
         $problems++
         continue
+    }
+
+    # Former EA folder junction (the EA now sits in the Experts root, copied by build.ps1).
+    $old = Join-Path $mqlDir 'Experts\RiskDesk'
+    if (Test-Path -LiteralPath $old) {
+        $current = Get-LinkTarget $old
+        if ($current -and (Get-NormalizedPath $current).StartsWith((Get-NormalizedPath $RepoRoot) + '\')) {
+            if ($DryRun) { Write-Action 'would' "remove obsolete junction $mql\Experts\RiskDesk" }
+            else { Remove-Junction $old; Write-Action 'removed' "$mql\Experts\RiskDesk (obsolete: the EA is now $mql\Experts\RiskDesk.ex$($mql.Substring(3)), copied by build.ps1)" }
+        }
     }
 
     foreach ($l in $Links) {

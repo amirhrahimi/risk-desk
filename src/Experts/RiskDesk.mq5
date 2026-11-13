@@ -1,18 +1,16 @@
 //+------------------------------------------------------------------+
-//| RiskDesk.mq4 - Expert Advisor entry file (MT4)                   |
+//| RiskDesk.mq5 - Expert Advisor entry file (MT5)                   |
 //| Forwards the five event handlers to CApp (02-architecture 4).    |
 //| '#property version' is set from 1.0.0 on (ADR-015); the version  |
 //| is RD_VERSION in Include/RiskDesk/Build.mqh and is logged on init.|
 //+------------------------------------------------------------------+
-#property strict
-
-#include "..\..\Include\RiskDesk\Build.mqh"
+#include "..\Include\RiskDesk\Build.mqh"
 
 #property copyright   RD_COPYRIGHT
 #property description "Risk-based trade panel for MetaTrader 4 and 5."
 #property description "Phase P3 UI shell: panel, Risk %, spread and prices; trading buttons arrive in P4-P6."
 
-#include "..\..\Include\RiskDesk\App\App.mqh"
+#include "..\Include\RiskDesk\App\App.mqh"
 
 CApp g_app;
 

@@ -72,8 +72,8 @@ When docs conflict, precedence is: 03 > 04 > 06 > 01 > the rest. Report every co
 │  ├─ paths.example.ps1        template (committed)
 │  └─ paths.local.ps1          real paths (git-ignored)
 └─ src/
-   ├─ Experts/RiskDesk/RiskDesk.mq4
-   ├─ Experts/RiskDesk/RiskDesk.mq5
+   ├─ Experts/RiskDesk.mq4      (no sub-folder: the EA sits in the Experts root, ADR-028)
+   ├─ Experts/RiskDesk.mq5
    ├─ Scripts/RiskDesk/BrokerProbe.mq4   BrokerProbe.mq5
    ├─ Scripts/RiskDesk/RiskDeskTests.mq4 RiskDeskTests.mq5
    ├─ Scripts/RiskDesk/GatewaySmoke.mq4  GatewaySmoke.mq5   (demo-only, rule R13)
@@ -86,15 +86,16 @@ When docs conflict, precedence is: 03 > 04 > 06 > 01 > the rest. Report every co
       └─ Services/  Logger.mqh  Persistence.mqh  Screenshot.mqh  ChartHousekeeping.mqh  CandleTime.mqh
 ```
 
-Includes are **relative** to the including file, using backslashes as in MetaQuotes' examples, e.g. in `src/Experts/RiskDesk/RiskDesk.mq5`: `#include "..\..\Include\RiskDesk\App\App.mqh"`. The same tree then compiles both from the repo and through the junctions inside each terminal's data folder.
+Includes are **relative** to the including file, using backslashes as in MetaQuotes' examples, e.g. in `src/Experts/RiskDesk.mq5`: `#include "..\Include\RiskDesk\App\App.mqh"`, in `src/Scripts/RiskDesk/BrokerProbe.mq5`: `#include "..\..\Include\RiskDesk\..."`. The same tree then compiles both from the repo and through the junctions inside each terminal's data folder. Scripts and includes reach the terminals through junctions; the EA is compiled in the repo and `build.ps1` copies `RiskDesk.ex4/.ex5` into the root of each terminal's `MQLx\Experts` (ADR-028).
 
 ## 5. Build and run
 
 - Paths live in `build/paths.local.ps1` (MetaEditor executables and the data folder of every terminal). If it is missing, create it from `paths.example.ps1` and ask the owner to fill it.
 - Compile everything: `powershell -ExecutionPolicy Bypass -File build/build.ps1` (or `-Target mt4` / `-Target mt5`).
 - Underlying commands (build.ps1 wraps them):
-  - MT5: `"<MT5 dir>\metaeditor64.exe" /compile:"<repo>\src\Experts\RiskDesk\RiskDesk.mq5" /log`
-  - MT4: `"<MT4 dir>\metaeditor.exe" /compile:"<repo>\src\Experts\RiskDesk\RiskDesk.mq4" /log`
+  - MT5: `"<MT5 dir>\metaeditor64.exe" /compile:"<repo>\src\Experts\RiskDesk.mq5" /log`
+  - MT4: `"<MT4 dir>\metaeditor.exe" /compile:"<repo>\src\Experts\RiskDesk.mq4" /log`
+  - build.ps1 then copies the compiled EA to `MQLx\Experts\RiskDesk.ex4/.ex5` of every terminal in `paths.local.ps1`; a compile done by hand does not.
   - The `.log` file is written next to the source file. **Do not trust MetaEditor's exit code.** Parse the log (it may be UTF-16 encoded) for the final `N errors, M warnings` result.
   - `.ex4/.ex5/.log` are build artefacts and are git-ignored.
 - You cannot click inside MetaTrader. For runtime verification give the owner a short numbered list of test IDs (T-xx from `docs/08-testing.md`) and ask for the relevant Experts-tab log lines and status-bar texts.

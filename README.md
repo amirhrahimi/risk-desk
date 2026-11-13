@@ -46,7 +46,7 @@ riskdesk/
 3. Start Claude Code in the folder (`claude`) and paste the **P0 prompt** from `docs/09-roadmap-and-prompts.md`.
 4. When P0 is done:
    - copy `build\paths.example.ps1` to `build\paths.local.ps1` and fill in the paths from step 2;
-   - run `powershell -ExecutionPolicy Bypass -File build\install-junctions.ps1` (links the source into every terminal, so one build serves all of them);
+   - run `powershell -ExecutionPolicy Bypass -File build\install-junctions.ps1` (links the scripts and includes into every terminal; `build\build.ps1` copies the compiled EA into each terminal's `Experts` folder, so one build serves all of them);
    - in each terminal refresh the Navigator, drag **BrokerProbe** onto any chart, then copy the report from `MQL4\Files\RiskDesk\` or `MQL5\Files\RiskDesk\` into `broker-profiles\`;
    - commit.
 5. Continue with P1 … P8, one phase per Claude Code session. After each phase: run the tests Claude lists, paste back results/log lines, commit.
