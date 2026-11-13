@@ -1,3 +1,6 @@
+// Risk Desk - risk-based position sizing and trade management for MetaTrader 4/5
+// SPDX-License-Identifier: MIT
+
 //+------------------------------------------------------------------+
 //| BrokerProbe.mq4 - diagnostic script entry file (MT4)             |
 //| Writes MQL4\Files\RiskDesk\probe_<company>_MT4_<login>_<date>.txt|
@@ -11,6 +14,8 @@
 #include "..\..\Include\RiskDesk\Build.mqh"
 
 #property copyright   RD_COPYRIGHT
+#property link        RD_LINK
+#property version     RD_VERSION_PROP
 #property description "RiskDesk BrokerProbe: writes a broker, account and symbol report to MQL4\\Files\\RiskDesk."
 #property description "Nothing is traded."
 #property script_show_inputs

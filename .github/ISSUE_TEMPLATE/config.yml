@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Troubleshooting and FAQ
+    url: https://github.com/amirhrahimi/risk-desk/blob/main/docs/troubleshooting.md
+    about: Most status-bar messages and common questions are explained here.
+  - name: User guide
+    url: https://github.com/amirhrahimi/risk-desk/blob/main/docs/user-guide.md
+    about: What every button does.

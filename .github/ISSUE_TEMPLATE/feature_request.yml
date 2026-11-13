@@ -1,0 +1,37 @@
+name: Feature request
+description: Suggest a new feature or a change to an existing one.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check ROADMAP.md and the open issues first. Risk Desk is a manual tool: it acts only on the user's clicks. Requests for automatic entries or signals are out of scope.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What do you want to do that Risk Desk does not support today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behaviour
+      description: What should happen, step by step? Which inputs, buttons or messages would change?
+    validations:
+      required: true
+  - type: textarea
+    id: risk
+    attributes:
+      label: Effect on risk and order handling
+      description: Would this change lot sizes, orders sent, or what the management buttons close? How should it behave at brokers with different rules?
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      multiple: true
+      options: ["MetaTrader 4", "MetaTrader 5"]

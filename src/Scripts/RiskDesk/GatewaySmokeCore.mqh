@@ -1,7 +1,10 @@
+// Risk Desk - risk-based position sizing and trade management for MetaTrader 4/5
+// SPDX-License-Identifier: MIT
+
 //+------------------------------------------------------------------+
 //| RiskDesk - Scripts/RiskDesk/GatewaySmokeCore.mqh                 |
 //| Layer   : diagnostics script (shared body of GatewaySmoke.mq4    |
-//|           and GatewaySmoke.mq5, 08-testing L3b, 09 P2)           |
+//|           and GatewaySmoke.mq5, 08-testing L3b, phase P2)        |
 //| Purpose : drives the real CTradeGateway on the chart symbol of a |
 //|           DEMO account with the smallest volume and distances    |
 //|           derived from the symbol's own properties:              |

@@ -1,0 +1,26 @@
+# Text files are stored with LF in the repository; Git converts them on checkout
+# according to each user's core.autocrlf. MetaEditor reads LF and CRLF alike.
+* text=auto
+
+# MQL sources: C++ diff hunks and language detection
+*.mq4 text diff=cpp linguist-language=MQL4
+*.mq5 text diff=cpp linguist-language=MQL5
+*.mqh text diff=cpp
+
+# Windows scripts keep CRLF for Windows PowerShell 5.1
+*.ps1 text eol=crlf
+
+# Broker reports are generated data
+broker-profiles/*.txt text linguist-generated
+broker-profiles/SUMMARY.md linguist-generated
+
+# Documentation
+*.md   text linguist-documentation
+docs/** linguist-documentation
+
+# Binaries (never committed, listed for safety)
+*.ex4 binary
+*.ex5 binary
+*.png binary
+*.jpg binary
+*.zip binary

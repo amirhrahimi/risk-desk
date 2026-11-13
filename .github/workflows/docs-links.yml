@@ -1,0 +1,23 @@
+# UNTESTED. Checks that relative links between the Markdown files point to existing files and
+# headings. Offline mode only: external URLs are not fetched, so the check does not depend on
+# other websites. Runs only when started by hand until a first run has succeeded; then add
+# push / pull_request triggers for '**.md'.
+name: docs-links (untested)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check relative links (offline)
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --offline --include-fragments --no-progress './**/*.md'
+          fail: true

@@ -1,3 +1,6 @@
+// Risk Desk - risk-based position sizing and trade management for MetaTrader 4/5
+// SPDX-License-Identifier: MIT
+
 //+------------------------------------------------------------------+
 //| RiskDesk - Scripts/RiskDesk/Tests/TestPriceMath.mqh              |
 //| Purpose : tests of Domain/PriceMath.mqh and Domain/Format.mqh:   |

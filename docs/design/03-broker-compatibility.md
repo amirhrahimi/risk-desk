@@ -1,10 +1,10 @@
 # 03 — Broker Compatibility
 
-This is the document that makes RiskDesk work where the original does not. Every rule has an ID (BC-xx). Trade code must implement all of them; tests in `08-testing.md` reference them.
+This is the document that makes RiskDesk behave the same on every broker. Every rule has an ID (BC-xx). Trade code must implement all of them; tests in `08-testing.md` reference them.
 
 ## 1. Why a risk panel works at one broker and fails at another
 
-The owner's original tool works at IG and fails at IC Markets EU and Dukascopy. Without its source we cannot be certain which of the causes below apply, but these are the usual ones, ordered by likelihood for these brokers:
+These are the usual reasons why a risk panel behaves differently from one broker to the next, ordered by likelihood for the target brokers (IC Markets EU, Dukascopy, IG):
 
 | # | Cause | Typical symptom | Where it bites | Our rule |
 |---|---|---|---|---|
@@ -18,10 +18,10 @@ The owner's original tool works at IG and fails at IC Markets EU and Dukascopy. 
 | H8 | Netting account assumptions | Second trade nets the first, half close fails | MT5 netting accounts | BC-10 |
 | H9 | SL/TP rejected on a market-execution order | `Invalid stops` on open, trade without SL | Some MT4 market-execution (ECN) servers | BC-11 |
 | H10 | Symbol names with suffixes/slashes break conversion lookups | Lot = 0 for crosses | `EURUSD.a`, `EURUSDm`, `EUR/USD`-style names | BC-01 |
-| H11 | Deliberate restriction in the original (e.g. tied to listed brokers) | Silent no-op | Unknown; its site says it was tested only with brokers it lists | Not applicable to RiskDesk |
+| H11 | Tool restricted to a list of brokers | Silent no-op | Any broker not on the list | Not applicable: RiskDesk has no broker list |
 
-### How the owner can confirm today with the original tool
-Open the Toolbox (Ctrl+T) → **Experts** and **Journal** tabs, click Buy on IC Markets / Dukascopy, and read the last lines. `unsupported filling mode`, `invalid volume`, `not enough money`, `invalid stops`, `invalid expiration`, or **no line at all** (lot computed as zero, or a deliberate block) each point to a row above. Paste those lines into `broker-profiles/original-tool-errors.md`; they become regression cases.
+### Reading the broker's answer
+After a refused or failed click, open the Toolbox (Ctrl+T) → **Experts** and **Journal** tabs and read the last lines. `unsupported filling mode`, `invalid volume`, `not enough money`, `invalid stops` and `invalid expiration` each point to a row above. RiskDesk shows the same reason in its status bar (R8).
 
 ## 2. Rules
 
@@ -159,7 +159,7 @@ RiskDesk does **not** require MetaTrader's One-Click Trading (the original did).
 
 | Broker | Platforms | Known specifics to handle |
 |---|---|---|
-| IG | MT4 (original works here); MT5 offered in some regions | Large CFD contract sizes on indices; spread-betting accounts (UK) quote per point; trust `OrderCalcProfit`/tick value and check the probe |
+| IG | MT4; MT5 offered in some regions | Large CFD contract sizes on indices; spread-betting accounts (UK) quote per point; trust `OrderCalcProfit`/tick value and check the probe |
 | IC Markets EU | MT4, MT5 | ESMA leverage caps (BC-09); Raw accounts charge commission → set `InpCommissionPerLot`; MT5 filling-mode rejections are a commonly reported EA failure (BC-06) |
 | Dukascopy (Europe / Bank) | MT4, MT5 | Market execution; hedging allowed on MT4; max 1,000 orders; many CFDs with min lot ≥ 1 and step ≥ 0.1 (BC-04); per-instrument max net exposure (BC-09); EU leverage e.g. 20–30:1 FX, 2:1 crypto; account currencies include EUR/CHF/GBP/PLN (BC-05) |
 

@@ -5,7 +5,7 @@ For a property or symbol not shown here, search the raw probe for its `[symbol N
 
 Columns: tick value is per 1 lot and one tick, in the account currency. Stops / freeze and spread in points. Filling (MT5 only) shows the symbol flags, then the fillings OrderCheck accepted for a market buy. MT4 has no filling or expiration flags.
 
-## A1 IG Group Limited MT4 - A1 @ IG-DEMO
+## A1 IG Group Limited MT4 @ IG-DEMO
 
 Currency USD, leverage 1:200, demo, margin mode hedging (MT4: every trade is its own ticket), order limit 10000, terminal build 1492. Probe `probe_IGGroupLimited_MT4_A1_20261112.txt` (27 symbols).
 
@@ -27,7 +27,7 @@ GatewaySmoke (`smoke_IGGroupLimited_MT4_A1_20261112.txt`, latest run per symbol)
 - XAUUSD: PASS 12, FAIL 0, SKIP 0 (0.2.0, 2026.11.12 11:30:24)
 - US30: PASS 12, FAIL 0, SKIP 0 (0.2.0, 2026.11.12 11:30:55)
 
-## A2 IC Markets (EU) Ltd MT4 - A2 @ ICMarketsEU-Demo03
+## A2 IC Markets (EU) Ltd MT4 @ ICMarketsEU-Demo03
 
 Currency USD, leverage 1:30, demo, margin mode hedging (MT4: every trade is its own ticket), order limit 100, terminal build 1492. Probe `probe_ICMarketsEULtd_MT4_A2_20261112.txt` (33 symbols).
 
@@ -50,7 +50,7 @@ GatewaySmoke (`smoke_ICMarketsEULtd_MT4_A2_20261112.txt`, latest run per symbol)
 - XAUUSD: PASS 12, FAIL 0, SKIP 0 (0.2.0, 2026.11.12 11:31:56)
 - US30: PASS 12, FAIL 0, SKIP 0 (0.2.0, 2026.11.12 11:32:28)
 
-## A3 IC Markets (EU) Ltd MT5 - A3 @ ICMarketsEU-Demo
+## A3 IC Markets (EU) Ltd MT5 @ ICMarketsEU-Demo
 
 Currency EUR, leverage 1:30, demo, margin mode hedging, order limit 200, terminal build 6311. Probe `probe_ICMarketsEULtd_MT5_A3_20261112.txt` (28 symbols).
 
@@ -76,7 +76,7 @@ GatewaySmoke (`smoke_ICMarketsEULtd_MT5_A3_20261112.txt`, latest run per symbol)
 - XAUUSD: PASS 12, FAIL 0, SKIP 0 (0.2.0, 2026.11.12 10:35:01)
 - US30: PASS 12, FAIL 0, SKIP 0 (0.2.0, 2026.11.12 10:35:20)
 
-## A4 Dukascopy Bank SA MT4 - A4 @ Dukascopy-demo-1
+## A4 Dukascopy Bank SA MT4 @ Dukascopy-demo-1
 
 Currency EUR, leverage 1:100, demo, margin mode hedging (MT4: every trade is its own ticket), order limit 1000, terminal build 1492. Probe `probe_DukascopyBankSA_MT4_A4_20261112.txt` (30 symbols).
 
@@ -102,7 +102,7 @@ GatewaySmoke (`smoke_DukascopyBankSA_MT4_A4_20261112.txt`, latest run per symbol
 - USA30.IDX: PASS 12, FAIL 0, SKIP 0 (0.2.0, 2026.11.12 11:34:06)
 - AUS.IDX: PASS 12, FAIL 0, SKIP 0 (0.2.0, 2026.11.12 11:34:36)
 
-## A5 Dukascopy Bank SA MT5 - A5 @ Dukascopy-demo-mt5-1
+## A5 Dukascopy Bank SA MT5 @ Dukascopy-demo-mt5-1
 
 Currency EUR, leverage 1:100, demo, margin mode hedging, order limit 0 (no limit), terminal build 6311. Probe `probe_DukascopyBankSA_MT5_A5_20261112.txt` (20 symbols).
 
@@ -130,7 +130,7 @@ GatewaySmoke (`smoke_DukascopyBankSA_MT5_A5_20261112.txt`, latest run per symbol
 - USA30.IDX: PASS 12, FAIL 0, SKIP 0 (0.2.0, 2026.11.12 10:36:11)
 - AUS.IDX: PASS 12, FAIL 0, SKIP 0 (0.2.0, 2026.11.12 10:36:28)
 
-## A6 MetaQuotes Ltd. MT5 - A6 @ MetaQuotes-Demo
+## A6 MetaQuotes Ltd. MT5 @ MetaQuotes-Demo
 
 Currency EUR, leverage 1:100, demo, margin mode netting, order limit 100, terminal build 6311. Probe `probe_MetaQuotesLtd_MT5_A6_20261112.txt` (28 symbols).
 

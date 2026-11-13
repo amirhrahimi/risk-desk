@@ -1,10 +1,10 @@
 # 01 — Product Requirements (PRD)
 
-Status: Draft v1.0 · Owner: project owner · Code name: **RiskDesk** (rename freely, see README)
+Status: v1.7.0 · Owner: project owner · Product name: **Risk Desk** (identifier in code and file names: `RiskDesk`)
 
 ## 1. Purpose
 
-A discretionary trader wants one panel on the chart that turns "where is my stop?" + "how much do I risk?" into a correctly sized order, then manages that order with a few buttons. The freeware tool the owner uses today does this, but it fails silently at two of the owner's three brokers (works at IG, not at IC Markets EU or Dukascopy). RiskDesk reproduces the same workflow and adds the broker-compatibility and diagnostics layer the original lacks.
+A discretionary trader wants one panel on the chart that turns "where is my stop?" + "how much do I risk?" into a correctly sized order, then manages that order with a few buttons. Map Manager by Mohammad Ali Poursamadi and team (credits in `NOTICE.md`) offers this workflow; its author states that it was tested only on the broker recommended on its website. RiskDesk reproduces the same workflow and adds a broker-compatibility and diagnostics layer, checked on several brokers' demo accounts (`docs/broker-compatibility.md`).
 
 ## 2. Users and context
 
@@ -14,7 +14,7 @@ A discretionary trader wants one panel on the chart that turns "where is my stop
 
 ## 3. Sources
 
-- Original user guide (Persian, 15 sections), translated below as "Orig §NN".
+- Original user guide (public, Persian, 15 sections), paraphrased below and referenced as "Orig §NN". Short quoted phrases and the button and input names are the only wording taken from it (`NOTICE.md`).
 - Original website changelog v2.0.0 / v2.0.1, marked "Orig v2.0.x".
 - Original input settings dialog (owner's screenshots of v2.0.1, 2026-11-09), marked "Orig input"; exact labels and defaults in `07-settings.md`.
 - Requirements marked **[NEW]** are improvements we add on purpose.

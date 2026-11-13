@@ -2,7 +2,7 @@
 
 How this file works:
 - **Open** questions say how to find the answer (usually a short test with the original tool on a demo account) and which **assumption** Claude Code implements until then, configurable where possible. The owner writes the answer in the `Answer` column.
-- Once a question is answered, Claude Code rewrites the answer as a **decision** precise enough to implement, updates the docs named in the row, moves the row to *Answered* and adds a line to the log in `history/implementation-log.md`.
+- Once a question is answered, Claude Code rewrites the answer as a **decision** precise enough to implement, updates the docs named in the row, moves the row to *Answered*; a decision with consequences beyond one row also gets an ADR.
 - Details Claude Code had to assume while turning an answer into a decision are listed under *Assumed details*. They need no reply unless they are wrong.
 
 ## Open

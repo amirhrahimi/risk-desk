@@ -1,3 +1,6 @@
+// Risk Desk - risk-based position sizing and trade management for MetaTrader 4/5
+// SPDX-License-Identifier: MIT
+
 //+------------------------------------------------------------------+
 //| RiskDesk - Scripts/RiskDesk/Tests/TestExtras.mqh                 |
 //| Purpose : unit tests of the P7 extras' pure parts:               |
@@ -135,10 +138,10 @@ void TestShotNames(CTestRunner &t)
   {
    t.Begin("F-19 / OP-14 screenshot names");
    datetime when = D'2026.11.12 10:43:21';
-   ASSERT_EQ_STR("buy", RdShotFileName(A1, "EURUSD", PERIOD_H1, when, "buy", 123),
-                 "A1_EURUSD_H1_2026-11-12_10-43-21_buy_123.png");
-   ASSERT_EQ_STR("camera", RdShotFileName(A3, "XAUUSD", PERIOD_M15, when, "manual", 0),
-                 "A3_XAUUSD_M15_2026-11-12_10-43-21_manual_0.png");
+   ASSERT_EQ_STR("buy", RdShotFileName(123456, "EURUSD", PERIOD_H1, when, "buy", 123),
+                 "123456_EURUSD_H1_2026-11-12_10-43-21_buy_123.png");
+   ASSERT_EQ_STR("camera", RdShotFileName(12345678, "XAUUSD", PERIOD_M15, when, "manual", 0),
+                 "12345678_XAUUSD_M15_2026-11-12_10-43-21_manual_0.png");
    ASSERT_EQ_STR("symbol with a space and a slash", RdShotFileName(1, "Nasdaq 100/x", PERIOD_MN1, when, "half", 7),
                  "1_Nasdaq_100_x_MN1_2026-11-12_10-43-21_half_7.png");
    ASSERT_EQ_STR("sanitize", RdSanitizeFileText("a/b\\c:d*e?f\"g<h>i|j k"), "a_b_c_d_e_f_g_h_i_j_k");

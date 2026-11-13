@@ -1,3 +1,6 @@
+// Risk Desk - risk-based position sizing and trade management for MetaTrader 4/5
+// SPDX-License-Identifier: MIT
+
 //+------------------------------------------------------------------+
 //| RiskDesk - App/UiSelfTestManageClose.mqh                         |
 //| Layer   : App, DEBUG builds only (RD_TEST_HOOKS)                 |

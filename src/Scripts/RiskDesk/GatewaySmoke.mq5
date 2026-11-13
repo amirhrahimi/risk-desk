@@ -1,3 +1,6 @@
+// Risk Desk - risk-based position sizing and trade management for MetaTrader 4/5
+// SPDX-License-Identifier: MIT
+
 //+------------------------------------------------------------------+
 //| GatewaySmoke.mq5 - gateway smoke test script entry file (MT5)    |
 //| Places, modifies, closes and deletes REAL orders on the chart    |
@@ -8,6 +11,8 @@
 #include "..\..\Include\RiskDesk\Build.mqh"
 
 #property copyright   RD_COPYRIGHT
+#property link        RD_LINK
+#property version     RD_VERSION_PROP
 #property description "RiskDesk gateway smoke test: real orders on DEMO accounts only, minimum volume,"
 #property description "everything closed/deleted at the end. Writes MQL5\\Files\\RiskDesk\\smoke_*.txt."
 #property script_show_inputs

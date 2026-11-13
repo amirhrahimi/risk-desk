@@ -1,3 +1,6 @@
+// Risk Desk - risk-based position sizing and trade management for MetaTrader 4/5
+// SPDX-License-Identifier: MIT
+
 //+------------------------------------------------------------------+
 //| RiskDesk - Domain/RiskBudget.mqh                                 |
 //| Layer   : Domain (pure: no terminal calls)                       |

@@ -1,3 +1,6 @@
+// Risk Desk - risk-based position sizing and trade management for MetaTrader 4/5
+// SPDX-License-Identifier: MIT
+
 //+------------------------------------------------------------------+
 //| RiskDesk - App/Commands.mqh                                      |
 //| Layer   : App                                                    |
@@ -505,7 +508,7 @@ string CCommands::LevelsText(const SSymbolSpec &s, const double sl, const double
   }
 
 //+------------------------------------------------------------------+
-//| The phase that brought each button (09).                         |
+//| The development phase that brought each button (P3-P6).         |
 //+------------------------------------------------------------------+
 string CCommands::Phase(const EPanelButton b)
   {

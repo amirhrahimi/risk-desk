@@ -1,0 +1,54 @@
+# UNTESTED / REQUIRES SETUP.
+# Draft of a compile check for the MT5 targets on a GitHub-hosted Windows runner.
+# It has never been run. Known open points:
+#   - the MetaTrader 5 installer's silent mode ("/auto") and install path on the runner are assumptions;
+#   - MetaEditor may need a first start or a data folder before it compiles;
+#   - MetaTrader 4 is not covered: MetaQuotes offers no public MT4 installer, so MT4 needs a
+#     self-hosted runner or a broker's installer.
+# It runs only when started by hand (Actions -> compile-check -> Run workflow). Add push / pull_request
+# triggers only after a manual run has succeeded. The local reference is build/build.ps1.
+name: compile-check (untested)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mt5:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MetaTrader 5 (for MetaEditor)
+        shell: pwsh
+        run: |
+          $setup = Join-Path $env:RUNNER_TEMP 'mt5setup.exe'
+          Invoke-WebRequest -Uri 'https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe' -OutFile $setup
+          Start-Process -FilePath $setup -ArgumentList '/auto' -Wait
+          $editor = 'C:\Program Files\MetaTrader 5\metaeditor64.exe'
+          if (-not (Test-Path -LiteralPath $editor)) { throw "MetaEditor not found at $editor" }
+
+      - name: Compile and check for 0 errors, 0 warnings
+        shell: pwsh
+        run: |
+          $editor = 'C:\Program Files\MetaTrader 5\metaeditor64.exe'
+          $targets = 'src\Experts\RiskDesk.mq5', 'src\Scripts\RiskDesk\BrokerProbe.mq5',
+                     'src\Scripts\RiskDesk\GatewaySmoke.mq5', 'src\Scripts\RiskDesk\RiskDeskTests.mq5'
+          $failed = 0
+          foreach ($t in $targets) {
+            $file = (Resolve-Path $t).Path
+            $log = [IO.Path]::ChangeExtension($file, '.log')
+            if (Test-Path -LiteralPath $log) { Remove-Item -LiteralPath $log }
+            Start-Process -FilePath $editor -ArgumentList @("/compile:`"$file`"", '/log') -Wait -WindowStyle Hidden
+            if (-not (Test-Path -LiteralPath $log)) { Write-Host "FAIL $t : no log"; $failed++; continue }
+            $text = Get-Content -LiteralPath $log -Raw   # BOM-aware (the log is often UTF-16)
+            $m = [regex]::Matches($text, '(\d+)\s+errors?(?:\(s\))?\s*,\s*(\d+)\s+warnings?(?:\(s\))?', 'IgnoreCase')
+            if ($m.Count -eq 0) { Write-Host "FAIL $t : no result line"; $text; $failed++; continue }
+            $e = [int]$m[$m.Count - 1].Groups[1].Value; $w = [int]$m[$m.Count - 1].Groups[2].Value
+            Write-Host ("{0} {1} : {2} errors, {3} warnings" -f ($(if ($e + $w -eq 0) { 'PASS' } else { 'FAIL' })), $t, $e, $w)
+            if ($e + $w -gt 0) { $text; $failed++ }
+          }
+          if ($failed -gt 0) { exit 1 }

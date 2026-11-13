@@ -78,11 +78,11 @@
 
 .EXAMPLE
     powershell -File build/build.ps1 -Debug -Target mt5
-    powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol EURUSD
-    powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol EURUSD -Suite trade
-    powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol XAUUSD -Suite trade-basic
-    powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol EURUSD -Suite pending -TimeoutSec 600
-    powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol EURUSD -Suite manage -TimeoutSec 900
+    powershell -File build/run-uitest.ps1 -Platform mt5 -Login <login> -Server ICMarketsEU-Demo -Symbol EURUSD
+    powershell -File build/run-uitest.ps1 -Platform mt5 -Login <login> -Server ICMarketsEU-Demo -Symbol EURUSD -Suite trade
+    powershell -File build/run-uitest.ps1 -Platform mt5 -Login <login> -Server ICMarketsEU-Demo -Symbol XAUUSD -Suite trade-basic
+    powershell -File build/run-uitest.ps1 -Platform mt5 -Login <login> -Server ICMarketsEU-Demo -Symbol EURUSD -Suite pending -TimeoutSec 600
+    powershell -File build/run-uitest.ps1 -Platform mt5 -Login <login> -Server ICMarketsEU-Demo -Symbol EURUSD -Suite manage -TimeoutSec 900
     powershell -File build/build.ps1
 #>
 param(

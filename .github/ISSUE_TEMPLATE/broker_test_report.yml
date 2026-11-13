@@ -1,0 +1,100 @@
+name: Broker test report
+description: Tell us how Risk Desk behaves with your broker (works, fails, or partly works).
+title: "Broker report: <broker> <MT4/MT5> <account type>"
+labels: ["broker report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. Reports like this one are how the compatibility table grows (docs/broker-compatibility.md).
+        **Test on a demo account first.** Redact attached reports with `build/redact-report.ps1` (it replaces the login and the data path), and remove account numbers and balances from logs and screenshots.
+  - type: input
+    id: version
+    attributes:
+      label: Risk Desk version
+      placeholder: "1.7.0"
+    validations:
+      required: true
+  - type: input
+    id: broker
+    attributes:
+      label: Broker (legal entity) and server
+      placeholder: "Example Broker (EU) Ltd, ExampleBroker-Demo02"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: ["MetaTrader 4", "MetaTrader 5"]
+    validations:
+      required: true
+  - type: input
+    id: build
+    attributes:
+      label: Terminal build
+      placeholder: "1492"
+    validations:
+      required: true
+  - type: input
+    id: account
+    attributes:
+      label: Account type
+      description: Demo or live, hedging or netting, account currency, leverage, standard/raw/cent.
+      placeholder: "demo, hedging, EUR, 1:30, raw (commission 7 per lot)"
+    validations:
+      required: true
+  - type: input
+    id: symbols
+    attributes:
+      label: Symbols and timeframes tested
+      placeholder: "EURUSD M15, XAUUSD H1, US30 M5"
+    validations:
+      required: true
+  - type: textarea
+    id: inputs
+    attributes:
+      label: Inputs changed from their defaults
+  - type: input
+    id: period
+    attributes:
+      label: Test period
+      placeholder: "2026-11-20 to 2026-11-22, London and New York sessions"
+  - type: checkboxes
+    id: tested
+    attributes:
+      label: What you tried
+      options:
+        - label: Buy / Sell with the SL line
+        - label: Pending orders (Set Pending, dragging a placed order, Del Pending)
+        - label: Risk Free
+        - label: Half Close
+        - label: Chart Close / Full Close
+        - label: BrokerProbe (report attached, redacted)
+        - label: GatewaySmoke on a demo account (report attached, redacted)
+  - type: dropdown
+    id: result
+    attributes:
+      label: Overall result
+      options: ["works", "partly works", "does not work"]
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Lot sizes compared with your own calculation, refused orders with their status-bar text, anything unexpected.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Experts-tab lines (redacted)
+      render: text
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy
+      options:
+        - label: I removed account numbers, balances, user names and passwords from this report and its attachments.
+          required: true

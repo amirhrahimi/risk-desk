@@ -80,9 +80,10 @@ $out.Add('For a property or symbol not shown here, search the raw probe for its 
 $out.Add('')
 $out.Add('Columns: tick value is per 1 lot and one tick, in the account currency. Stops / freeze and spread in points. Filling (MT5 only) shows the symbol flags, then the fillings OrderCheck accepted for a market buy. MT4 has no filling or expiration flags.')
 
-# latest probe per platform + login
+# latest probe per platform + login. The login part is the numeric login of
+# a raw report or the label of a report redacted by build/redact-report.ps1.
 $probes = @(Get-ChildItem -LiteralPath $ProfilesDir -Filter 'probe_*.txt' -File | ForEach-Object {
-    if ($_.Name -match '^probe_(.+)_(MT4|MT5)_(\d+)_(\d{8})\.txt$') {
+    if ($_.Name -match '^probe_(.+)_(MT4|MT5)_(\d+|[A-Za-z][A-Za-z0-9]{0,7})_(\d{8})\.txt$') {
         [pscustomobject]@{ File = $_; Platform = $Matches[2]; Login = $Matches[3]; Date = $Matches[4] }
     }
 } | Group-Object Platform, Login | ForEach-Object { $_.Group | Sort-Object Date | Select-Object -Last 1 })
@@ -99,7 +100,8 @@ foreach ($row in @($rows | Sort-Object Id, Login)) {
     $p = $row.Probe; $r = $row.Report
     $acc = $r['account']; $term = $r['terminal']; $sum = $r['summary']
     $out.Add('')
-    $out.Add("## $($row.Id) $($row.Company) $($p.Platform) - $($p.Login) @ $(Get-Val $acc 'server')")
+    $loginPart = if ($p.Login -eq $row.Id) { '' } else { " - $($p.Login)" }
+    $out.Add("## $($row.Id) $($row.Company) $($p.Platform)$loginPart @ $(Get-Val $acc 'server')")
     $out.Add('')
     $out.Add("Currency $(Get-Val $acc 'currency'), leverage $(Get-Val $acc 'leverage'), $(Get-Val $acc 'trade_mode'), margin mode $(Get-Val $acc 'margin_mode'), order limit $(Get-Val $acc 'limit_orders'), terminal build $(Get-Val $term 'build'). " +
              "Probe ``$($p.File.Name)`` ($(Get-Val $sum 'symbols_probed') symbols).")
