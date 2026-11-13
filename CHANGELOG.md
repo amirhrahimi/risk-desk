@@ -4,6 +4,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+- CI: the MT5 compile check and the Markdown link check were verified on GitHub Actions and now run on every pull request and push to `main` that touches the sources or the docs. MT4 is still checked locally with `build/build.ps1`.
+
 ## [1.7.0] - 2026-11-13
 
 First public pre-release. Tested on demo accounts only (IG MT4, IC Markets EU MT4 and MT5, Dukascopy MT4 and MT5, MetaQuotes-Demo MT5 netting); not yet tested on live accounts. See the README for known limitations.
