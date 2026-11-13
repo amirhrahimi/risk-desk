@@ -62,7 +62,7 @@ When docs conflict, precedence is: 03 > 04 > 06 > 01 > the rest. Report every co
 /
 ├─ CLAUDE.md  README.md  CHANGELOG.md  ROADMAP.md  LICENSE  NOTICE.md
 ├─ CONTRIBUTING.md  CODE_OF_CONDUCT.md  SECURITY.md  SUPPORT.md
-├─ .github/                    issue templates, PR template, workflows (compile check: untested)
+├─ .github/                    issue templates, PR template, workflows (MT5 compile check, docs link check)
 ├─ docs/                       user documentation (installation, user guide, configuration, ...)
 │  └─ design/                  specifications 01-08, 10, 11 (see rule R12)
 │     └─ adr/                  one file per ADR, indexed by 10-decisions.md

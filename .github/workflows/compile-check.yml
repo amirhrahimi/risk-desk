@@ -1,16 +1,20 @@
-# UNTESTED / REQUIRES SETUP.
-# Draft of a compile check for the MT5 targets on a GitHub-hosted Windows runner.
-# It has never been run. Known open points:
-#   - the MetaTrader 5 installer's silent mode ("/auto") and install path on the runner are assumptions;
-#   - MetaEditor may need a first start or a data folder before it compiles;
-#   - MetaTrader 4 is not covered: MetaQuotes offers no public MT4 installer, so MT4 needs a
-#     self-hosted runner or a broker's installer.
-# It runs only when started by hand (Actions -> compile-check -> Run workflow). Add push / pull_request
-# triggers only after a manual run has succeeded. The local reference is build/build.ps1.
-name: compile-check (untested)
+# Compiles the four MT5 targets with MetaEditor on a GitHub-hosted Windows runner and fails on
+# any error or warning (rule R11). First verified 2026-11-13 (about 1.5 minutes per run).
+# MetaTrader 4 is not covered: MetaQuotes offers no public MT4 installer, so MT4 is checked
+# locally with build/build.ps1, which remains the reference for both platforms.
+name: compile-check
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'src/**'
+      - '.github/workflows/compile-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - '.github/workflows/compile-check.yml'
 
 permissions:
   contents: read
@@ -20,7 +24,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install MetaTrader 5 (for MetaEditor)
         shell: pwsh

@@ -1,11 +1,19 @@
-# UNTESTED. Checks that relative links between the Markdown files point to existing files and
-# headings. Offline mode only: external URLs are not fetched, so the check does not depend on
-# other websites. Runs only when started by hand until a first run has succeeded; then add
-# push / pull_request triggers for '**.md'.
-name: docs-links (untested)
+# Checks that relative links between the Markdown files point to existing files and headings.
+# Offline mode: external URLs are not fetched, so the check does not depend on other websites.
+# First verified 2026-11-13.
+name: docs-links
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - '**/*.md'
+      - '.github/workflows/docs-links.yml'
+  push:
+    branches: [main]
+    paths:
+      - '**/*.md'
+      - '.github/workflows/docs-links.yml'
 
 permissions:
   contents: read
@@ -15,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Check relative links (offline)
         uses: lycheeverse/lychee-action@v2
         with:
