@@ -86,6 +86,8 @@ void CUiSelfTest::TradeStart()
      }
    double minPct = m_ts.volMin * (loss + MathMax(0.0, m_cfg.commissionPerLot)) / base * 100.0;
    m_testRisk = MathMax(0.05, MathCeil(minPct * 2.5 * 100.0 - 1e-9) / 100.0);
+   if(m_suite == "half")
+      m_testRisk = MathMin(m_testRisk, 1.0);   // the half suite sizes its cases itself (HfAffordable), not by Risk %
    if(m_testRisk > 1.0)
      {
       Line("INFO the minimum lot " + RdFormatLots(m_ts, m_ts.volMin) + " risks " + RdFormatPct(minPct) + " at a " +

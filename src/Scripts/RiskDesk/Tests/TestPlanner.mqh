@@ -45,6 +45,10 @@ void TestV19(CTestRunner &t)
    ASSERT_FALSE("bid 1.10035 skipped", ok);
    ASSERT_EQ_INT("skip is amber", r.sev, SEV_WARN);
    ASSERT_CONTAINS("needed price", r.message, "not enough profit (needs Bid >= 1.10043)");
+   ASSERT_EQ_INT("skip reason: not enough profit", rf.skip, RFSKIP_NOT_ENOUGH);
+   TfQuote(q, 1.10050, 1.10062);
+   CPlanner::RiskFree(in, q, s, cfg, rf, r);
+   ASSERT_EQ_INT("applied: no skip reason", rf.skip, RFSKIP_NONE);
   }
 
 //+------------------------------------------------------------------+
@@ -65,8 +69,10 @@ void TestV20(CTestRunner &t)
    ASSERT_FALSE("skipped", CPlanner::RiskFree(in, q, s, cfg, rf, r));
    ASSERT_NEAR("target 1.10012", rf.target, 1.10012, 1e-12);
    ASSERT_CONTAINS("already protected", r.message, "already protected");
+   ASSERT_EQ_INT("skip reason: protected", rf.skip, RFSKIP_PROTECTED);
    in.sl = 1.10012;
    ASSERT_FALSE("SL already at the target: skipped", CPlanner::RiskFree(in, q, s, cfg, rf, r));
+   ASSERT_EQ_INT("SL at the target: protected", rf.skip, RFSKIP_PROTECTED);
   }
 
 //+------------------------------------------------------------------+
@@ -183,6 +189,7 @@ void TestRiskFreeSkips(CTestRunner &t)
    SResult r;
    ASSERT_FALSE("buy below open", CPlanner::RiskFree(in, q, s, cfg, rf, r));
    ASSERT_EQ_STR("not in profit", r.message, "not in profit");
+   ASSERT_EQ_INT("skip reason: not in profit", rf.skip, RFSKIP_NOT_IN_PROFIT);
    in.side = SIDE_SELL;
    in.sl = 1.10200;
    ASSERT_FALSE("sell with Ask above open", CPlanner::RiskFree(in, q, s, cfg, rf, r));
@@ -193,6 +200,12 @@ void TestRiskFreeSkips(CTestRunner &t)
    TfQuote(q, 1.10100, 1.10112);
    ASSERT_FALSE("TP inside the freeze level", CPlanner::RiskFree(in, q, s, cfg, rf, r));
    ASSERT_CONTAINS("frozen reason", r.message, "frozen: TP is within the freeze level (10 pts) of Bid");
+   ASSERT_EQ_INT("skip reason: frozen", rf.skip, RFSKIP_FROZEN);
+   in.tickValue = 0.0;
+   cfg.commissionPerLot = 7.0;
+   s.freezeLevel = 0;
+   ASSERT_FALSE("refused (cannot value the commission)", CPlanner::RiskFree(in, q, s, cfg, rf, r));
+   ASSERT_EQ_INT("a refusal is not a skip", rf.skip, RFSKIP_NONE);
   }
 
 //+------------------------------------------------------------------+

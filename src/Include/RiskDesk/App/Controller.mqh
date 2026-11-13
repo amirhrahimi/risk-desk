@@ -101,7 +101,7 @@ struct SPreview
 #define RD_CTL_UI_SAVE_MS     1000    // 02 section 8: ui.ini debounced 1 s
 #define RD_CTL_TICK_MIN_MS    50      // ticks refresh at most every 50 ms
 
-class CController
+class CController : public CProgressSink
   {
 private:
    CSettings        *m_cfg;
@@ -179,6 +179,7 @@ public:
    void              Refresh();
    void              Click(const EPanelButton b);
    void              Report(const SResult &r);
+   virtual void      Progress(const string text);
    void              LoadRisk(const long login);
    bool              ChartSizeChanged();
    bool              CheckChartLook();
@@ -449,6 +450,24 @@ void CController::Report(const SResult &r)
          RD_LOG_WARN("Status: " + r.message);
       else
          RD_LOG_INFO("Status: " + r.message);
+  }
+
+//+------------------------------------------------------------------+
+//| OP-12 "Closing 4/9...": a command that sends several requests    |
+//| shows each step at once. Requests are synchronous, so this is    |
+//| the only drawing while the command runs. Not logged: the gateway |
+//| logs every request, and Report() logs the final status.          |
+//+------------------------------------------------------------------+
+void CController::Progress(const string text)
+  {
+   m_status.Show(SEV_OK, text);
+   SQuote q;
+   bool quoteOk = CMarket::Quote(_Symbol, q);
+   SPanelModel m;
+   BuildModel(m, q, quoteOk);
+   m_status.Fill(m, m_panel.StatusWidth());
+   m_panel.Render(m);
+   m_redraw.Flush();
   }
 
 //+------------------------------------------------------------------+

@@ -148,7 +148,7 @@ Orig §11: for all trades on this chart that are currently in profit, move SL to
 
 ### F-12 Half Close
 Orig §12: closes half of the volume of every open trade on the chart, in profit or loss.
-- AC1 For each position: close `floor(volume × InpPartialClosePct%)` to the volume step; remaining volume must be ≥ min lot.
+- AC1 For each position: close the volume on the step grid nearest to `volume × InpPartialClosePct%`, a tie keeping the larger part (Q23): at 50 % 3 lots → close 1, keep 2; 0.25 → close 0.12, keep 0.13; Half Close again and again from 2 lots keeps 1 → 0.50 → 0.25 → 0.13 → 0.07 → 0.04 → 0.02 → 0.01, then the minimum lot cannot be split. The remaining volume must be ≥ min lot (04 §10).
 - AC2 Indivisible positions follow `InpPartialIndivisible` (default Skip) and are reported.
 
 ### F-13 Chart Close

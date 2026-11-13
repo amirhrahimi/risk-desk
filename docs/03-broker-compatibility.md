@@ -145,6 +145,7 @@ RiskDesk does **not** require MetaTrader's One-Click Trading (the original did).
 ### BC-16 Identification of tool trades
 - Identify by magic number (`InpMagic`). Comments are informational only: brokers may truncate or replace them.
 - MT4 partial close usually creates a new ticket for the remainder that keeps the magic, but some servers keep the original ticket open with the smaller volume (observed: IG MT4). Check both; always re-list positions after a partial close.
+- Where the original ticket stays open (IG MT4), the closed part is booked as a NEW order in the account history: the next ticket number, magic 0, same symbol, type and open price, the closed volume. Its P/L is read from there (D37); never filter the history by magic to find a tool trade's partial closes.
 
 ### BC-17 Market closed and stale quotes
 - If the last tick is older than `InpStaleQuoteSec` (300 s), show an amber hint "No quotes for 5 min – market may be closed". Do not block; the server decides.
@@ -190,6 +191,19 @@ P5 pending self-test (08 §3f, 2026-11-12, Set Pending / overlay drags / Del Pen
 - Stops level only at IG MT4 (A1): 40 pts EURUSD, 200 pts XAUUSD, 150 pts US30; an entry or SL inside it was refused before sending with the distance and the price to move to (T-14). The other accounts report 0.
 - A4 Dukascopy MT4: after `OrderDelete` returned OK the terminal kept listing the deleted order for a moment; a second delete of it was answered by MetaTrader itself with 4108 "unknown ticket" (once "invalid request"). G-05 now waits until the ticket is gone from the list and treats a refused delete of a vanished ticket as already deleted (ADR-025).
 - A6 netting: a Buy Stop beside an open buy was placed after the merge confirmation; a Sell Limit was refused (D27).
+
+P6 manage self-test (08 §3g, 2026-11-12 evening, Risk Free / Half Close / Chart Close / Full Close with real demo positions on A1–A6: EURUSD, gold on IG):
+- Every server accepted the SL moves (G-03), the partial closes and the full closes (G-04); the P/L in each Chart / Full Close status equalled the history's P/L of those exits.
+- Partial close: IC Markets MT4 (A2) and Dukascopy MT4 (A4) give the rest a new ticket (named in the status, `rest 0.02 is now #…`); IG MT4 (A1) keeps the original ticket open with the smaller volume, as the probe said. There the gateway found no closed order under that ticket, so Half Close on IG showed no P/L (fixed by D37, see the Half Close self-test below).
+- Risk Free: IC Markets EURUSD had a 0-point spread at that hour, so the moved SL was the open price exactly (no commission set). On A5 the spread went from 1 to 4 points between two positions of one click; Risk Free values each position with its own fresh quote, so it tightened a position the test had just put at break-even (04 §9 applies the current spread; the SL never loosened). With IG's stops level (40 pts EURUSD, 200 pts gold) the price did not get far enough in profit within 180 s, so only the skip reasons were checked there.
+- A6 netting: two buys merged into one position at the averaged price; Half Close sent an opposite deal of half and the same position kept the other half and its open price (BC-10).
+- AUS.IDX (Dukascopy) was outside its session at 23:37 server time, so T-17's whole-contract case ran only as the minimum-lot case (the same code path: a minimum-lot position cannot be halved).
+- MetaTrader 5 updated itself (6311 → 6316) during one unattended start and was restarted by its updater without the startup configuration; `run-uitest.ps1` now says so instead of suggesting a missing debug build.
+
+Half Close self-test (08 §3h, 2026-11-13 night, indices and majors on A1–A6):
+- Grids covered: whole lots (IC Markets MT4 US30 / USTEC, IC Markets MT5 JP225, Dukascopy AUS.IDX on MT4 and MT5), 0.1 (IC Markets MT5 US30 / US500, Dukascopy USA30.IDX on MT4 and MT5), 0.01 (IG US30 / NAS100, every FX major). Every server accepted every partial close; the split was the same on every grid (then still the floor rule: 3 steps → 1 closed, 2 left; the minimum lot cannot be split). After Q23 (nearest, a tie keeping the larger part: the same splits at 50 %, plus the owner's halving path 25 → 13 → 7 → 4 → 2 → 1 → skip) the suite was run again on every account.
+- IG MT4 (A1) keeps the original ticket and books the closed part as a new history order with magic 0 (BC-16). Until D37 the gateway did not look there, so Half Close on IG showed no P/L, and a click that also closed a minimum-lot position whole showed the P/L of that one only (`(1 of 2 closes)`).
+- MetaQuotes-Demo (A6, netting): US30 and US500 have trade mode "disabled", so netting ran on the majors only.
 
 ## 4. BrokerProbe → what to look at
 For each account the probe report (08-testing §3) must let a developer answer, per symbol: filling flags, expiration flags, execution mode, order-mode flags, tick size vs point, tick value vs computed expectation, volume min/step/max/limit, stops/freeze level, margin for 1 lot, and account margin mode/currency/leverage. Any surprise becomes a new line in §3 and, if needed, a new BC rule.

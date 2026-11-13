@@ -9,6 +9,7 @@
 //|           - CostDistance: price distance worth an amount, used   |
 //|             for the Risk Free commission offset    (section 9)   |
 //|           - PartialClose volume                    (section 10)  |
+//|           - CloseChunk: a full close above the max volume (D35)  |
 //|           - LossPerLotByTicks: the tick-value valuation (BC-05)  |
 //|             as a pure formula. Platform/Money decides which      |
 //|             valuation the EA uses; the tests use this one.       |
@@ -93,6 +94,7 @@ public:
                                   double &dist);
    static bool       PartialClose(const double volume, const SSymbolSpec &s, const SPlanSettings &cfg,
                                   SPartialClose &pc, SResult &r);
+   static bool       CloseChunk(const double remaining, const SSymbolSpec &s, double &chunk);
   };
 
 //+------------------------------------------------------------------+
@@ -254,8 +256,15 @@ bool CRiskMath::CostDistance(const double money, const double moneyPerTick, cons
   }
 
 //+------------------------------------------------------------------+
-//| 04 section 10. true: close pc.closeVolume. false: skipped,       |
-//| r.sev == SEV_WARN with the reason (or SEV_ERROR on bad input).   |
+//| 04 section 10 (Q23): the split nearest to the percentage, a tie  |
+//| keeping the larger part (3 lots at 50 % -> close 1, keep 2; 0.25 |
+//| -> close 0.12, keep 0.13). hi = the largest close that leaves at |
+//| least the minimum lot; the grid volume nearest to vol x pct;     |
+//| above hi: hi when it is as near as closing everything or nearer, |
+//| else indivisible (as when nothing is nearest or no split leaves a|
+//| minimum lot). true: close                                        |
+//| pc.closeVolume. false: skipped, r.sev == SEV_WARN with the reason|
+//| (or SEV_ERROR on bad input).                                     |
 //+------------------------------------------------------------------+
 bool CRiskMath::PartialClose(const double volume, const SSymbolSpec &s, const SPlanSettings &cfg,
                              SPartialClose &pc, SResult &r)
@@ -266,13 +275,22 @@ bool CRiskMath::PartialClose(const double volume, const SSymbolSpec &s, const SP
    if(!MathIsValidNumber(volume) || volume <= 0.0)
       return RdFail(r, "Position volume is " + RdNum(volume));
 
+   double raw = volume * cfg.partialClosePct / 100.0;
+   double hi = 0.0;
    double closeVol = 0.0;
-   bool divisible = RdFloorVolume(s, volume * cfg.partialClosePct / 100.0, closeVol);
+   bool divisible = RdFloorVolume(s, volume - s.volMin, hi) && RdNearestVolume(s, raw, closeVol);
+   if(divisible && RdVolGt(closeVol, hi))
+     {
+      if(raw - hi <= volume - raw + RD_VOL_EPS)
+         closeVol = hi;          // the nearest split that leaves a minimum lot (a tie keeps more)
+      else
+         divisible = false;      // closing everything is nearer
+     }
    double remain = 0.0;
    if(divisible)
      {
       remain = NormalizeDouble(volume - closeVol, RdLotDigits(s));
-      if(RdVolGt(remain, 0.0) && RdVolLt(remain, s.volMin))
+      if(!RdVolGt(remain, 0.0) || RdVolLt(remain, s.volMin))
          divisible = false;
      }
 
@@ -294,6 +312,33 @@ bool CRiskMath::PartialClose(const double volume, const SSymbolSpec &s, const SP
    pc.closeVolume = closeVol;
    pc.remainVolume = remain;
    return RdOk(r, "close " + RdFormatLots(s, closeVol) + ", keep " + RdFormatLots(s, remain));
+  }
+
+//+------------------------------------------------------------------+
+//| Closing a whole position whose volume is above the broker's      |
+//| maximum per request (a netting position can grow past it, BC-04, |
+//| D35): the volume of the next close request. All of 'remaining'   |
+//| when it fits; else the maximum on the grid, or less when that    |
+//| would leave a rest below the minimum lot. False when no valid    |
+//| request exists (volume <= 0, invalid grid).                      |
+//+------------------------------------------------------------------+
+bool CRiskMath::CloseChunk(const double remaining, const SSymbolSpec &s, double &chunk)
+  {
+   chunk = 0.0;
+   if(!MathIsValidNumber(remaining) || remaining <= 0.0)
+      return false;
+   if(!(s.volMax > 0.0) || !RdVolGt(remaining, s.volMax))
+     {
+      chunk = remaining;
+      return true;
+     }
+   double c = 0.0;
+   if(!RdFloorVolume(s, s.volMax, c))
+      return false;
+   if(RdVolLt(remaining - c, s.volMin) && !RdFloorVolume(s, remaining - s.volMin, c))
+      return false;
+   chunk = c;
+   return RdVolGt(chunk, 0.0);
   }
 
 #endif // RD_DOMAIN_RISKMATH_MQH

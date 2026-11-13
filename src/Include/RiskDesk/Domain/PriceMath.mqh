@@ -180,6 +180,38 @@ bool RdFloorVolume(const SSymbolSpec &s, const double raw, double &lots)
    return RdFloorVolume(raw, s.volMin, s.volStep, lots);
   }
 
+// Grid volume volMin + k x volStep nearest to raw, a tie rounding DOWN (Half
+// Close closes the smaller part, so the larger part stays: 04 section 10,
+// Q23). Below volMin the choice is nothing or volMin: false when nothing is
+// nearer or as near (or the grid is invalid). The -1e-8 (in steps) keeps
+// 0.125 at step 0.01 a tie whichever way the doubles round (11.5 - 0.5).
+bool RdNearestVolume(const double raw, const double volMin, const double volStep, double &lots)
+  {
+   lots = 0.0;
+   if(!MathIsValidNumber(raw) || !MathIsValidNumber(volMin) || !MathIsValidNumber(volStep))
+      return false;
+   if(volStep <= 0.0 || volMin <= 0.0 || raw <= 0.0)
+      return false;
+   int digits = RdLotDigits(volMin, volStep);
+   if(raw < volMin - RD_VOL_MIN_EPS)
+     {
+      if(raw / volMin - RD_VOL_EPS <= 0.5)
+         return false;
+      lots = NormalizeDouble(volMin, digits);
+      return true;
+     }
+   double k = MathCeil((raw - volMin) / volStep - 0.5 - RD_VOL_EPS);
+   if(k < 0.0)
+      k = 0.0;
+   lots = NormalizeDouble(volMin + k * volStep, digits);
+   return true;
+  }
+
+bool RdNearestVolume(const SSymbolSpec &s, const double raw, double &lots)
+  {
+   return RdNearestVolume(raw, s.volMin, s.volStep, lots);
+  }
+
 //--- volume comparisons with 1e-8 tolerance
 bool RdVolEq(const double a, const double b)
   {

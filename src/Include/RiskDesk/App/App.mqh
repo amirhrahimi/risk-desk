@@ -148,6 +148,7 @@ int CApp::Init()
    m_ctl.Init(GetPointer(m_cfg), GetPointer(m_state), GetPointer(m_panel), GetPointer(m_status), GetPointer(m_cmd),
               GetPointer(m_layout), GetPointer(m_redraw), GetPointer(m_store), GetPointer(m_gw), GetPointer(m_money),
               GetPointer(m_lines), GetPointer(m_overlay));
+   m_cmd.SetProgress(GetPointer(m_ctl));   // "Closing 4/9..." (OP-12)
    m_ctl.ChartSizeChanged();   // chart size + auto-fit before the objects exist
 
    ResetLastError();
