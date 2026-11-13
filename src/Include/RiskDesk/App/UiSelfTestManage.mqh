@@ -263,7 +263,7 @@ string CUiSelfTest::MgPickSymbol(const string not1, const string not2)
   {
    SAccountSpec acc;
    SResult ar;
-   CAccountSpec::Read(acc, ar);
+   CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor);
    double base = Base();
    for(int i = 0; i < SymbolsTotal(true); i++)
      {

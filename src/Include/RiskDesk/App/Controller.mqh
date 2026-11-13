@@ -23,6 +23,9 @@
 //|             screenshots after commands (F-19).                   |
 //|           - pending order overlay (P5, F-22): drawn every        |
 //|             refresh; a dropped overlay line runs OP-16.          |
+//|           - chart extras (P7): candle countdown (F-21) and       |
+//|             closed-trade objects (F-20) every refresh; old daily |
+//|             log files pruned at start and each new day (F-32).   |
 //|           View model and idle readout: App/ControllerModel.mqh.  |
 //|           Preview and lines: App/ControllerPreview.mqh.          |
 //|           Overlay and OP-16 drops: App/ControllerOverlay.mqh.    |
@@ -44,6 +47,8 @@
 #include "..\Services\Logger.mqh"
 #include "..\Services\Persistence.mqh"
 #include "..\Services\Screenshot.mqh"
+#include "..\Services\CandleTime.mqh"
+#include "..\Services\ChartHousekeeping.mqh"
 #include "..\UI\Theme.mqh"
 #include "..\UI\Layout.mqh"
 #include "..\UI\Widgets.mqh"
@@ -116,6 +121,10 @@ private:
    CMoney           *m_money;
    CLines           *m_lines;
    CPendingOverlay  *m_overlay;
+   CCandleTime      *m_candle;          // F-21 (NULL = none)
+   CChartHousekeeping *m_house;         // F-20 (NULL = none)
+   bool              m_houseFirst;      // first refresh: scan for closed-trade objects at once
+   int               m_logDay;          // local day of the last log pruning (F-32), -1 = not yet
 
    SPreview          m_pv;
    SOverlayItem      m_ov[];            // placed pending orders as drawn (F-22)
@@ -165,6 +174,7 @@ private:
    bool              SyncOverlay();
    void              OverlayLabels(const SOrder &arr[], const SAccountSpec &acc, const bool accOk);
    void              OverlayDropped(const ulong ticket, const ELineRole role, const bool drag);
+   bool              SyncExtras(const SQuote &q, const bool quoteOk);
 
 public:
                      CController();
@@ -172,7 +182,16 @@ public:
                           CLayout *layout, CRdRedraw *redraw, CPersistence *store, CTradeGateway *gw, CMoney *money,
                           CLines *lines, CPendingOverlay *overlay);
    void              AdoptLines();
+   // P7 chart extras, owned by CApp (05 section 6).
+   void              SetExtras(CCandleTime *candle, CChartHousekeeping *house)
+     {
+      m_candle = candle;
+      m_house = house;
+      m_houseFirst = true;
+     }
    string            LotsTip() const { return m_pv.lotsTip; }
+   CCandleTime      *Candle() { return m_candle; }   // self-test
+   CChartHousekeeping *House() { return m_house; }   // self-test
    void              OnChartEvent(const int id, const long &lparam, const double &dparam, const string &sparam);
    void              OnTimer();
    void              OnTick();
@@ -201,6 +220,10 @@ CController::CController()
    m_money = NULL;
    m_lines = NULL;
    m_overlay = NULL;
+   m_candle = NULL;
+   m_house = NULL;
+   m_houseFirst = true;
+   m_logDay = -1;
    m_pv.Reset();
    m_ovKey = "";
    m_ovOn = true;     // objects kept with the chart are removed if the overlay is off
@@ -256,6 +279,8 @@ void CController::Init(CSettings *cfg, CState *state, CPanel *panel, CStatusBar 
    m_chartW = 0;     // an EA keeps its objects across a timeframe change: measure and fit again
    m_chartH = 0;
    m_oneClick = -1;
+   m_logDay = -1;
+   m_houseFirst = true;
    CheckChartLook();
    ReadSpec();
   }
@@ -317,8 +342,20 @@ void CController::OnChartEvent(const int id, const long &lparam, const double &d
    if(id == CHARTEVENT_CHART_CHANGE)
      {
       bool look = CheckChartLook();
-      if(ChartSizeChanged() || look)
+      bool moved = false;
+      if(m_candle != NULL && m_candle.On())   // F-21: RD_CT is placed in pixels, follow a scroll or zoom at once
+        {
+         SQuote q;
+         bool created = false;
+         moved = m_candle.Update(CMarket::Quote(_Symbol, q) ? q.bid : 0.0, created);
+         if(created)
+            m_raiseWanted = true;
+        }
+      if(ChartSizeChanged() || look || moved)
+        {
+         m_redraw.Mark();
          m_redraw.Flush();
+        }
       return;
      }
   }
@@ -594,6 +631,14 @@ void CController::Housekeeping()
    m_housekeepAt = now;
    CheckChartLook();
    ChartSizeChanged();
+   //--- F-32: a new local day -> the daily files older than InpLogKeepDays go
+   int day = (int)((long)TimeLocal() / RD_DAY_SEC);
+   if(day != m_logDay)
+     {
+      m_logDay = day;
+      if(m_cfg.logToFile && !RdIsTester())
+         CLogger::PruneOld(m_cfg.logKeepDays);
+     }
    if(!m_panel.ObjectsOk() && !m_panel.Dragging())
      {
       RD_LOG_WARN("Panel objects were missing (deleted from the chart?) - panel rebuilt");
@@ -627,6 +672,8 @@ void CController::Refresh()
    if(ApplyLabels())
       m_raiseWanted = true;
    if(SyncOverlay())   // F-22: placed pending orders
+      m_raiseWanted = true;
+   if(SyncExtras(q, quoteOk))   // F-21 candle time, F-20 closed-trade objects
       m_raiseWanted = true;
    if(m_raiseWanted && !m_panel.Dragging())
      {

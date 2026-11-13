@@ -211,7 +211,7 @@ void CUiSelfTest::TradeT12a()
    m_money.MarginFor(m_ts, SIDE_BUY, lots, RdNormalizePrice(m_ts, q.ask), need, mr);
    SAccountSpec acc;
    SResult ar;
-   CAccountSpec::Read(acc, ar);
+   CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor);
    if(!(need > 0.0) || !(acc.freeMargin > 0.0))
      {
       Line("INFO T-12: margin of " + m_pvLots + " lot unknown (" + mr.message + ")");
@@ -394,7 +394,7 @@ void CUiSelfTest::TradeT28Check()
    SResult vr;
    SAccountSpec acc;
    SResult ar;
-   CAccountSpec::Read(acc, ar);
+   CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor);
    if(RdPriceEq(m_ts, close, m_t28Open))
       v = 0.0;
    else

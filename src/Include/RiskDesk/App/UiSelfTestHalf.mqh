@@ -227,7 +227,7 @@ bool CUiSelfTest::HfAffordable(const string id, const int &units[])
    m_money.MarginFor(m_ts, SIDE_BUY, lots, ask, need, mr);
    SAccountSpec acc;
    SResult ar;
-   CAccountSpec::Read(acc, ar);
+   CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor);
    if(!(loss > 0.0) || !(base > 0.0) || risk > 0.025 * base || need > 0.5 * acc.freeMargin)
      {
       Line("INFO " + id + ": " + RdFormatLots(m_ts, lots) + " lot would risk " + RdNum(risk, 2) +
@@ -374,7 +374,7 @@ bool CUiSelfTest::HfClick(const string id, SUiHalfPos &p[], const double pct, co
    m_cfg.confirmHalfClose = false;
    SAccountSpec acc;
    SResult ar;
-   CAccountSpec::Read(acc, ar);
+   CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor);
    int n = ArraySize(p);
 
    //--- what the click should do

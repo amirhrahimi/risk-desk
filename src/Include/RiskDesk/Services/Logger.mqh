@@ -4,7 +4,10 @@
 //| Purpose : one logging entry point for every layer except Domain. |
 //|           Writes to the Experts tab and, when enabled, mirrors   |
 //|           each line to MQLx/Files/RiskDesk/Logs/                 |
-//|           RiskDesk_<yyyymmdd>.log (F-32; rotation comes in P7).  |
+//|           RiskDesk_<yyyymmdd>.log (F-32): a new file each local  |
+//|           day; PruneOld() deletes the daily files older than     |
+//|           InpLogKeepDays days (0 = keep all), called by App at   |
+//|           start and at each new day.                             |
 //|                                                                  |
 //| The logger configuration (level, file flag, tag) is held in      |
 //| static members, set once by Configure() in OnInit/OnStart. It is |
@@ -18,6 +21,7 @@
 
 #include "..\Build.mqh"
 #include "..\Domain\Types.mqh"
+#include "..\Domain\TimeMath.mqh"
 
 #define RD_LOG_DIR       "RiskDesk\\Logs"
 
@@ -42,6 +46,10 @@ public:
    static bool       Enabled(const ELogLevel level) { return level <= s_level; }
    static void       Write(const ELogLevel level, const string message);
    static string     TodayFile();
+   // F-32: deletes RiskDesk_<yyyymmdd>.log files older than the last keepDays local
+   // days (today counts as one); keepDays <= 0 keeps all. Other files are never
+   // touched. Returns the number deleted.
+   static int        PruneOld(const int keepDays);
   };
 
 ELogLevel CLogger::s_level      = LOGLEVEL_INFO;
@@ -82,6 +90,40 @@ string CLogger::TodayFile()
    MqlDateTime dt;
    TimeToStruct(TimeLocal(), dt);
    return StringFormat("%s\\%s_%04d%02d%02d.log", RD_LOG_DIR, RD_PRODUCT, dt.year, dt.mon, dt.day);
+  }
+
+//+------------------------------------------------------------------+
+int CLogger::PruneOld(const int keepDays)
+  {
+   if(keepDays <= 0)
+      return 0;
+   string found = "";
+   long h = FileFindFirst(RD_LOG_DIR + "\\" + RD_PRODUCT + "_*.log", found);
+   if(h == INVALID_HANDLE)
+      return 0;
+   string old[];
+   datetime today = TimeLocal();
+   do
+     {
+      datetime day = 0;
+      if(RdLogFileDay(found, RD_PRODUCT, day) && RdLogFileExpired(day, today, keepDays))
+        {
+         int n = ArraySize(old);
+         ArrayResize(old, n + 1);
+         old[n] = found;
+        }
+     }
+   while(FileFindNext(h, found));
+   FileFindClose(h);
+   int deleted = 0;
+   for(int i = 0; i < ArraySize(old); i++)
+      if(FileDelete(RD_LOG_DIR + "\\" + old[i]))
+         deleted++;
+   if(ArraySize(old) > 0)
+      Write(LOGLEVEL_INFO, "Log files older than " + IntegerToString(keepDays) + " days deleted: " + IntegerToString(deleted) +
+            (deleted < ArraySize(old) ? " of " + IntegerToString(ArraySize(old)) + " (the others are open elsewhere?)" : "") +
+            " (" + old[0] + (ArraySize(old) > 1 ? " and others" : "") + ")");
+   return deleted;
   }
 
 //+------------------------------------------------------------------+

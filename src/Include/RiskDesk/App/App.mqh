@@ -7,7 +7,8 @@
 //|           Init: settings -> startup log -> gateway config ->     |
 //|           persisted state (once per program run) -> symbol-change|
 //|           check -> theme/layout -> panel build (adopts existing  |
-//|           objects) -> timer and mouse events -> first refresh.   |
+//|           objects) -> chart extras (P7) -> timer and mouse       |
+//|           events -> first refresh.                               |
 //|           Deinit: save what changed; delete every RD_ object     |
 //|           only when RiskDesk leaves the chart.                   |
 //+------------------------------------------------------------------+
@@ -80,6 +81,8 @@ private:
    CMoney            m_money;
    CLines            m_lines;
    CPendingOverlay   m_overlay;
+   CCandleTime       m_candle;          // F-21
+   CChartHousekeeping m_house;          // F-20
    bool              m_running;
    bool              m_mouseEventsWere;
    bool              m_foregroundWas;   // "Chart on foreground" before RiskDesk switched it off
@@ -92,6 +95,7 @@ private:
    string            CheckChartSymbol();
    void              ConfigureTheme();
    void              ConfigureLines();
+   void              ConfigureExtras();
 
 public:
                      CApp() { m_running = false; m_mouseEventsWere = false; m_foregroundWas = false; }
@@ -149,6 +153,8 @@ int CApp::Init()
               GetPointer(m_layout), GetPointer(m_redraw), GetPointer(m_store), GetPointer(m_gw), GetPointer(m_money),
               GetPointer(m_lines), GetPointer(m_overlay));
    m_cmd.SetProgress(GetPointer(m_ctl));   // "Closing 4/9..." (OP-12)
+   ConfigureExtras();
+   m_ctl.SetExtras(GetPointer(m_candle), GetPointer(m_house));
    m_ctl.ChartSizeChanged();   // chart size + auto-fit before the objects exist
 
    ResetLastError();
@@ -158,7 +164,15 @@ int CApp::Init()
       return INIT_FAILED;
      }
 
-   if(!EventSetMillisecondTimer(m_cfg.refreshMs))
+   // F-21 AC1: the countdown changes every second, so the timer is at most 1 s apart
+   int timerMs = m_cfg.refreshMs;
+   if(m_cfg.showCandleTime && timerMs > 1000)
+     {
+      timerMs = 1000;
+      RD_LOG_INFO("Refresh every 1000 ms instead of " + IntegerToString(m_cfg.refreshMs) +
+                  " ms while Candle Time is on (it counts seconds)");
+     }
+   if(!EventSetMillisecondTimer(timerMs))
      {
       RD_LOG_WARN("Millisecond timer unavailable (error " + IntegerToString(GetLastError()) + ") - refreshing every second");
       EventSetTimer(1);
@@ -214,6 +228,7 @@ void CApp::Deinit(const int reason)
                    reason == REASON_CHARTCLOSE);
    if(leaving)
      {
+      m_house.Leave();   // F-20: the user's "Show trade history" back (MT5), before RD_S_CTO goes
       m_panel.Destroy();
       int lines = CLines::DeleteAll() + CPendingOverlay::DeleteAll();   // the orders themselves stay
       int rest = RdDeleteObjects("RD_");
@@ -384,6 +399,18 @@ void CApp::ConfigureLines()
   }
 
 //+------------------------------------------------------------------+
+//| 05 section 6 / 07 Chart extras: candle countdown (F-21) and      |
+//| closed-trade objects (F-20).                                     |
+//+------------------------------------------------------------------+
+void CApp::ConfigureExtras()
+  {
+   SCandleStyle cs;
+   m_cfg.CandleStyle(cs, m_theme.fontBody);
+   m_candle.Configure(cs);
+   m_house.Configure(m_cfg.closedTradeObjects);
+  }
+
+//+------------------------------------------------------------------+
 //| T-01: version, platform, account (currency, leverage, margin     |
 //| mode) and the chart symbol's spec.                               |
 //+------------------------------------------------------------------+
@@ -401,7 +428,7 @@ void CApp::LogStartup()
 
    SAccountSpec account;
    SResult accountResult;
-   if(CAccountSpec::Read(account, accountResult))
+   if(CAccountSpec::Read(account, accountResult, m_cfg.centMode, m_cfg.centDivisor))
       RD_LOG_INFO("Account " + CAccountSpec::Describe(account));
    else
       RD_LOG_WARN("Account: " + accountResult.message);

@@ -34,7 +34,7 @@ One EA instance per chart. Instances do not talk to each other; account-wide dat
    │  └──────────────▶ UI        CPanel · widgets · CLines · CPendingOverlay · CStatusBar · CTheme · CLayout
    │                    Services  CLogger · CPersistence · CScreenshot · CChartHousekeeping · CCandleTime
    ▼
-  Domain   (pure)     Types · PriceMath · RiskMath · Validators · Planner · RiskBudget
+  Domain   (pure)     Types · PriceMath · RiskMath · Validators · Planner · RiskBudget · Format · TimeMath
    ▲
    │ uses Domain types only
   Platform (only place with #ifdef)  Compat · SymbolSpec · AccountSpec · Market · Money · TradeGateway · History

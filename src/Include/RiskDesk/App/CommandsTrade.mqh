@@ -54,7 +54,7 @@ bool CCommands::OpenMarket(const ESide side, SResult &r)
       return RdFail(r, refused + pr.message);
    SAccountSpec acc;
    SResult ar;
-   if(!CAccountSpec::Read(acc, ar))
+   if(!CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor))
       return RdFail(r, refused + ar.message);
 
    //--- BC-05: money of the SL distance for 1 lot (commission is added by CRiskMath, F-30)

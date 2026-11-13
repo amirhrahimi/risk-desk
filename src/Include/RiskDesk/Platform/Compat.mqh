@@ -367,6 +367,36 @@ datetime RdServerTime()
 #endif
   }
 
+//====================================================================
+// Chart: MetaTrader's own trade history display (F-20)
+//====================================================================
+
+// MT5 "Show trade history" (CHART_SHOW_TRADE_HISTORY): the deals the
+// terminal draws itself, not as chart objects. False on MT4, which has no
+// such property (it draws closed trades as "#ticket ..." objects).
+bool RdChartTradeHistory(bool &on)
+  {
+   on = false;
+#ifdef __MQL5__
+   long value = 0;
+   if(!ChartGetInteger(0, CHART_SHOW_TRADE_HISTORY, 0, value))
+      return false;
+   on = (value != 0);
+   return true;
+#else
+   return false;
+#endif
+  }
+
+bool RdSetChartTradeHistory(const bool on)
+  {
+#ifdef __MQL5__
+   return ChartSetInteger(0, CHART_SHOW_TRADE_HISTORY, on);
+#else
+   return false;
+#endif
+  }
+
 #ifdef __MQL5__
 //====================================================================
 // MT5 trade server return codes -> constant names (for logs/reports).

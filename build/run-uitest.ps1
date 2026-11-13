@@ -40,6 +40,16 @@
                    status. REAL test positions on a DEMO account only
                    (magic 772288), each case within 2.5 % of the balance,
                    every test position closed again. One run per symbol.
+      extras       the P7 checks: candle time (T-33: text and colour against
+                   the server clock, running between ticks, off / on, on the
+                   chart's timeframe, M1, H4 and W1), closed-trade objects
+                   (T-33: MetaTrader's "#ticket" arrows and lines of a closed
+                   trade removed with Remove and kept with Keep, user objects
+                   untouched, MT5 "Show trade history" off and given back),
+                   screenshot names (T-34: camera and Buy), cent display
+                   forced on (T-31) and log file retention (F-32). One REAL
+                   test Buy on a DEMO account only (magic 772288), closed
+                   again.
 
     The runner
       1. writes the one-time request file MQLx\Files\RiskDesk\uitest.request
@@ -82,7 +92,7 @@ param(
     [Parameter(Mandatory = $true)][string]$Symbol,
     [string]$Inputs = '',            # extra EA inputs 'Key=Value;Key=Value'
     [string]$Period = 'H1',
-    [ValidateSet('panel', 'trade', 'trade-basic', 'pending', 'manage', 'half')][string]$Suite = 'panel',
+    [ValidateSet('panel', 'trade', 'trade-basic', 'pending', 'manage', 'half', 'extras')][string]$Suite = 'panel',
     # T-26: 'off' starts the terminal with Algo/AutoTrading switched off (MT5 [Experts] Enabled=0,
     # MT4 ExpertsTrades=false; tested in P4 - MT5 AllowLiveTrading=0 and MT4 ExpertsEnable=false
     # did not stop the startup EA from trading). The terminal keeps the setting: the next normal
@@ -194,9 +204,9 @@ Remove-Item -LiteralPath $captureRequest -Force -ErrorAction SilentlyContinue
 $reportName = "${tag}_${Login}_report.txt"
 $filePrefix = "${tag}_${Login}_"
 if ($Suite -ne 'panel') {
-    # the EA names the trade, pending, manage and half reports after the symbol: / \ : * ? " < > | and spaces become _
+    # the EA names the trade, pending, manage, half and extras reports after the symbol: / \ : * ? " < > | and spaces become _
     $safe = ($Symbol -replace '[\\/:*?"<>| ]', '_')
-    $kind = if ($Suite -eq 'pending' -or $Suite -eq 'manage' -or $Suite -eq 'half') { $Suite } else { 'trade' }
+    $kind = if ($Suite -eq 'pending' -or $Suite -eq 'manage' -or $Suite -eq 'half' -or $Suite -eq 'extras') { $Suite } else { 'trade' }
     $reportName = "${tag}_${Login}_${kind}_${safe}_report.txt"
     $filePrefix = "${tag}_${Login}_${kind}_${safe}_"
 }

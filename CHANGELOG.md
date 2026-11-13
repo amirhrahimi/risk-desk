@@ -3,13 +3,23 @@
 All notable changes to this project are documented here. Format: Keep a Changelog; versions: SemVer.
 
 ## [Unreleased]
+
+## [0.7.0] - 2026-11-13 - Phase P7: Extras
 ### Added
+- Candle time (F-21, 05 §6, Q4, Q20, `Services/CandleTime.mqh`): `RD_CT` a few pixels right of the current candle at the Bid (placed in pixels, follows scroll and zoom), `<-- mm:ss` / `<-- hh:mm:ss` / `<-- Nd hh:mm:ss`, gold, red in the last `InpCandleTimeWarnPct` % of the candle (MN1: of the month) and at `00:00` while the market is closed. Updated every second from the server clock, also between ticks (MT4: `CServerClock` in `Platform/Market.mqh`, milliseconds from the last tick); a candle whose time ran out without a tick counts on by the clock while the symbol is in session (D40). Without room right of the candle (no chart shift) it stands left of it, `02:33:29 -->` (D39). With Candle Time on the timer runs at most 1 s apart (D42).
+- Closed trade history objects (F-20, `Services/ChartHousekeeping.mqh`): with `CTO_REMOVE` (default) MetaTrader's arrows and trend lines named `#<ticket> …` are deleted when the ticket is a closed trade of the chart symbol in the account history, on init, when the chart's objects change and every 5 s; user drawings and other programs' objects never match. MT5: "Show trade history" is switched off and the user's value given back when RiskDesk leaves the chart or the input becomes Keep. `CTO_KEEP` touches nothing.
+- Cent accounts (F-24, BC-12): with `InpCentMode` Auto on a cent currency, or On, every amount shows the major unit too, `-1,000.00 USC (-$10.00)` (labels, status, dialogs, refusals, logs); a forced cent mode on USD/EUR/GBP shows USC/EUC/GBC (D38). Lot sizing is unchanged.
+- Log retention (F-32, D41): new input `InpLogKeepDays` (30, 0 = keep all); daily files `RiskDesk_<yyyymmdd>.log` older than that are deleted at start and at each new day.
+- `Domain/TimeMath.mqh` (candle clock, countdown text, months, log file days) and, in `Domain/Format.mqh`, the cent display, the trade-object name parser and the screenshot name (moved from `Services/Screenshot.mqh`); 7 unit tests with 115 checks in `Tests/TestExtras.mqh` (T-31 lots, Q20 thresholds at M1..W1 and MN1, market closed, between ticks, F-19 names, F-20 names, log files).
+- Debug extras suite (`build/run-uitest.ps1 -Suite extras`, 08 §3i, `App/UiSelfTestExtras.mqh`): T-33 candle time on the chart's timeframe, M1, H4 and W1 against the server clock, between ticks, off / on, with and without chart shift; T-34 camera and Buy screenshot names, RiskDesk's screenshot on W1; T-33 closed-trade objects removed and kept with a real closed test trade and four objects that must stay; T-31 cent display forced on; F-32 retention.
 - Debug Half Close suite (`build/run-uitest.ps1 -Suite half`, 08 §3h, `App/UiSelfTestHalf.mqh`): Half Close over the chart symbol's volume grid with real demo positions (even / odd multiples of the minimum lot, repeated clicks down to the minimum lot, Skip and Close all, 30 % / 70 %, several positions in one click, a merged netting position), each click checked against the expected split, the rest's ticket, open price, SL and TP, the history's closed volume and P/L, and the status. Run on indices (whole-lot, 0.1 and 0.01 grids) and majors on all six demo accounts.
 
 ### Changed
 - Half Close rounding (Q23, 04 §10, F-12 AC1): the closed part is the volume nearest to `InpPartialClosePct`, a tie keeping the larger part, instead of the floor. At 50 % (the default) the splits are the same as before (3 lots → close 1 keep 2; 0.25 → close 0.12 keep 0.13; repeated clicks from 2 lots keep 1 → 0.50 → 0.25 → 0.13 → 0.07 → 0.04 → 0.02 → 0.01, then the minimum lot is skipped, Q11). At other percentages the nearest replaces the floor (70 % of 4 lots → close 3, was 2), and where the minimum lot is larger than the step the closest split that leaves a minimum lot is used. `RdNearestVolume` (Domain/PriceMath) with unit tests (the owner's halving path among them).
 
 ### Fixed
+- Self-test screenshots froze MT4 (build 1492) on a chart with fewer bars than its width (W1 on IG and Dukascopy): `ChartScreenShot` wider than the chart; the self-test now takes the chart's own size there, as RiskDesk's screenshot does (ADR-027).
+- Preview and overlay labels are recomputed when the cent display changes (it was missing from their cache keys).
 - Half Close / G-04 on IG MT4: the server keeps the original ticket open and books the closed part as a new history order with magic 0, so the status showed no P/L, or only that of the other closes of the click (`(1 of 2 closes)`). The gateway now reads the closed part's P/L and close price from that order (D37, BC-16).
 
 ## [0.6.0] - 2026-11-12 - Phase P6: Trade management

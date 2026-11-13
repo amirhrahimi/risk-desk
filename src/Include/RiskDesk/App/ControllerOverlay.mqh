@@ -13,11 +13,30 @@
 //|             (CCommands::MoveOrder) behind the busy guard, ends   |
 //|             with a status and a log line (R8) and puts the lines |
 //|             back on the order's values (snap back when refused)  |
+//|           and the other optional overlays (P7, 05 section 6):    |
+//|           - the candle countdown (F-21, Services/CandleTime)     |
+//|           - MetaTrader's closed-trade objects kept or removed    |
+//|             (F-20, Services/ChartHousekeeping)                   |
 //|           Part of CController; included at the end of           |
 //|           App/Controller.mqh.                                    |
 //+------------------------------------------------------------------+
 #ifndef RD_APP_CONTROLLEROVERLAY_MQH
 #define RD_APP_CONTROLLEROVERLAY_MQH
+
+//+------------------------------------------------------------------+
+//| P7 chart extras, every refresh; each is one flag test when off.  |
+//| True when objects were created (the panel goes on top again).    |
+//+------------------------------------------------------------------+
+bool CController::SyncExtras(const SQuote &q, const bool quoteOk)
+  {
+   bool created = false;
+   if(m_candle != NULL && m_candle.Update(quoteOk ? q.bid : 0.0, created))
+      m_redraw.Mark();
+   if(m_house != NULL && m_house.Run(m_houseFirst) > 0)
+      m_redraw.Mark();
+   m_houseFirst = false;
+   return created;
+  }
 
 //+------------------------------------------------------------------+
 //| One refresh of the overlay. True when objects were created (the  |
@@ -49,9 +68,10 @@ bool CController::SyncOverlay()
       return false;   // keep what is drawn
    SAccountSpec acc;
    SResult ar;
-   bool accOk = CAccountSpec::Read(acc, ar);
+   bool accOk = CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor);
    string key = (accOk ? DoubleToString(acc.balance, 2) + "|" + (m_cfg.riskBase != RISKBASE_BALANCE ?
-                 DoubleToString(acc.equity, 2) : "") : "-") + "|" + IntegerToString(m_specAt);
+                 DoubleToString(acc.equity, 2) : "") + "|" + (acc.centShow ? acc.centUnit : "") : "-") + "|" +
+                IntegerToString(m_specAt);
    int n = ArraySize(arr);
    for(int i = 0; i < n; i++)
       key += "|" + IntegerToString((long)arr[i].ticket) + ":" + IntegerToString(arr[i].side) + IntegerToString(arr[i].kind) +

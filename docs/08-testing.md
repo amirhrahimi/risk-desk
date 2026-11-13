@@ -199,6 +199,30 @@ Every click is checked against the split expected in whole grid steps (u = one s
 | H-9 merged (netting) | buy 2u + buy 1u = one position of 3u | 1u closed by an opposite deal, the same position keeps 2u, its averaged open, SL and TP |
 | H-10 halving to the minimum | buy 25u, six clicks | 25u → 13u → 7u → 4u → 2u → 1u kept (the rest named each time on MT4), then `cannot be split` (amber): the owner\'s path, at 0.01 steps 0.25 → 0.13 → 0.07 → 0.04 → 0.02 → 0.01 |
 
+## 3i. Extras suite (`build/run-uitest.ps1 -Suite extras`, debug build, phase P7)
+
+The P7 extras on a real chart (`App/UiSelfTestExtras.mqh`, ADR-027). Same runner, debug build and safety rules as §3e; one REAL test Buy (magic 772288, about 2.5 × the risk of the minimum lot, demo accounts only, closed again at once; on a netting account only when the symbol has no position). The timeframe steps run first (a timeframe change runs OnInit, which reloads the inputs). Report and screenshots: `Files/RiskDesk/uitest/<PLATFORM>_<login>_extras_<symbol>_*`.
+
+```
+powershell -File build/build.ps1 -Debug
+powershell -File build/run-uitest.ps1 -Platform mt4 -Login A2 -Server ICMarketsEU-Demo03 -Symbol EURUSD -Suite extras
+powershell -File build/build.ps1
+```
+
+| Check | Covers |
+|---|---|
+| `RD_CT` against a countdown computed in the test from bar 0's open + the period and the server clock (±2 s): text, `mm:ss` / `hh:mm:ss` / `Nd hh:mm:ss` form for that many seconds, gold or red at `InpCandleTimeWarnPct` (either within 2 s of the threshold), place (right of the candle `<-- …`, or left of it `… -->`, D39) at the Bid, hidden, not selectable, font size | T-33 candle time, F-21 AC1/AC2 |
+| 2.5 s later the countdown went down by the time that passed (the INFO says whether a tick came meanwhile) | T-33 "keeps running between ticks" |
+| Candle Time off → `RD_CT` removed (20 refreshes timed), on → drawn again | T-33 toggle, "cheap when disabled" |
+| Chart shift on → right of the candle; off → left of it | D39 |
+| The same check on M1, H4 and W1, then back to the runner's timeframe; on W1 also RiskDesk's own screenshot (a W1 chart with fewer bars than its width froze MT4 when a larger picture was asked for, ADR-027) | T-33 M1 / H4 / W1, T-34 |
+| Camera: `<login>_<symbol>_<TF>_<yyyy-mm-dd_HH-MM-SS>_manual_0.png` exists, green `Screenshot saved: …`; a Buy: `…_buy_<ticket>.png` with the status ticket | T-34, F-19 |
+| With the Buy's closed ticket: three objects named as MetaTrader names a closed trade's arrows and line, plus four that must stay (a text with the same `#ticket `, an arrow of a ticket that is no trade, a user trend line, `#<ticket>x`): Remove → the three deleted, the four kept, MT5 "Show trade history" off with the user's value in `RD_S_CTO`; Keep → new ones kept, the user's value back | T-33 closed-trade objects, F-20 AC1–AC3 |
+| `InpCentMode=CENT_ON` with lines on the chart: the SL label shows `<cent unit> (<major>…)`, Lots unchanged | T-31 (display), F-24 |
+| A daily log file of 2001 is deleted, a file of another name and today's file stay | F-32 retention (D41) |
+
+Result 2026-11-13: 19 passed, 0 failed on A1–A6 (EURUSD). The suite's three objects carry the names MT4 gives a closed trade (Q24: `#<ticket> <open> -> <close>`, `#<ticket> sell 0.05 EURAUD at <open>`, `… close at <close>`); MetaTrader drawing them itself is not covered. Not covered either: a real cent account (A7, none in the matrix): T-31 on A7 stays a manual check.
+
 ## 4. Account and symbol matrix (L4)
 
 | Account | Platform | Notes |
