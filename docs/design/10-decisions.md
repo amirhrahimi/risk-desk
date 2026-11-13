@@ -36,3 +36,4 @@ Read only the ADRs a task names or touches; the titles below say what each one d
 | [ADR-028](adr/ADR-028-ea-in-the-experts-root.md) | The EA sits in the Experts root, without a RiskDesk sub-folder |
 | [ADR-029](adr/ADR-029-open-source-publication.md) | Open-source publication: MIT licence, attribution, docs layout, redacted reports, version 1.7.0 |
 | [ADR-030](adr/ADR-030-releases-from-ci.md) | Releases are built and published by CI: MT4+MT5 build on every pull request and push, versioned release or development build on `main` |
+| [ADR-031](adr/ADR-031-first-stable-release-before-hardening.md) | 1.8.0 is released as the first stable version before the P8 hardening |

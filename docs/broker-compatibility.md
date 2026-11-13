@@ -41,7 +41,7 @@ All tests ran on **demo** accounts, 2026-11-12 and 2026-11-13. No live account h
 
 ## Not yet verified on any server
 
-These paths are implemented but no demo server produced the situation that triggers them. Tests that force them are planned for 1.8.0 ([ROADMAP.md](../ROADMAP.md)):
+These paths are implemented but no demo server produced the situation that triggers them. Tests that force them are planned ([ROADMAP.md](../ROADMAP.md)):
 
 - closing a position whose SL could not be attached (`InpCloseIfStopFails`, rule R7);
 - an ambiguous result (timeout, lost connection), which must be checked before any resend (rule R9);

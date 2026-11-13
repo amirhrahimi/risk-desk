@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-11-13
+
+First stable release. The trading code is the same as in 1.7.0. Tested on demo accounts only; not yet tested on live accounts. The hardening work once planned for this release (tests that force the untested safety paths, the full demo test matrix, a review of the trade gateway) is still open and listed in the ROADMAP; see the README for known limitations (ADR-031).
+
 ### Added
 - `build/check-version.ps1`: `build.ps1` and the CI build fail when `RD_VERSION` and `RD_VERSION_PROP` in `Build.mqh` name different versions.
 
@@ -48,5 +52,6 @@ Internal versions, not published. The BrokerProbe and GatewaySmoke reports in `b
 | 0.1.0 | 2026-11-12 | P1: domain layer and unit tests |
 | 0.0.1 | 2026-11-12 | P0: build tooling and BrokerProbe |
 
-[Unreleased]: https://github.com/amirhrahimi/risk-desk/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/amirhrahimi/risk-desk/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/amirhrahimi/risk-desk/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/amirhrahimi/risk-desk/releases/tag/v1.7.0

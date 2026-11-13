@@ -2,9 +2,9 @@
 
 This page lists **plans, not commitments**. Order and scope can change; nothing here has a date. Suggestions are welcome as [feature requests](https://github.com/amirhrahimi/risk-desk/issues/new?template=feature_request.yml).
 
-## 1.8.0: first stable release
+## Hardening (next minor version)
 
-The hardening work that turns the 1.7.0 pre-release into a release line:
+Work that was planned before the first stable release and is still open; 1.8.0 was published without it (ADR-031):
 
 - **Force the untested safety paths in debug builds** and run them on demo accounts: closing a position whose stop-loss cannot be attached (T-29, rule R7) and an ambiguous result without blind resend (T-35, rule R9). Add a test for the MT5 filling-policy fallback after a real rejection.
 - **Run the full demo test matrix** (T-01 to T-28 on the IG, IC Markets EU and Dukascopy accounts, T-30 on a netting account, T-31 on a cent account if available) and fix what it finds, with a regression test for every fix in the risk logic ([docs/design/08-testing.md](docs/design/08-testing.md)).
