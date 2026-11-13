@@ -57,7 +57,7 @@
          left in a profile never re-runs the test),
       2. starts the terminal with a startup configuration that logs into
          -Login on -Server (saved password; none is passed or stored), opens a
-         chart of -Symbol and attaches Experts\RiskDesk\RiskDesk with
+         chart of -Symbol and attaches Experts\RiskDesk with
          InpTestUiSelfTest=true (a .set file in the Presets folder),
       3. waits for MQLx\Files\RiskDesk\uitest\<PLATFORM>_<login>_report.txt
          (trade suites: <PLATFORM>_<login>_trade_<symbol>_report.txt, pending /
@@ -118,8 +118,8 @@ $mql = 'MQL5'; $exeName = 'terminal64.exe'; $ext = '.ex5'; $tag = 'MT5'
 if ($Platform -eq 'mt4') { $mql = 'MQL4'; $exeName = 'terminal.exe'; $ext = '.ex4'; $tag = 'MT4' }
 $install = (Get-Content -LiteralPath (Join-Path $data 'origin.txt') -TotalCount 1).Trim()
 $exe = Join-Path $install $exeName
-if (-not (Test-Path -LiteralPath (Join-Path $data "$mql\Experts\RiskDesk\RiskDesk$ext"))) {
-    Write-Host "FAIL  $mql\Experts\RiskDesk\RiskDesk$ext missing: run build.ps1 -Debug and install-junctions.ps1"; exit 1
+if (-not (Test-Path -LiteralPath (Join-Path $data "$mql\Experts\RiskDesk$ext"))) {
+    Write-Host "FAIL  $mql\Experts\RiskDesk$ext missing: run install-junctions.ps1 and build.ps1 -Debug"; exit 1
 }
 $buildMqh = Join-Path (Split-Path -Parent $PSScriptRoot) 'src\Include\RiskDesk\Build.mqh'
 if (-not (Select-String -LiteralPath $buildMqh -Pattern '^\s*#define\s+RD_TEST_HOOKS' -Quiet)) {
@@ -155,12 +155,12 @@ $algo = if ($Permissions -eq 'off') { 0 } else { 1 }
 if ($Platform -eq 'mt5') {
     $lines = @('[Common]', "Login=$Login", "Server=$Server",
                '[Experts]', 'AllowLiveTrading=1', 'AllowDllImport=0', "Enabled=$algo",
-               '[StartUp]', 'Expert=RiskDesk\RiskDesk', "ExpertParameters=$setName", "Symbol=$Symbol", "Period=$Period")
+               '[StartUp]', 'Expert=RiskDesk', "ExpertParameters=$setName", "Symbol=$Symbol", "Period=$Period")
     $arguments = @("/config:`"$ini`"")
 } else {
     $trades = if ($algo -eq 1) { 'true' } else { 'false' }
     $lines = @("Login=$Login", "Server=$Server", 'ExpertsEnable=true', "ExpertsTrades=$trades", 'ExpertsDllImport=false',
-               'Expert=RiskDesk\RiskDesk', "ExpertParameters=$setName", "Symbol=$Symbol", "Period=$Period")
+               'Expert=RiskDesk', "ExpertParameters=$setName", "Symbol=$Symbol", "Period=$Period")
     $arguments = @("`"$ini`"")
 }
 [IO.File]::WriteAllText($ini, (($lines -join "`r`n") + "`r`n"), [Text.Encoding]::ASCII)

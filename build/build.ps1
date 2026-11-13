@@ -10,6 +10,11 @@
     source (UTF-16 or UTF-8; decoded here). Prints one line per file and a summary.
     Exit code 0 only when every file compiled with 0 errors and 0 warnings.
 
+    The EA (src/Experts/RiskDesk.mq4/.mq5) is then copied into the root of
+    MQLx\Experts of every terminal of that platform in $Terminals, so the
+    Navigator shows it without a sub-folder. Scripts and includes reach the
+    terminals through the junctions of install-junctions.ps1.
+
     -Debug builds with RD_TEST_HOOKS: MetaEditor has no command-line define, so
     the script un-comments '//#define RD_TEST_HOOKS' in
     src/Include/RiskDesk/Build.mqh for the duration of the build and restores
@@ -42,7 +47,8 @@ Set-StrictMode -Version 2.0
 $RepoRoot  = Split-Path -Parent $PSScriptRoot
 $PathsFile = Join-Path $PSScriptRoot 'paths.local.ps1'
 $BuildMqh  = Join-Path $RepoRoot 'src\Include\RiskDesk\Build.mqh'
-$SrcDirs   = @((Join-Path $RepoRoot 'src\Experts'), (Join-Path $RepoRoot 'src\Scripts'))
+$ExpertsDir = Join-Path $RepoRoot 'src\Experts'
+$SrcDirs   = @($ExpertsDir, (Join-Path $RepoRoot 'src\Scripts'))
 
 function Write-Status([string]$status, [string]$text) {
     $color = 'Gray'
@@ -128,6 +134,34 @@ function Invoke-Compile([string]$platform, [string]$editor, [string]$file) {
     return $result
 }
 
+# The EA sits in the root of MQLx\Experts (no RiskDesk sub-folder in the Navigator).
+# A folder junction cannot do that and a file link cannot cross drives, so the
+# compiled .ex4/.ex5 is copied there. Returns the number of failed copies.
+function Install-Expert([string]$platform, [string]$source) {
+    $outExt = '.ex5'; $mql = 'MQL5'
+    if ($platform -eq 'mt4') { $outExt = '.ex4'; $mql = 'MQL4' }
+    $built = [IO.Path]::ChangeExtension($source, $outExt)
+    $name = [IO.Path]::GetFileName($built)
+    $failed = 0
+    foreach ($t in @($Terminals)) {
+        if (([string]$t.Platform).ToLowerInvariant() -ne $platform) { continue }
+        $dir = Join-Path ([string]$t.DataPath) "$mql\Experts"
+        if (-not (Test-Path -LiteralPath $dir)) {
+            Write-Status 'FAIL' "$platform  install $name - $dir not found"
+            $failed++
+            continue
+        }
+        try {
+            Copy-Item -LiteralPath $built -Destination (Join-Path $dir $name) -Force
+            Write-Status 'INFO' "$platform  installed $mql\Experts\$name  ($($t.Name))"
+        } catch {
+            Write-Status 'FAIL' "$platform  install $name into $dir - $($_.Exception.Message)"
+            $failed++
+        }
+    }
+    return $failed
+}
+
 #--- configuration -------------------------------------------------------------
 if (-not (Test-Path -LiteralPath $PathsFile)) {
     Write-Status 'FAIL' 'build/paths.local.ps1 not found. Copy build/paths.example.ps1 to build/paths.local.ps1 and fill in the MetaEditor paths.'
@@ -197,6 +231,7 @@ try {
             }
             if ($r.Ok) {
                 Write-Status 'PASS' ('{0}  {1,-48} {2}  ({3})' -f $platform, $r.File, $summary, $r.Note)
+                if ($f.DirectoryName -ieq $ExpertsDir) { $failures += Install-Expert $platform $f.FullName }
             } else {
                 $failures++
                 $note = ''

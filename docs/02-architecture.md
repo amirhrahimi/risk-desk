@@ -48,7 +48,7 @@ Rules:
 
 ## 4. Compile model (one tree, two targets)
 
-- `src/Experts/RiskDesk/RiskDesk.mq4` and `.mq5` are ~30-line shells: `#property` lines, includes, and the five event handlers forwarding to a global `CApp g_app`.
+- `src/Experts/RiskDesk.mq4` and `.mq5` (in the Experts root, no sub-folder, ADR-028) are ~30-line shells: `#property` lines, includes, and the five event handlers forwarding to a global `CApp g_app`.
 - `Platform/Compat.mqh` normalises the language differences:
   - `#ifdef __MQL5__ ... #else ... #endif` blocks that provide common helpers (`RdBid()`, `RdAsk()`, `RdIsTester()`, `RdTerminalDpi()`, ...).
   - Own enums for side and order kind so Domain never touches `OP_*` or `ORDER_TYPE_*`.
