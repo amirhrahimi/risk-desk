@@ -27,7 +27,7 @@
 #define RD_BUILD_MQH
 
 #define RD_PRODUCT       "RiskDesk"
-#define RD_VERSION       "1.8.0"
+#define RD_VERSION       "1.8.0-rc.1"
 #define RD_VERSION_PROP  "1.80"
 #define RD_COPYRIGHT     "Copyright 2026, Amir Rahimi (MIT licence)"
 #define RD_LINK          "https://github.com/amirhrahimi/risk-desk"

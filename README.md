@@ -11,7 +11,7 @@ Risk Desk is a chart panel (Expert Advisor) for MetaTrader 4 and MetaTrader 5 th
 > [!WARNING]
 > **Risk disclaimer.** Trading foreign exchange, CFDs and other leveraged products carries a high risk of losing money, and you can lose more than you expect. Risk Desk is provided "as is", without warranty of any kind (see [LICENSE](LICENSE)); you use it entirely at your own risk. It is not financial advice. A bug in this software, a broker's behaviour or a market gap can cause losses. The "risk %" is the planned loss at the stop-loss price: a stop can fill worse than its price (slippage, gaps, weekends), and commissions and swaps are only included where you configure them. **Always test on a demo account with your broker before using a live account**, and check every lot size and stop-loss yourself.
 
-**Status:** 1.8.0 is the first stable release. It has been tested on demo accounts only (six accounts, four broker companies, both platforms; see [Broker compatibility](#broker-compatibility)). It has not been tested on live accounts. A few safety paths still lack a test against a real server; see [Known limitations](#known-limitations) and [ROADMAP.md](ROADMAP.md).
+**Status:** 1.8.0-rc.1 is a **release candidate** (pre-release) for 1.8.0, the first stable release. It has been tested on demo accounts only (six accounts, four broker companies, both platforms; see [Broker compatibility](#broker-compatibility)). It has not been tested on live accounts. A few safety paths still lack a test against a real server; see [Known limitations](#known-limitations). 1.8.0 follows once the hardening work in [ROADMAP.md](ROADMAP.md) is done.
 
 ## Contents
 
@@ -66,7 +66,7 @@ Step by step, with the optional scripts: [docs/installation.md](docs/installatio
 ## Quick start on a demo account
 
 1. Open a **demo** account with your broker and a chart of a liquid symbol (for example EURUSD).
-2. Drag **RiskDesk** from the Navigator onto the chart, tick *Allow live trading* / *Allow Algo Trading*, and press OK. The status bar at the bottom of the panel shows `RiskDesk 1.8.0 ready`.
+2. Drag **RiskDesk** from the Navigator onto the chart, tick *Allow live trading* / *Allow Algo Trading*, and press OK. The status bar at the bottom of the panel shows `RiskDesk 1.8.0-rc.1 ready`.
 3. Type a small value in **Risk %**, for example `0.5`.
 4. Click **Add Line**. A red SL line appears; drag it below the price for a buy (above the price for a sell).
 5. Read **Lots** and the label on the SL line: the money you would lose at that stop, the %, the lot size and the distance.
@@ -125,7 +125,7 @@ Risk Desk is a manual tool, so there is no strategy to backtest or optimize. In 
 
 ## Known limitations
 
-- **Untested safety paths.** Three safety paths have not yet been triggered on a real server: closing a position whose stop-loss could not be attached (`InpCloseIfStopFails`), handling an unclear result such as a timeout (no blind resend), and the MT5 filling-policy fallback after a real rejection. They are covered by design and code review only. Tests that force them are planned ([ROADMAP.md](ROADMAP.md)).
+- **Pre-release.** Three safety paths have not yet been triggered on a real server: closing a position whose stop-loss could not be attached (`InpCloseIfStopFails`), handling an unclear result such as a timeout (no blind resend), and the MT5 filling-policy fallback after a real rejection. They are covered by design and code review only. Tests for them are planned for 1.8.0.
 - A stop-loss can fill beyond its price. On index CFDs, demo SL hits filled up to 7.5 % beyond the displayed risk on MT5.
 - One slippage value is used for every symbol. On fast markets (for example gold at the US open on IG MT4) market orders can be requoted until the retries run out; the status bar then says so and nothing is opened.
 - Screenshots, log lines and BrokerProbe reports contain your account number. Remove it before sharing them ([SUPPORT.md](SUPPORT.md)).
