@@ -15,7 +15,7 @@ It is a clean-room reimplementation of the *behaviour* described in the public u
 
 It is a manual-trading tool. It never opens, modifies or closes anything unless the user clicks a button or drops a dragged line of a placed pending order (ADR-014).
 
-The project is public and MIT-licensed (`LICENSE`, ADR-029). Version 1.7.0 is a pre-release; 1.8.0 is the first stable release (`ROADMAP.md`).
+The project is public and MIT-licensed (`LICENSE`, ADR-029). 1.7.0 was the first pre-release and 1.8.0-rc.1 is the release candidate; 1.8.0 is the first stable release, after the hardening work in `ROADMAP.md`.
 
 ## 2. Read order (source of truth = `docs/design/`)
 
