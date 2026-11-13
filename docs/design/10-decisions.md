@@ -1,6 +1,6 @@
 # 10 — Architecture Decision Records
 
-Format: Context → Decision → Consequences. One file per ADR in `docs/adr/` (`ADR-NNN-<slug>.md`). Add a new ADR as the next number in its own file and a row at the end of this index; never rewrite accepted ones (supersede them instead).
+Format: Context → Decision → Consequences. One file per ADR in `docs/design/adr/` (`ADR-NNN-<slug>.md`). Add a new ADR as the next number in its own file and a row at the end of this index; never rewrite accepted ones (supersede them instead).
 
 Read only the ADRs a task names or touches; the titles below say what each one decides.
 
@@ -34,3 +34,4 @@ Read only the ADRs a task names or touches; the titles below say what each one d
 | [ADR-026](adr/ADR-026-trade-management-phase-p6.md) | Trade management (phase P6): Risk Free, Half Close, Chart Close, Full Close |
 | [ADR-027](adr/ADR-027-chart-extras-phase-p7.md) | Chart extras (phase P7): candle time, closed-trade objects, cent display, log retention |
 | [ADR-028](adr/ADR-028-ea-in-the-experts-root.md) | The EA sits in the Experts root, without a RiskDesk sub-folder |
+| [ADR-029](adr/ADR-029-open-source-publication.md) | Open-source publication: MIT licence, attribution, docs layout, redacted reports, version 1.7.0 |

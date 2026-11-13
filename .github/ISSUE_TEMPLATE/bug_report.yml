@@ -1,0 +1,93 @@
+name: Bug report
+description: Something did not work as expected (wrong lot, refused order, no message, display problem).
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. **Remove your account number, balance and Windows user name** from everything you paste or attach. Never post a password.
+        Trading losses, slippage and broker rejections that Risk Desk reported correctly are not bugs; see docs/troubleshooting.md.
+  - type: input
+    id: version
+    attributes:
+      label: Risk Desk version
+      description: 'Experts tab: "RiskDesk <version> starting".'
+      placeholder: "1.7.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: ["MetaTrader 4", "MetaTrader 5"]
+    validations:
+      required: true
+  - type: input
+    id: build
+    attributes:
+      label: Terminal build
+      description: Help → About.
+      placeholder: "MT5 build 6316"
+    validations:
+      required: true
+  - type: input
+    id: broker
+    attributes:
+      label: Broker and server
+      placeholder: "Example Broker Ltd, ExampleBroker-Demo"
+    validations:
+      required: true
+  - type: dropdown
+    id: account
+    attributes:
+      label: Account type
+      multiple: true
+      options: ["demo", "live", "hedging", "netting (MT5)", "standard", "cent"]
+    validations:
+      required: true
+  - type: input
+    id: symbol
+    attributes:
+      label: Symbol and timeframe
+      placeholder: "XAUUSD, H1"
+    validations:
+      required: true
+  - type: textarea
+    id: inputs
+    attributes:
+      label: Inputs changed from their defaults
+      placeholder: "InpCommissionPerLot = 7; InpScopeChartOps = RiskDesk trades on the chart symbol"
+  - type: textarea
+    id: steps
+    attributes:
+      label: What you did
+      description: Lines placed (prices), Risk %, the button clicked.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: Include the exact status-bar text.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Experts-tab lines (redacted)
+      description: The lines around the click (right-click → Copy). Replace the account number.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I removed account numbers, balances, user names and passwords from this report.
+          required: true
+        - label: I can reproduce this on a demo account.

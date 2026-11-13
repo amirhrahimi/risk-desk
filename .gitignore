@@ -1,21 +1,47 @@
-# MetaTrader build artefacts
+# MetaTrader / MetaEditor build artefacts: binaries are published only on GitHub Releases
 *.ex4
 *.ex5
 *.log
+*.dat
+*.tmp
+*.bak
+
+# Release packages (build/package-release.ps1)
+dist/
+
+# Terminal and Strategy Tester files that may land in a working copy
+tester/
+Tester/
+history/
+*.hst
+*.fxt
+*.hcc
+*.hc
+*.htm
+*.html
+*.gif
+
+# Presets can contain personal values; sanitized examples go into examples/
+*.set
+!examples/**/*.set
 
 # Local machine paths
 build/paths.local.ps1
 
 # OS / editor
 Thumbs.db
+desktop.ini
 .DS_Store
 .vscode/
-*.bak
+.idea/
+*.swp
 
 # clangd / MQL clangd helper: generated per machine (absolute paths)
 .clangd
 .clang-format
 compile_commands.json
 .mql-auto-forwards/
-
 .cache
+
+# Local working notes (open-source preparation)
+.oss-prep/

@@ -70,8 +70,8 @@ Output: one line per step in the Experts tab, an Alert with the summary, and a b
 Runs BrokerProbe or GatewaySmoke on one saved account without clicking (ADR-020). The terminal must not be running; it logs into `-Login` on `-Server` with the password it has saved, opens a chart of `-Symbol`, runs the script, and closes when the report appears in `MQLx/Files/RiskDesk`.
 
 ```
-powershell -File build/run-script.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Script BrokerProbe -Symbol EURUSD -Report "probe_*_A3_*.txt"
-powershell -File build/run-script.ps1 -Platform mt4 -Login A1 -Server IG-DEMO -Script GatewaySmoke -Symbol US30 -Inputs "InpConfirm=false" -Report "smoke_*_A1_*.txt"
+powershell -File build/run-script.ps1 -Platform mt5 -Login <login> -Server ICMarketsEU-Demo -Script BrokerProbe -Symbol EURUSD -Report "probe_*_<login>_*.txt"
+powershell -File build/run-script.ps1 -Platform mt4 -Login <login> -Server IG-DEMO -Script GatewaySmoke -Symbol US30 -Inputs "InpConfirm=false" -Report "smoke_*_<login>_*.txt"
 ```
 Use the broker's own symbol names from its probe report (`[test symbols]`). Copy the reports into `broker-profiles/` afterwards.
 
@@ -81,8 +81,8 @@ Checks the panel on a real terminal without clicking (ADR-021). Only in a debug 
 
 ```
 powershell -File build/build.ps1 -Debug
-powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol EURUSD
-powershell -File build/run-uitest.ps1 -Platform mt4 -Login A1 -Server IG-DEMO -Symbol EURUSD
+powershell -File build/run-uitest.ps1 -Platform mt5 -Login <login> -Server ICMarketsEU-Demo -Symbol EURUSD
+powershell -File build/run-uitest.ps1 -Platform mt4 -Login <login> -Server IG-DEMO -Symbol EURUSD
 powershell -File build/build.ps1
 ```
 The runner writes the one-time request file `Files/RiskDesk/uitest.request`, starts the terminal with RiskDesk (`InpTestUiSelfTest=true`) on a temporary chart, waits for `Files/RiskDesk/uitest/<PLATFORM>_<login>_report.txt` and copies the report and the screenshots to `-OutDir` (default `%TEMP%\RiskDesk-uitest`). The EA removes itself and closes the terminal. It never trades and uses `Files/RiskDesk/uitest/store/` instead of `ui.ini` / `acct_*.ini`.
@@ -100,9 +100,9 @@ The same runner and debug build as §3d, with a second set of steps (`App/UiSelf
 
 ```
 powershell -File build/build.ps1 -Debug
-powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol EURUSD -Suite trade -TimeoutSec 600
-powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol XAUUSD -Suite trade-basic -TimeoutSec 600
-powershell -File build/run-uitest.ps1 -Platform mt4 -Login A1 -Server IG-DEMO -Symbol EURUSD -Suite trade-basic -Permissions off
+powershell -File build/run-uitest.ps1 -Platform mt5 -Login <login> -Server ICMarketsEU-Demo -Symbol EURUSD -Suite trade -TimeoutSec 600
+powershell -File build/run-uitest.ps1 -Platform mt5 -Login <login> -Server ICMarketsEU-Demo -Symbol XAUUSD -Suite trade-basic -TimeoutSec 600
+powershell -File build/run-uitest.ps1 -Platform mt4 -Login <login> -Server IG-DEMO -Symbol EURUSD -Suite trade-basic -Permissions off
 powershell -File build/build.ps1
 ```
 
@@ -133,8 +133,8 @@ The same runner, debug build and safety rules as §3e (demo accounts only, magic
 
 ```
 powershell -File build/build.ps1 -Debug
-powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol EURUSD -Suite pending -TimeoutSec 600
-powershell -File build/run-uitest.ps1 -Platform mt4 -Login A1 -Server IG-DEMO -Symbol EURUSD -Suite pending -TimeoutSec 600
+powershell -File build/run-uitest.ps1 -Platform mt5 -Login <login> -Server ICMarketsEU-Demo -Symbol EURUSD -Suite pending -TimeoutSec 600
+powershell -File build/run-uitest.ps1 -Platform mt4 -Login <login> -Server IG-DEMO -Symbol EURUSD -Suite pending -TimeoutSec 600
 powershell -File build/build.ps1
 ```
 
@@ -158,7 +158,7 @@ The same runner, debug build and safety rules as §3e (demo accounts only, own s
 
 ```
 powershell -File build/build.ps1 -Debug
-powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol EURUSD -Suite manage -TimeoutSec 900
+powershell -File build/run-uitest.ps1 -Platform mt5 -Login <login> -Server ICMarketsEU-Demo -Symbol EURUSD -Suite manage -TimeoutSec 900
 powershell -File build/build.ps1
 ```
 
@@ -180,7 +180,7 @@ Half Close (OP-10, F-12, 04 §10) over the volume grid of the chart symbol, so t
 
 ```
 powershell -File build/build.ps1 -Debug
-powershell -File build/run-uitest.ps1 -Platform mt4 -Login A2 -Server ICMarketsEU-Demo03 -Symbol US30 -Suite half -TimeoutSec 400
+powershell -File build/run-uitest.ps1 -Platform mt4 -Login <login> -Server ICMarketsEU-Demo03 -Symbol US30 -Suite half -TimeoutSec 400
 powershell -File build/build.ps1
 ```
 
@@ -205,7 +205,7 @@ The P7 extras on a real chart (`App/UiSelfTestExtras.mqh`, ADR-027). Same runner
 
 ```
 powershell -File build/build.ps1 -Debug
-powershell -File build/run-uitest.ps1 -Platform mt4 -Login A2 -Server ICMarketsEU-Demo03 -Symbol EURUSD -Suite extras
+powershell -File build/run-uitest.ps1 -Platform mt4 -Login <login> -Server ICMarketsEU-Demo03 -Symbol EURUSD -Suite extras
 powershell -File build/build.ps1
 ```
 
@@ -227,7 +227,7 @@ Result 2026-11-13: 19 passed, 0 failed on A1–A6 (EURUSD). The suite's three ob
 
 | Account | Platform | Notes |
 |---|---|---|
-| A1 IG demo | MT4 | baseline (original works here) |
+| A1 IG demo | MT4 | baseline |
 | A2 IC Markets EU demo | MT4 | |
 | A3 IC Markets EU demo | MT5 | filling policy (H1) |
 | A4 Dukascopy demo | MT4 | volume grid (H2) |
@@ -278,7 +278,7 @@ Format: **ID — goal** · steps · expected. "Status" means the panel status ba
 | T-33 | Chart extras | Close a few trades with `CTO_REMOVE`, then `CTO_KEEP`; toggle Candle Time; place 2 pending orders with overlay on, move one with MetaTrader's own trade level, delete one | Closed-trade arrows removed/kept (user drawings untouched); countdown correct at M1 (`mm:ss`), H4 (`hh:mm:ss`), W1 (`Nd hh:mm:ss`), gold, red in the last `InpCandleTimeWarnPct` (10) % of the candle (M5: from `00:30`, H1: from `06:00`) and at `00:00` when the market is closed, keeps running between ticks; overlay follows orders exactly; no lag |
 | T-34 | Screenshot naming | Several actions + camera button | Files named per F-19 |
 | T-35 | Ambiguous result | Debug build, `InpTestForceAmbiguous=true` | Log shows check-before-resend; exactly one position |
-| T-36 | Original-tool regressions | The owner recorded only "nothing happens, Experts and Journal empty" for the original (2026-11-12) and closed the topic. On every account: Add Line, Buy with RiskDesk on EURUSD, XAUUSD and an index | Each click opens the trade or shows a red reason with a log line; never nothing (R8) |
+| T-36 | Silent-failure regressions | On every account: Add Line, Buy with RiskDesk on EURUSD, XAUUSD and an index | Each click opens the trade or shows a red reason with a log line; never nothing (R8) |
 | T-37 | Auto-fit panel | `InpScale=1.6`, `InpAutoFitPanel=true`; shrink the chart window step by step, then enlarge | Panel always fully visible, never larger than scale 1.6, text readable; with auto-fit off it keeps its size. `InpPanelColumns=Auto`: two columns once one column would fall below 85 % of 1.6, one column again when the window grows |
 | T-39 | Drag a pending order | Buy Stop placed by RiskDesk: drag its SL farther (risk still under the caps), drag its TP, drag its entry up, drag its entry below Ask, drag the SL so the risk exceeds 10 %; select an overlay line and press Delete | SL/TP modified, labels and open risk updated, amber note when risk > panel %; entry up: SL and TP move by the same distance, risk unchanged; entry below Ask refused and snapped back; over-cap move refused with numbers and snapped back; deleted line redrawn, order intact |
 | T-38 | Original settings parity | Set the same inputs as the original (07-settings ★ values) | Colours, font, sizes and TP behaviour match the original side by side |

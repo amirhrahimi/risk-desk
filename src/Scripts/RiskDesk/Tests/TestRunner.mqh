@@ -1,3 +1,6 @@
+// Risk Desk - risk-based position sizing and trade management for MetaTrader 4/5
+// SPDX-License-Identifier: MIT
+
 //+------------------------------------------------------------------+
 //| RiskDesk - Scripts/RiskDesk/Tests/TestRunner.mqh                 |
 //| Purpose : the tiny assert helper of RiskDeskTests (08-testing    |

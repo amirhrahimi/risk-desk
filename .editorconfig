@@ -1,0 +1,24 @@
+# https://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# MQL sources: MetaEditor style, 3-space indent, ASCII only (ADR-018)
+[*.{mq4,mq5,mqh}]
+indent_style = space
+indent_size = 3
+
+[*.ps1]
+indent_style = space
+indent_size = 4
+end_of_line = crlf
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false

@@ -29,10 +29,10 @@
     accounts (rule R13). Pass InpConfirm=false to run it unattended.
 
 .EXAMPLE
-    powershell -File build/run-script.ps1 -Platform mt5 -Login A6 -Server MetaQuotes-Demo `
-        -Script BrokerProbe -Symbol EURUSD -Report 'probe_*_A6_*.txt'
-    powershell -File build/run-script.ps1 -Platform mt4 -Login A1 -Server IG-DEMO `
-        -Script GatewaySmoke -Symbol EURUSD -Inputs 'InpConfirm=false' -Report 'smoke_*_A1_*.txt'
+    powershell -File build/run-script.ps1 -Platform mt5 -Login <login> -Server MetaQuotes-Demo `
+        -Script BrokerProbe -Symbol EURUSD -Report 'probe_*_<login>_*.txt'
+    powershell -File build/run-script.ps1 -Platform mt4 -Login <login> -Server IG-DEMO `
+        -Script GatewaySmoke -Symbol EURUSD -Inputs 'InpConfirm=false' -Report 'smoke_*_<login>_*.txt'
 #>
 param(
     [Parameter(Mandatory = $true)][ValidateSet('mt4', 'mt5')][string]$Platform,

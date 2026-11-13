@@ -1,3 +1,6 @@
+// Risk Desk - risk-based position sizing and trade management for MetaTrader 4/5
+// SPDX-License-Identifier: MIT
+
 //+------------------------------------------------------------------+
 //| RiskDesk - Platform/TradeGatewayMT4Send.mqh                      |
 //| Layer   : Platform. Included only by TradeGatewayMT4.mqh.        |
