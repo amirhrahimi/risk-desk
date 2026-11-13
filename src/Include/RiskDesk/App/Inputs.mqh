@@ -169,6 +169,7 @@ sinput string InpSep_Diagnostics = "==== Diagnostics ====";   // ==== Diagnostic
 #endif
 input ELogLevel         InpLogLevel                  = LOGLEVEL_INFO;     // Log level
 input bool              InpLogToFile                 = true;              // Mirror the log to Files/RiskDesk/Logs
+input int               InpLogKeepDays               = 30;                // Keep the daily log files for N days (0 = keep all)
 
 #ifdef RD_TEST_HOOKS
 //--- Test hooks: debug builds only (08-testing section 2), never in a release build

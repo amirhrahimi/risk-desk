@@ -136,6 +136,7 @@ Resulting TP mode (derived once in `Settings`, enum `ETpMode`, F-17, ADR-013):
 |---|---|---|
 | `InpLogLevel` | `ELogLevel` | `LOGLEVEL_INFO` (ERROR / WARN / INFO / DEBUG) |
 | `InpLogToFile` | bool | true |
+| `InpLogKeepDays` | int | 30 [NEW] (P7, D41): daily log files `RiskDesk_<yyyymmdd>.log` older than N days are deleted at start and at each new day; 0 = keep all; range 0–3650 |
 
 ## Enum definitions (Domain/Types.mqh)
 ```cpp

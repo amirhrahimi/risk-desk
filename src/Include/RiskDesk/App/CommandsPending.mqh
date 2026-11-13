@@ -61,7 +61,7 @@ bool CCommands::SetPending(SResult &r)
    string order = RdOrderText(plan.side, plan.kind);
    SAccountSpec acc;
    SResult ar;
-   if(!CAccountSpec::Read(acc, ar))
+   if(!CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor))
       return RdFail(r, refused + ar.message);
 
    //--- BC-05: money of Entry -> SL for 1 lot (commission added by CRiskMath, F-30)
@@ -305,7 +305,7 @@ bool CCommands::MoveOrder(const ulong ticket, const ELineRole role, const double
    //--- risk with the lot unchanged (04 section 5)
    SAccountSpec acc;
    SResult ar;
-   if(!CAccountSpec::Read(acc, ar))
+   if(!CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor))
       return RdFail(r, refused + ar.message);
    SPlanSettings p;
    m_cfg.Plan(p);

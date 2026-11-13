@@ -97,6 +97,7 @@ Implement phase P6: Risk Free, Half Close, Chart Close and Full Close with scope
 ## P7 — Extras
 **Deliverables:** closed trade objects keep/remove (F-20, `Services/ChartHousekeeping.mqh`), candle time (F-21, per the answer to Q4), cent display (F-24), final screenshot naming and camera button (F-19), log file rotation (F-32).
 **Done when:** T-31, T-33, T-34 pass.
+**Done in P7 (ADR-027):** F-19 needed no change (P4); "log file rotation" became retention of the daily files (`InpLogKeepDays`, D41). The F-20 matcher deletes only arrows and trend lines named `#<ticket> …` whose ticket is a closed trade of the chart symbol in the account history, so it does not depend on the owner's Ctrl+B list; the list, sent after the implementation, confirmed MT4's names (Q24). The debug extras suite (08 §3i) runs T-31 (display), T-33 and T-34 unattended.
 
 ```text
 Read CLAUDE.md, docs/01 (F-19..F-21, F-24, F-32), docs/05 §6, docs/11-open-questions.md (use the owner's answers).

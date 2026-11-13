@@ -13,6 +13,8 @@
 //|             section 9; P6). MT5 sums the commission and fee of   |
 //|             the position's deals (POSITION_COMMISSION is not     |
 //|             filled by MT5); MT4 reads OrderCommission/OrderSwap. |
+//|           - IsClosedTradeOf: is a "#ticket ..." chart object one  |
+//|             of MetaTrader's closed-trade objects (F-20)?         |
 //+------------------------------------------------------------------+
 #ifndef RD_PLATFORM_HISTORY_MQH
 #define RD_PLATFORM_HISTORY_MQH
@@ -43,7 +45,30 @@ public:
    // Commission + swap (+ MT5 fee) booked so far on open position 'ticket', as a cost:
    // > 0 = charged; a net credit is 0 (D10). False when the position is not open.
    static bool       BookedCost(const ulong ticket, double &cost, SResult &r);
+   // F-20: 'ticket' (from a "#ticket ..." object name) is a closed trade of 'symbol'
+   // in this account's history: MT4 a closed or deleted order; MT5 a deal or an
+   // order of the history (the terminal's objects carry either ticket). Changes the
+   // selected order (MT4) / the history selection (MT5).
+   static bool       IsClosedTradeOf(const ulong ticket, const string symbol);
   };
+
+//+------------------------------------------------------------------+
+bool CHistory::IsClosedTradeOf(const ulong ticket, const string symbol)
+  {
+   if(ticket == 0)
+      return false;
+#ifdef __MQL5__
+   if(HistoryDealSelect(ticket))
+      return HistoryDealGetString(ticket, DEAL_SYMBOL) == symbol;
+   if(HistoryOrderSelect(ticket))
+      return HistoryOrderGetString(ticket, ORDER_SYMBOL) == symbol;
+   return false;
+#else
+   if(ticket > (ulong)INT_MAX || !OrderSelect((int)ticket, SELECT_BY_TICKET))
+      return false;
+   return OrderCloseTime() > 0 && OrderSymbol() == symbol;
+#endif
+  }
 
 //+------------------------------------------------------------------+
 bool CHistory::BookedCost(const ulong ticket, double &cost, SResult &r)

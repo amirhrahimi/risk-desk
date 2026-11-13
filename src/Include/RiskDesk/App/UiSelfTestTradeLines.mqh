@@ -102,7 +102,7 @@ void CUiSelfTest::TradeStart()
    m_money.MarginFor(m_ts, SIDE_BUY, lots, ask, need, mr);
    SAccountSpec acc;
    SResult ar;
-   CAccountSpec::Read(acc, ar);
+   CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor);
    if(!(lots > 0.0) || need > 0.5 * acc.freeMargin)
      {
       Line("INFO a " + RdFormatLots(m_ts, lots) + " lot test position needs " + RdNum(need, 2) + " margin of " +

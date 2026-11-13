@@ -1,8 +1,10 @@
 //+------------------------------------------------------------------+
 //| RiskDesk - Platform/Market.mqh                                   |
 //| Layer   : Platform                                               |
-//| Purpose : fresh quotes (02-architecture section 9) and the       |
-//|           BC-17 stale-quote check.                               |
+//| Purpose : fresh quotes (02-architecture section 9), the BC-17    |
+//|           stale-quote check, trade sessions, and CServerClock:   |
+//|           the server time that keeps running between ticks for   |
+//|           the candle countdown (F-21, 05 section 6).             |
 //+------------------------------------------------------------------+
 #ifndef RD_PLATFORM_MARKET_MQH
 #define RD_PLATFORM_MARKET_MQH
@@ -26,6 +28,66 @@ public:
    // Information only (BC-17: the server decides whether an order trades).
    static bool       InSession(const string symbol, const datetime when, bool &known);
   };
+
+//+------------------------------------------------------------------+
+//| F-21 / 05 section 6: the server time, also between ticks.        |
+//| MT5: TimeTradeServer() (the terminal's estimate). MT4 has only   |
+//| TimeCurrent(), the whole second of the last tick: the clock runs |
+//| on GetTickCount() milliseconds from an anchor in server time.    |
+//| Every tick is a lower bound (the server time is at least that    |
+//| second): a tick later than the clock moves the anchor up to it,  |
+//| so the clock converges onto the server time from below and never |
+//| runs ahead by a rounding second. A tick 2 s or more behind the   |
+//| clock (the clock was anchored on an old tick) re-anchors it.     |
+//| No tick at all (weekend): it runs on from the last tick.         |
+//| One instance per user (state in members, not global).            |
+//+------------------------------------------------------------------+
+class CServerClock
+  {
+private:
+   long              m_anchorMs;      // server time in ms at m_anchorAt
+   uint              m_anchorAt;      // GetTickCount() then
+   bool              m_known;
+   datetime          m_lastTick;
+
+public:
+                     CServerClock() { Reset(); }
+   void              Reset() { m_anchorMs = 0; m_anchorAt = 0; m_known = false; m_lastTick = 0; }
+   datetime          Now();
+  };
+
+datetime CServerClock::Now()
+  {
+#ifdef __MQL5__
+   return TimeTradeServer();
+#else
+   datetime server = TimeCurrent();
+   if(server <= 0)
+      return TimeLocal();
+   uint at = GetTickCount();
+   long low = (long)server * 1000;
+   if(!m_known)
+     {
+      m_anchorMs = low;
+      m_anchorAt = at;
+      m_known = true;
+      m_lastTick = server;
+      return server;
+     }
+   long estimate = m_anchorMs + (long)(uint)(at - m_anchorAt);
+   if(server != m_lastTick)
+     {
+      m_lastTick = server;
+      if(low > estimate || low < estimate - 2000)
+        {
+         m_anchorMs = low;
+         m_anchorAt = at;
+         estimate = low;
+        }
+     }
+   return (datetime)(estimate / 1000);
+#endif
+  }
 
 //+------------------------------------------------------------------+
 bool CMarket::Quote(const string symbol, SQuote &q)

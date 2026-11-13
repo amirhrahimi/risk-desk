@@ -11,6 +11,8 @@
 //|   Validators V-12 V-13 V-14 V-21                                 |
 //|   RiskBudget V-15 V-16 V-17 V-24                                 |
 //|   Planner    V-19 V-20 V-23                                      |
+//|   Extras     P7: cent display, trade object / screenshot / log   |
+//|              file names, candle countdown (TestExtras.mqh)       |
 //| plus edge cases per module. Add one test per Domain bug fixed.   |
 //+------------------------------------------------------------------+
 #ifndef RD_TESTS_SUITE_MQH
@@ -23,6 +25,7 @@
 #include "TestValidators.mqh"
 #include "TestRiskBudget.mqh"
 #include "TestPlanner.mqh"
+#include "TestExtras.mqh"
 
 // Returns the number of failed checks.
 int RunRiskDeskTests(const string platform, const string mqlDir)
@@ -34,6 +37,7 @@ int RunRiskDeskTests(const string platform, const string mqlDir)
    RunValidatorTests(t);
    RunRiskBudgetTests(t);
    RunPlannerTests(t);
+   RunExtrasTests(t);
    t.Finish();
    return t.Failed();
   }

@@ -273,7 +273,7 @@ double CUiSelfTest::ExpectedLoss(const ESide side, const double entry, const dou
   {
    SAccountSpec acc;
    SResult r;
-   CAccountSpec::Read(acc, r);
+   CAccountSpec::Read(acc, r, m_cfg.centMode, m_cfg.centDivisor);
    double calc = 0.0;
    SResult cr;
    if(m_money.LossByCalcProfit(m_ts, side, entry, sl, calc, cr) && calc > 0.0)
@@ -297,7 +297,7 @@ double CUiSelfTest::Base()
   {
    SAccountSpec a;
    SResult r;
-   CAccountSpec::Read(a, r);
+   CAccountSpec::Read(a, r, m_cfg.centMode, m_cfg.centDivisor);
    return CRiskMath::RiskBase(m_cfg.riskBase, a.balance, a.equity);
   }
 

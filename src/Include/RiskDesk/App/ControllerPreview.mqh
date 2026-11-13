@@ -103,12 +103,13 @@ void CController::ComputePreview(const SQuote &q, const bool quoteOk)
    m_lines.Read(mode, l);
    SAccountSpec acc;
    SResult ar;
-   bool accOk = CAccountSpec::Read(acc, ar);
+   bool accOk = CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor);
    string key = IntegerToString(mode) + "|" + DoubleToString(l.entry, 8) + "|" + DoubleToString(l.sl, 8) + "|" +
                 (l.hasTp ? DoubleToString(l.tp, 8) : "-") + "|" + DoubleToString(q.bid, 8) + "|" + DoubleToString(q.ask, 8) +
                 "|" + DoubleToString(m_state.riskPct, 2) + "|" + DoubleToString(acc.balance, 2) + "|" +
                 (m_cfg.riskBase != RISKBASE_BALANCE ? DoubleToString(acc.equity, 2) : "") + "|" + IntegerToString(m_specAt) +
-                "|" + (quoteOk ? "q" : "-") + (m_specOk ? "s" : "-") + (accOk ? "a" : "-");
+                "|" + (quoteOk ? "q" : "-") + (m_specOk ? "s" : "-") + (accOk ? "a" : "-") +
+                (acc.centShow ? "|" + acc.centUnit + RdNum(acc.centDivisor, 0) : "");   // F-24 display
    if(key == m_pv.key)
       return;
    m_pv.Reset();

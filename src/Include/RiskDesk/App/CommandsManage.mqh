@@ -95,7 +95,7 @@ bool CCommands::RiskFree(SResult &r)
       return RdWarn(r, name + ": no " + which + " on " + _Symbol);
    SAccountSpec acc;
    SResult ar;
-   if(!CAccountSpec::Read(acc, ar))
+   if(!CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor))
       return RdFail(r, name + " refused: " + ar.message);
    SPlanSettings p;
    m_cfg.Plan(p);
@@ -299,7 +299,7 @@ bool CCommands::HalfClose(SResult &r)
       return RdWarn(r, name + ": no " + which + " on " + _Symbol);
    SAccountSpec acc;
    SResult ar;
-   if(!CAccountSpec::Read(acc, ar))
+   if(!CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor))
       return RdFail(r, name + " refused: " + ar.message);
    SPlanSettings p;
    m_cfg.Plan(p);
@@ -595,7 +595,7 @@ bool CCommands::ChartClose(SResult &r)
       return RdWarn(r, name + ": no " + which + "s on " + _Symbol);
    SAccountSpec acc;
    SResult ar;
-   if(!CAccountSpec::Read(acc, ar))
+   if(!CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor))
       return RdFail(r, name + " refused: " + ar.message);
    ulong tickets[];
    string labels[];
@@ -656,7 +656,7 @@ bool CCommands::FullClose(SResult &r)
       return RdWarn(r, name + ": no " + which + "s on this account" + (m_cfg.fullCloseAlsoPending ? " and no pending orders" : ""));
    SAccountSpec acc;
    SResult ar;
-   if(!CAccountSpec::Read(acc, ar))
+   if(!CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor))
       return RdFail(r, name + " refused: " + ar.message);
 
    //--- group by symbol, in the order the symbols first appear

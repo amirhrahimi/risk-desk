@@ -18,6 +18,7 @@
 
 #include "..\Domain\Types.mqh"
 #include "..\Platform\TradeGatewayBase.mqh"
+#include "..\Services\CandleTime.mqh"
 #include "Inputs.mqh"
 
 class CSettings
@@ -132,6 +133,7 @@ public:
    //--- Diagnostics
    ELogLevel         logLevel;
    bool              logToFile;
+   int               logKeepDays;       // F-32: daily files kept, 0 = all
    //--- Test hooks (always false in a release build)
    bool              testUiSelfTest;
 
@@ -141,6 +143,8 @@ public:
    string            WarningsText() const;
    void              Plan(SPlanSettings &p) const;
    void              Gateway(SGatewaySettings &g) const;
+   // F-21 candle countdown look (07 Chart extras); font = the panel's body font.
+   void              CandleStyle(SCandleStyle &cs, const string font) const;
    string            TpModeText() const;
    string            Summary() const;
   };
@@ -321,6 +325,7 @@ void CSettings::Load()
    //--- Diagnostics
    logLevel                  = InpLogLevel;
    logToFile                 = InpLogToFile;
+   logKeepDays               = ClampI("Keep the daily log files for N days", InpLogKeepDays, 0, 3650);
 
    testUiSelfTest            = false;
 #ifdef RD_TEST_HOOKS
@@ -357,6 +362,18 @@ void CSettings::Plan(SPlanSettings &p) const
    p.partialIndivisible        = partialIndivisible;
   }
 
+void CSettings::CandleStyle(SCandleStyle &cs, const string font) const
+  {
+   cs.Defaults();
+   cs.on = showCandleTime;
+   cs.fontSize = candleTimeFontSize;
+   cs.font = font;
+   cs.normal = colorCandleTime;
+   cs.warn = colorCandleTimeWarn;
+   cs.warnPct = candleTimeWarnPct;
+  }
+
+//+------------------------------------------------------------------+
 void CSettings::Gateway(SGatewaySettings &g) const
   {
    g.Defaults();

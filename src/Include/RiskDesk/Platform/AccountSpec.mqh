@@ -3,18 +3,23 @@
 //| Layer   : Platform                                               |
 //| Purpose : read account and terminal properties into SAccountSpec |
 //|           (rule R3) and check trade permissions with the         |
-//|           specific messages of BC-15. Cent detection: BC-12.     |
+//|           specific messages of BC-15. Cent detection: BC-12;     |
+//|           cent display (F-24) from InpCentMode / InpCentDivisor, |
+//|           which App passes to Read().                            |
 //+------------------------------------------------------------------+
 #ifndef RD_PLATFORM_ACCOUNTSPEC_MQH
 #define RD_PLATFORM_ACCOUNTSPEC_MQH
 
 #include "..\Domain\Types.mqh"
+#include "..\Domain\Format.mqh"
 #include "Compat.mqh"
 
 class CAccountSpec
   {
 public:
-   static bool       Read(SAccountSpec &a, SResult &r);
+   // centMode / centDivisor: InpCentMode / InpCentDivisor (F-24 display, RdApplyCent).
+   static bool       Read(SAccountSpec &a, SResult &r, const ECentMode centMode = CENT_AUTO,
+                          const double centDivisor = 100.0);
    // BC-15 terminal/EA/account checks, in the order of the table.
    // Symbol trade modes are checked per command (they depend on the side).
    static bool       CanTrade(SResult &why);
@@ -32,7 +37,7 @@ public:
   };
 
 //+------------------------------------------------------------------+
-bool CAccountSpec::Read(SAccountSpec &a, SResult &r)
+bool CAccountSpec::Read(SAccountSpec &a, SResult &r, const ECentMode centMode, const double centDivisor)
   {
    a.Reset();
    r.Reset();
@@ -46,7 +51,7 @@ bool CAccountSpec::Read(SAccountSpec &a, SResult &r)
    a.leverage             = AccountInfoInteger(ACCOUNT_LEVERAGE);
    a.marginMode           = RdAccountMarginMode();
    a.hedging              = RdIsHedgingMarginMode(a.marginMode);
-   a.isCent               = IsCentCurrency(a.currency);
+   RdApplyCent(a, centMode, centDivisor);   // isCent and the F-24 display
    a.isDemo               = RdIsDemoAccount();
    a.terminalConnected    = TerminalInfoInteger(TERMINAL_CONNECTED) != 0;
    a.terminalTradeAllowed = TerminalInfoInteger(TERMINAL_TRADE_ALLOWED) != 0;
@@ -106,11 +111,7 @@ bool CAccountSpec::WaitReady(const int timeoutMs, int &waitedMs)
 //+------------------------------------------------------------------+
 bool CAccountSpec::IsCentCurrency(const string currency)
   {
-   if(currency == "USC" || currency == "EUC" || currency == "GBC" || currency == "USc" || currency == "EUc")
-      return true;
-   string lower = currency;
-   StringToLower(lower);
-   return StringFind(lower, "cent") >= 0;
+   return RdIsCentCurrency(currency);
   }
 
 //+------------------------------------------------------------------+
@@ -121,6 +122,8 @@ string CAccountSpec::Describe(const SAccountSpec &a)
    return IntegerToString(a.login) + " on " + a.server + " (" + a.company + ")" +
           ", " + (a.isDemo ? "demo" : "NOT demo") +
           ", currency " + a.currency + (a.isCent ? " (cent)" : "") +
+          (a.centShow ? ", money shown as " + a.centUnit + " and " + (a.centMajor != "" ? a.centMajor : "major units") +
+           " (1:" + RdNum(a.centDivisor, 0) + ")" : "") +
           ", leverage 1:" + IntegerToString(a.leverage) +
           ", margin mode " + RdMarginModeText(a.marginMode) +
           ", balance " + DoubleToString(a.balance, a.digitsCcy) +

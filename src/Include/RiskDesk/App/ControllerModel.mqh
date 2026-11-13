@@ -34,7 +34,7 @@ void CController::ReadSpec()
    SQuote q;
    SAccountSpec acc;
    SResult ar;
-   if(!CMarket::Quote(_Symbol, q) || !CAccountSpec::Read(acc, ar))
+   if(!CMarket::Quote(_Symbol, q) || !CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor))
       return;
    double sl = RdNormalizePrice(m_spec, q.bid - 100.0 * RdTick(m_spec));
    if(!(sl > 0.0))
@@ -205,7 +205,7 @@ void CController::ComputeOpenRisk()
    SAccountSpec acc;
    SResult r;
    m_riskSev = SEV_WARN;
-   if(!CAccountSpec::Read(acc, r))
+   if(!CAccountSpec::Read(acc, r, m_cfg.centMode, m_cfg.centDivisor))
      {
       m_riskText = "Open risk n/a: " + r.message;
       return;

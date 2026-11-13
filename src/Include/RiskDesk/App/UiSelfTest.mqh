@@ -29,6 +29,10 @@
 //|           - half: Half Close over the symbol's volume grid       |
 //|             (index and FX grids of every broker), same safety    |
 //|             rules: App/UiSelfTestHalf.mqh.                       |
+//|           - extras (P7): candle time, closed-trade objects,      |
+//|             screenshot names, cent display, log retention (T-31, |
+//|             T-33, T-34), one test Buy with the same safety       |
+//|             rules: App/UiSelfTestExtras.mqh.                     |
 //|           Neither replaces T-24 (Windows DPI) or real clicks.    |
 //| Safety : runs only when the runner left the request file         |
 //|          RiskDesk/uitest.request (deleted at start), so a chart  |
@@ -99,7 +103,7 @@ private:
    CLines           *m_plan;            // the planning lines (the report text is m_lines)
    CPendingOverlay  *m_overlay;
 
-   string            m_suite;           // "panel", "trade", "trade-basic", "pending", "manage", "half"
+   string            m_suite;           // "panel", "trade", "trade-basic", "pending", "manage", "half", "extras"
    bool              m_active;
    bool              m_closeOnDeinit;
    int               m_step;
@@ -169,6 +173,15 @@ private:
    bool              m_hfOk;            // the cases can run on this symbol and account
    datetime          m_hfFrom;          // start of the current case (history window)
    string            m_hfTable;         // the splits of the run, for the summary line
+   //--- extras suite (P7, App/UiSelfTestExtras.mqh)
+   ENUM_TIMEFRAMES   m_exPeriod;        // the runner's timeframe (back at the end)
+   ENUM_TIMEFRAMES   m_exWant;          // timeframe asked for
+   long              m_exLeft;          // countdown seconds at the first reading
+   uint              m_exAt;            // when it was read
+   datetime          m_exTick;          // TimeCurrent() then
+   ulong             m_exTicket;        // the closed test trade (F-20), 0 = none
+   bool              m_exShiftWas;      // the chart's CHART_SHIFT at the start
+   bool              m_exRightOf;       // the last ExCandle found RD_CT right of the candle
 
    void              Line(const string text);
    void              Check(const bool ok, const string id, const string detail);
@@ -336,6 +349,26 @@ private:
                             const EIndivisible indiv, const int clicks);
    bool              HfClick(const string id, SUiHalfPos &p[], const double pct, const EIndivisible indiv, string &split);
    void              HfNetMerged();
+   //--- extras suite (App/UiSelfTestExtras.mqh)
+   void              StepExtras(const uint now);
+   void              ExStart();
+   bool              ExTf(const ENUM_TIMEFRAMES tf);
+   static long       ExParseCountdown(const string text, int &form);
+   bool              ExCandle(const string id, long &left);
+   void              ExBetweenTicks();
+   void              ExCandleToggle();
+   void              ExShift(const bool on);
+   void              ExShiftCheck(const bool on);
+   bool              ExShotNamed(const string path, const string action, const ulong ticket, const datetime t0,
+                                 const datetime t1, string &want);
+   void              ExCameraShot();
+   void              ExChartShot(const string tf);
+   void              ExBuyShot();
+   bool              ExMakeObject(const string name, const ENUM_OBJECT type, const double p1, const double p2);
+   void              ExClosedObjects();
+   void              ExCent();
+   void              ExLogs();
+   void              ExEnd();
 
 public:
                      CUiSelfTest();
@@ -426,6 +459,14 @@ CUiSelfTest::CUiSelfTest()
    m_hfOk = false;
    m_hfFrom = 0;
    m_hfTable = "";
+   m_exPeriod = PERIOD_CURRENT;
+   m_exWant = PERIOD_CURRENT;
+   m_exLeft = -1;
+   m_exAt = 0;
+   m_exTick = 0;
+   m_exTicket = 0;
+   m_exShiftWas = false;
+   m_exRightOf = true;
   }
 
 //+------------------------------------------------------------------+
@@ -445,7 +486,8 @@ string CUiSelfTest::ReadSuite()
          suite = RdTrim(StringSubstr(line, 6));
      }
    FileClose(h);
-   if(suite != "trade" && suite != "trade-basic" && suite != "pending" && suite != "manage" && suite != "half")
+   if(suite != "trade" && suite != "trade-basic" && suite != "pending" && suite != "manage" && suite != "half" &&
+      suite != "extras")
       suite = "panel";
    return suite;
   }
@@ -493,7 +535,7 @@ void CUiSelfTest::Start(CSettings *cfg, CState *state, CTheme *theme, CLayout *l
 string CUiSelfTest::FilePrefix() const
   {
    string p = RD_UITEST_DIR + "\\" + RD_PLATFORM + "_" + IntegerToString(CAccountSpec::Login());
-   if(m_suite == "pending" || m_suite == "manage" || m_suite == "half")
+   if(m_suite == "pending" || m_suite == "manage" || m_suite == "half" || m_suite == "extras")
       p += "_" + m_suite + "_" + CScreenshot::Sanitize(_Symbol);
    else
       if(m_suite != "panel")
@@ -526,7 +568,18 @@ void CUiSelfTest::Shot(const string name)
    string file = FilePrefix() + "_" + StringFormat("%02d", m_shot) + "_" + name + ".png";
    // ChartScreenShot draws the whole chart, price and time scales included, into the
    // size asked for: ask for more than the chart area so nothing of it is covered.
-   bool ok = ChartScreenShot(0, file, ChartW() + 100, ChartH() + 40, ALIGN_LEFT);
+   // Not on a chart with fewer bars than its width (a short W1 history): MT4 build 1492
+   // froze there (ADR-027); the chart's own size, as CScreenshot takes it, works.
+   int w = ChartW() + 100;
+   int h = ChartH() + 40;
+   int align = ALIGN_LEFT;
+   if(iBars(_Symbol, PERIOD_CURRENT) <= (int)ChartGetInteger(0, CHART_WIDTH_IN_BARS) + 20)
+     {
+      w = ChartW();
+      h = ChartH();
+      align = ALIGN_RIGHT;
+     }
+   bool ok = ChartScreenShot(0, file, w, h, (ENUM_ALIGN_MODE)align);
    Line((ok ? "SHOT " : "SHOT FAILED ") + file);
    m_lastShot = file;
   }
@@ -614,7 +667,10 @@ void CUiSelfTest::Step()
             if(m_suite == "half")
                StepHalf(now);
             else
-               StepTrade(now);
+               if(m_suite == "extras")
+                  StepExtras(now);
+               else
+                  StepTrade(now);
   }
 
 //+------------------------------------------------------------------+
@@ -778,5 +834,6 @@ void CUiSelfTest::OnDeinit(const int reason)
 #include "UiSelfTestPendingMove.mqh"
 #include "UiSelfTestManage.mqh"
 #include "UiSelfTestHalf.mqh"
+#include "UiSelfTestExtras.mqh"
 
 #endif // RD_APP_UISELFTEST_MQH

@@ -13,6 +13,7 @@
 #define RD_SERVICES_SCREENSHOT_MQH
 
 #include "..\Domain\Types.mqh"
+#include "..\Domain\Format.mqh"
 #include "..\Platform\Compat.mqh"
 #include "Logger.mqh"
 
@@ -29,34 +30,21 @@ public:
                           string &path, SResult &r);
   };
 
-// OP-14: / \ : * ? " < > | -> _
+// The names are built in Domain/Format.mqh (unit-tested).
 string CScreenshot::Sanitize(const string text)
   {
-   string s = text;
-   string bad[] = {"/", "\\", ":", "*", "?", "\"", "<", ">", "|", " "};
-   for(int i = 0; i < ArraySize(bad); i++)
-      StringReplace(s, bad[i], "_");
-   return s;
+   return RdSanitizeFileText(text);
   }
 
-// PERIOD_H1 -> "H1"
 string CScreenshot::TimeframeText(const ENUM_TIMEFRAMES tf)
   {
-   string s = EnumToString(tf);
-   if(StringFind(s, "PERIOD_") == 0)
-      s = StringSubstr(s, 7);
-   return s;
+   return RdTimeframeText(tf);
   }
 
 string CScreenshot::FileName(const long login, const string symbol, const ENUM_TIMEFRAMES tf, const datetime when,
                              const string action, const ulong ticket)
   {
-   string t = TimeToString(when, TIME_DATE | TIME_SECONDS);   // 2026.11.12 10:43:21
-   StringReplace(t, ".", "-");
-   StringReplace(t, " ", "_");
-   StringReplace(t, ":", "-");
-   return IntegerToString(login) + "_" + Sanitize(symbol) + "_" + TimeframeText(tf) + "_" + t + "_" +
-          Sanitize(action) + "_" + IntegerToString((long)ticket) + ".png";
+   return RdShotFileName(login, symbol, tf, when, action, ticket);
   }
 
 //+------------------------------------------------------------------+

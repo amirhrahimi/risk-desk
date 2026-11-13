@@ -32,3 +32,4 @@ Read only the ADRs a task names or touches; the titles below say what each one d
 | [ADR-024](adr/ADR-024-line-labels-keep-clear-of-the-panel.md) | Line labels keep clear of the panel |
 | [ADR-025](adr/ADR-025-pending-orders-phase-p5-set-pending-del-pending.md) | Pending orders (phase P5): Set Pending, Del Pending, the overlay and moving an order by its line |
 | [ADR-026](adr/ADR-026-trade-management-phase-p6.md) | Trade management (phase P6): Risk Free, Half Close, Chart Close, Full Close |
+| [ADR-027](adr/ADR-027-chart-extras-phase-p7.md) | Chart extras (phase P7): candle time, closed-trade objects, cent display, log retention |

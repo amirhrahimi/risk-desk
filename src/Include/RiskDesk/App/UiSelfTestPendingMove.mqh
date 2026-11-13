@@ -29,7 +29,7 @@ void CUiSelfTest::PendF22()
    bool drawn = OverlayDrawn(t, o, why);
    SAccountSpec acc;
    SResult ar;
-   CAccountSpec::Read(acc, ar);
+   CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor);
    string en = Text(CPendingOverlay::LabelName(t, LINEROLE_ENTRY));
    string slLabel = Text(CPendingOverlay::LabelName(t, LINEROLE_SL));
    string tpLabel = Text(CPendingOverlay::LabelName(t, LINEROLE_TP));
@@ -127,7 +127,7 @@ void CUiSelfTest::PendT39a()
    string name = RdOrderText(o.side, o.kind) + " " + RdTicketText(t);
    SAccountSpec acc;
    SResult ar;
-   CAccountSpec::Read(acc, ar);
+   CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor);
    m_ctl.Refresh();
    string idle0 = m_status.IdleText();
    //--- SL farther
@@ -330,7 +330,7 @@ void CUiSelfTest::PendT15()
    m_otherTicket = 0;
    SAccountSpec acc;
    SResult ar;
-   CAccountSpec::Read(acc, ar);
+   CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor);
    double base = Base();
    int tries = 0;
    for(int i = 0; i < SymbolsTotal(true) && m_otherTicket == 0 && tries < 3; i++)

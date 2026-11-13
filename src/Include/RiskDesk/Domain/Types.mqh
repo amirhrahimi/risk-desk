@@ -227,6 +227,11 @@ struct SAccountSpec
    int               marginMode;        // MT5 ENUM_ACCOUNT_MARGIN_MODE, -1 on MT4
    bool              hedging;           // MT4: always true (BC-10)
    bool              isCent;            // auto-detected from the currency (BC-12)
+   //--- F-24 display (RdApplyCent): money shown as cents plus the major unit
+   bool              centShow;          // InpCentMode ON, or AUTO and isCent
+   double            centDivisor;       // InpCentDivisor (100)
+   string            centUnit;          // "USC": the cent amount's unit
+   string            centMajor;         // "USD": the major unit ("" = unknown, plain number)
    bool              isDemo;
    bool              terminalConnected;
    bool              terminalTradeAllowed;
@@ -249,6 +254,10 @@ struct SAccountSpec
       marginMode = -1;
       hedging = true;
       isCent = false;
+      centShow = false;
+      centDivisor = 100.0;
+      centUnit = "";
+      centMajor = "";
       isDemo = false;
       terminalConnected = false;
       terminalTradeAllowed = false;

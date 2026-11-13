@@ -21,7 +21,7 @@ double CUiSelfTest::MgRisk(const ulong ticket)
    SSymbolSpec s;
    SAccountSpec acc;
    SResult r;
-   if(!m_gw.SelectPosition(ticket, p) || !(p.sl > 0.0) || !CSymbolSpec::Read(p.symbol, s, r) || !CAccountSpec::Read(acc, r))
+   if(!m_gw.SelectPosition(ticket, p) || !(p.sl > 0.0) || !CSymbolSpec::Read(p.symbol, s, r) || !CAccountSpec::Read(acc, r, m_cfg.centMode, m_cfg.centDivisor))
       return 0.0;
    double loss = 0.0;
    if(!m_money.LossPerLot(s, acc.currency, p.side, p.open, p.sl, loss, r))
@@ -86,7 +86,7 @@ void CUiSelfTest::MgT18()
         (m1 > 0 ? ", manual " + RdTicketText(m1) : "") + (o1 > 0 ? ", RiskDesk " + RdTicketText(o1) + " on " + m_mgSym2 : ""));
    SAccountSpec acc;
    SResult ar;
-   CAccountSpec::Read(acc, ar);
+   CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor);
    ulong tools[];
    ArrayResize(tools, (t2 > 0) ? 2 : 1);
    tools[0] = t1;
@@ -228,7 +228,7 @@ void CUiSelfTest::MgT19Close()
      }
    SAccountSpec acc;
    SResult ar;
-   CAccountSpec::Read(acc, ar);
+   CAccountSpec::Read(acc, ar, m_cfg.centMode, m_cfg.centDivisor);
    string syms[];
    int ns = 0;
    for(int i = 0; i < n; i++)
