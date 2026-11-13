@@ -14,7 +14,7 @@ Every terminal has a *data folder*. In the terminal choose **File → Open Data 
 
 ## Option A: install a release
 
-1. Download `RiskDesk-<version>.zip` from the [Releases page](https://github.com/amirhrahimi/risk-desk/releases). Optionally check it against `RiskDesk-<version>.sha256.txt` (PowerShell: `Get-FileHash RiskDesk-<version>.zip`).
+1. Download `RiskDesk-<version>.zip` from the [Releases page](https://github.com/amirhrahimi/risk-desk/releases). Optionally check it against `RiskDesk-<version>.sha256.txt` (PowerShell: `Get-FileHash RiskDesk-<version>.zip`). Use a numbered release: the *Development build* (`RiskDesk-dev-<commit>.zip`) is built automatically from the latest change and is not tested.
 2. Unzip it. It contains an `MQL4` and an `MQL5` folder in the layout above.
 3. Close the terminal, or keep it open and refresh the Navigator later.
 4. Copy the `MQL4` folder (for MetaTrader 4) or the `MQL5` folder (for MetaTrader 5) into the data folder, merging it with the folder that is already there.

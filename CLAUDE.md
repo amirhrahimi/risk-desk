@@ -62,7 +62,7 @@ When docs conflict, precedence is: 03 > 04 > 06 > 01 > the rest. Report every co
 /
 ├─ CLAUDE.md  README.md  CHANGELOG.md  ROADMAP.md  LICENSE  NOTICE.md
 ├─ CONTRIBUTING.md  CODE_OF_CONDUCT.md  SECURITY.md  SUPPORT.md
-├─ .github/                    issue templates, PR template, workflows (MT5 compile check, docs link check)
+├─ .github/                    issue templates, PR template, workflows (MT4+MT5 build and releases, docs link check)
 ├─ docs/                       user documentation (installation, user guide, configuration, ...)
 │  └─ design/                  specifications 01-08, 10, 11 (see rule R12)
 │     └─ adr/                  one file per ADR, indexed by 10-decisions.md
@@ -108,6 +108,7 @@ Includes are **relative** to the including file, using backslashes as in MetaQuo
   - The `.log` file is written next to the source file. **Do not trust MetaEditor's exit code.** Parse the log (it may be UTF-16 encoded) for the final `N errors, M warnings` result.
   - `.ex4/.ex5/.log` are build artefacts and are git-ignored.
 - Release zip: `powershell -ExecutionPolicy Bypass -File build/package-release.ps1` (release build, then `dist/RiskDesk-<version>.zip`).
+- CI (`.github/workflows/build.yml`) compiles the eight targets with MetaEditor 4 and 5 on every pull request and push. A push to `main` publishes release `v<RD_VERSION>` when that version has none yet (it needs a `## [x.y.z]` section in `CHANGELOG.md`; a SemVer pre-release version such as `1.8.0-rc.1` becomes a GitHub pre-release), otherwise it replaces the `dev` pre-release. Releasing = bump the version and the CHANGELOG in one commit and push it to `main`. Builds that are not a release report `<version>+dev.<commit>` or `<version>+pr.<n>.<commit>` (set on the runner only, ADR-030).
 - You cannot click inside MetaTrader. For runtime verification give the owner a short numbered list of test IDs (T-xx from `docs/design/08-testing.md`) and ask for the relevant Experts-tab log lines and status-bar texts.
 
 ## 6. Coding standards (MQL4/MQL5 common subset)

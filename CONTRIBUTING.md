@@ -81,7 +81,14 @@ The layout, the build and the specifications are described in [docs/architecture
 
 ## Releases
 
-Maintainers bump `RD_VERSION` and `RD_VERSION_PROP` in `src/Include/RiskDesk/Build.mqh`, move the `[Unreleased]` notes in `CHANGELOG.md` to the new version, run `build/package-release.ps1`, and attach `dist/RiskDesk-<version>.zip` and its `.sha256.txt` to a GitHub release. Binaries are never committed.
+Releases are built and published by GitHub Actions ([.github/workflows/build.yml](.github/workflows/build.yml)); binaries are never committed.
+
+- **Every pull request and push** compiles the eight targets with MetaEditor 4 and 5 (0 errors, 0 warnings) and attaches the package to the workflow run, so reviewers can download and try it on a demo account.
+- **A new version:** maintainers bump `RD_VERSION` and `RD_VERSION_PROP` in `src/Include/RiskDesk/Build.mqh` and move the `[Unreleased]` notes in `CHANGELOG.md` to a `## [x.y.z]` section, in one pull request. When it is merged, the workflow creates release `vx.y.z` with `RiskDesk-x.y.z.zip`, its `.sha256.txt` and the CHANGELOG section as notes. Following [SemVer](https://semver.org/), a version with a pre-release part such as `1.8.0-rc.1` is published as a pre-release (`RD_VERSION_PROP` stays `"1.80"`: MetaTrader's `#property version` has no room for a suffix).
+- **Any other push to `main`** replaces the *Development build* pre-release (tag `dev`) with a build of that commit. It is untested.
+- Builds that are not a release carry their commit in the version they report (SemVer build metadata, set on the runner only): `1.7.0+dev.abc1234` for a development build, `1.7.0+pr.12.abc1234` for pull request 12. A bug report then shows exactly which build was used.
+
+`build/package-release.ps1` makes the same package locally, for example to check it before a release.
 
 ## Licence
 

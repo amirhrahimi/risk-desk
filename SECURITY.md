@@ -32,5 +32,5 @@ You can expect a first reply within a reasonable time. Fixes for confirmed issue
 ## Using Risk Desk safely
 
 - Test every new version and every new broker on a **demo** account first.
-- Download releases only from this repository's [Releases page](https://github.com/amirhrahimi/risk-desk/releases) and compare the zip with its `.sha256.txt`. Do not run `.ex4`/`.ex5` files from other sources that claim to be Risk Desk.
+- Download releases only from this repository's [Releases page](https://github.com/amirhrahimi/risk-desk/releases) and compare the zip with its `.sha256.txt`. Prefer a numbered release; the *Development build* there is untested. Do not run `.ex4`/`.ex5` files from other sources that claim to be Risk Desk.
 - Never share your trading password. Risk Desk never asks for it.
