@@ -300,4 +300,4 @@ Expected: <what you expected>
 - [ ] Probe reports current for all accounts.
 - [ ] T-01…T-28 pass on A1–A5; T-30 on A6; T-31 if available.
 - [ ] CHANGELOG updated, version bumped, `README` user section updated.
-- [ ] Release zip: `RiskDesk.ex4`, `RiskDesk.ex5`, `BrokerProbe.ex4/.ex5`, short user guide (PDF/MD).
+- [ ] Release zip: `RiskDesk.ex4`, `RiskDesk.ex5`, `BrokerProbe.ex4/.ex5`, short user guide (PDF/MD). Built and published by `.github/workflows/build.yml` on the push to `main` that bumps the version (ADR-030); `build/package-release.ps1` makes the same zip locally.

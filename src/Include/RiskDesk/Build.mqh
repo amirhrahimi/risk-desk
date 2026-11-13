@@ -12,7 +12,9 @@
 //|           the 'x.yz' form that '#property version' accepts       |
 //|           without warning 68 (major.minor patch: 1.7.0 = "1.70");|
 //|           every entry file sets '#property version' from it      |
-//|           (ADR-015, ADR-029).                                    |
+//|           (ADR-015, ADR-029). CI builds that are not a release   |
+//|           get the commit appended on the runner only, for        |
+//|           example "1.7.0+dev.abc1234" (ADR-030).                 |
 //| Debug   : MetaEditor has no command-line define switch, so       |
 //|           'build.ps1 -Debug' un-comments the test-hooks define   |
 //|           at the end of this file for the duration of the build  |

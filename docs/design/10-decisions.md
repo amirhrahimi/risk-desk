@@ -35,3 +35,4 @@ Read only the ADRs a task names or touches; the titles below say what each one d
 | [ADR-027](adr/ADR-027-chart-extras-phase-p7.md) | Chart extras (phase P7): candle time, closed-trade objects, cent display, log retention |
 | [ADR-028](adr/ADR-028-ea-in-the-experts-root.md) | The EA sits in the Experts root, without a RiskDesk sub-folder |
 | [ADR-029](adr/ADR-029-open-source-publication.md) | Open-source publication: MIT licence, attribution, docs layout, redacted reports, version 1.7.0 |
+| [ADR-030](adr/ADR-030-releases-from-ci.md) | Releases are built and published by CI: MT4+MT5 build on every pull request and push, versioned release or development build on `main` |

@@ -11,7 +11,6 @@ The hardening work that turns the 1.7.0 pre-release into a release line:
 - **Review the trade gateway** against the compatibility checklist ([docs/design/03-broker-compatibility.md §6](docs/design/03-broker-compatibility.md#6-compatibility-checklist-definition-of-done-for-every-trade-feature)).
 - Refresh the BrokerProbe and GatewaySmoke reports with the release build.
 - Show the product name as "Risk Desk" in the panel title, dialogs and messages (code identifiers, file names and log file names stay `RiskDesk`).
-- An MT4 compile check in CI, if a reliable way to install MetaEditor 4 on a runner is found. The MT5 compile check and the docs link check already run on every pull request.
 
 ## Broader broker coverage
 

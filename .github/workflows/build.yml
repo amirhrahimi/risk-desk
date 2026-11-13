@@ -1,0 +1,230 @@
+# Builds Risk Desk for MetaTrader 4 and 5 on a GitHub-hosted Windows runner and publishes it.
+#
+#   Pull request to main: compiles the eight targets (0 errors, 0 warnings, rule R11) and attaches
+#                         the package to the run. No release: the code is not merged yet.
+#   Push to main:         the same build, then
+#                         - if the version in src/Include/RiskDesk/Build.mqh has no release yet,
+#                           creates release vX.Y.Z at this commit, with the notes of that version
+#                           in CHANGELOG.md (a SemVer pre-release version such as 1.8.0-rc.1
+#                           becomes a GitHub pre-release);
+#                         - otherwise replaces the "dev" pre-release with this commit's build.
+#
+# Every build that is not a release carries its commit in the version (SemVer build metadata,
+# set in Build.mqh on the runner only): 1.7.0+dev.abc1234 on main, 1.7.0+pr.12.abc1234 for a
+# pull request. Released builds report the plain version.
+#
+# The package is made by build/package-release.ps1, the same script as a local release.
+# MetaEditor comes from MetaQuotes' public installers (mt4setup.exe, mt5setup.exe).
+# First verified 2026-11-13: 8 of 8 targets, 0 errors, 0 warnings, about 2 minutes.
+name: build
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      build_version: ${{ steps.version.outputs.build_version }}
+      kind: ${{ steps.version.outputs.kind }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Decide release or development build
+        id: version
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          $file = (Resolve-Path 'src/Include/RiskDesk/Build.mqh').Path
+          $text = [IO.File]::ReadAllText($file)
+          if ($text -notmatch '(?m)^#define\s+RD_VERSION\s+"([^"]+)"') { throw "RD_VERSION not found in $file" }
+          $version = $Matches[1]
+          if ($env:GITHUB_EVENT_NAME -eq 'pull_request') {
+            $kind = 'pr'; $stamp = "$version+pr.$($env:PR_NUMBER).$($env:PR_HEAD_SHA.Substring(0, 7))"
+          } else {
+            $short = $env:GITHUB_SHA.Substring(0, 7)
+            $kind = 'dev'; $stamp = "$version+dev.$short"
+            if ($env:GITHUB_REF -eq 'refs/heads/main') {
+              $released = @(& gh release list --limit 1000 --json tagName --jq '.[].tagName')
+              if ($LASTEXITCODE -ne 0) { throw 'Could not list the releases' }
+              if ($released -notcontains "v$version") { $kind = 'release'; $stamp = $version }
+            }
+          }
+          if ($stamp -ne $version) {
+            $text = [regex]::Replace($text, '(?m)^(#define\s+RD_VERSION\s+)"[^"]+"', "`${1}`"$stamp`"")
+            [IO.File]::WriteAllText($file, $text)
+          }
+          Write-Host "Build kind: $kind, version in the binaries: $stamp"
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "build_version=$stamp" >> $env:GITHUB_OUTPUT
+          "kind=$kind" >> $env:GITHUB_OUTPUT
+
+      - name: Install MetaTrader 4 and 5 (for MetaEditor)
+        shell: pwsh
+        run: |
+          foreach ($p in 'mt4', 'mt5') {
+            $setup = Join-Path $env:RUNNER_TEMP "$($p)setup.exe"
+            Invoke-WebRequest -Uri "https://download.mql5.com/cdn/web/metaquotes.software.corp/$p/$($p)setup.exe" -OutFile $setup
+            Start-Process -FilePath $setup -ArgumentList '/auto' -Wait
+          }
+          $found = @(Get-ChildItem 'C:\Program Files', 'C:\Program Files (x86)' -Recurse -Depth 2 -Filter 'metaeditor*.exe' -ErrorAction SilentlyContinue)
+          $found | ForEach-Object { '{0}  {1}' -f $_.FullName, $_.VersionInfo.FileVersion }
+          $me4 = $found | Where-Object Name -eq 'metaeditor.exe' | Select-Object -First 1
+          $me5 = $found | Where-Object Name -eq 'metaeditor64.exe' | Select-Object -First 1
+          if (-not $me4) { throw 'MetaEditor 4 (metaeditor.exe) not found after installing MetaTrader 4' }
+          if (-not $me5) { throw 'MetaEditor 5 (metaeditor64.exe) not found after installing MetaTrader 5' }
+          "ME4=$($me4.FullName)" >> $env:GITHUB_ENV
+          "ME5=$($me5.FullName)" >> $env:GITHUB_ENV
+
+      - name: Compile and check for 0 errors, 0 warnings
+        shell: pwsh
+        run: |
+          $targets = 'src\Experts\RiskDesk.mq4', 'src\Scripts\RiskDesk\BrokerProbe.mq4',
+                     'src\Scripts\RiskDesk\GatewaySmoke.mq4', 'src\Scripts\RiskDesk\RiskDeskTests.mq4',
+                     'src\Experts\RiskDesk.mq5', 'src\Scripts\RiskDesk\BrokerProbe.mq5',
+                     'src\Scripts\RiskDesk\GatewaySmoke.mq5', 'src\Scripts\RiskDesk\RiskDeskTests.mq5'
+          $failed = 0
+          foreach ($t in $targets) {
+            $file = (Resolve-Path $t).Path
+            $mt4 = $file.EndsWith('.mq4')
+            $editor = if ($mt4) { $env:ME4 } else { $env:ME5 }
+            $out = [IO.Path]::ChangeExtension($file, $(if ($mt4) { '.ex4' } else { '.ex5' }))
+            $log = [IO.Path]::ChangeExtension($file, '.log')
+            foreach ($f in $out, $log) { if (Test-Path -LiteralPath $f) { Remove-Item -LiteralPath $f } }
+            $proc = Start-Process -FilePath $editor -ArgumentList @("/compile:`"$file`"", '/log') -PassThru -WindowStyle Hidden
+            if (-not $proc.WaitForExit(300000)) { $proc.Kill(); Write-Host "FAIL $t : MetaEditor did not finish in 300 s"; $failed++; continue }
+            if (-not (Test-Path -LiteralPath $log)) { Write-Host "FAIL $t : no log"; $failed++; continue }
+            $text = Get-Content -LiteralPath $log -Raw   # BOM-aware (the log is often UTF-16)
+            $m = [regex]::Matches($text, '(\d+)\s+errors?(?:\(s\))?\s*,\s*(\d+)\s+warnings?(?:\(s\))?', 'IgnoreCase')
+            if ($m.Count -eq 0) { Write-Host "FAIL $t : no result line"; $text; $failed++; continue }
+            $e = [int]$m[$m.Count - 1].Groups[1].Value; $w = [int]$m[$m.Count - 1].Groups[2].Value
+            $ok = ($e + $w -eq 0) -and (Test-Path -LiteralPath $out)
+            Write-Host ("{0} {1} : {2} errors, {3} warnings{4}" -f $(if ($ok) { 'PASS' } else { 'FAIL' }), $t, $e, $w, $(if (Test-Path -LiteralPath $out) { '' } else { ', no output file' }))
+            if (-not $ok) { $text -split "`r?`n" | Where-Object { $_ -match ':\s*(error|warning)\s+\d+\s*:' }; $failed++ }
+          }
+          if ($failed -gt 0) { exit 1 }
+
+      - name: Package
+        shell: pwsh
+        run: |
+          & ./build/package-release.ps1 -SkipBuild
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      # For people: the package contents (MQL4/, MQL5/, docs), downloadable from the run page.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: RiskDesk-${{ steps.version.outputs.build_version }}
+          path: dist/RiskDesk-${{ steps.version.outputs.build_version }}/
+          if-no-files-found: error
+
+      # For the release job: the zip and its checksums, as attached to a release.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-files
+          path: |
+            dist/RiskDesk-${{ steps.version.outputs.build_version }}.zip
+            dist/RiskDesk-${{ steps.version.outputs.build_version }}.sha256.txt
+          if-no-files-found: error
+          retention-days: 1
+
+  release:
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      VER: ${{ needs.build.outputs.version }}
+      BUILD_VER: ${{ needs.build.outputs.build_version }}
+      KIND: ${{ needs.build.outputs.kind }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-files
+          path: dist
+
+      - name: Publish the release or the development build
+        shell: bash
+        run: |
+          set -euo pipefail
+          short="${GITHUB_SHA::7}"
+          url="https://github.com/$GH_REPO"
+
+          # CHANGELOG.md section of one version (without its heading), up to the next "## ".
+          section() { awk -v h="## [$1]" 'index($0, h) == 1 { on = 1; next } on && /^## / { exit } on' CHANGELOG.md; }
+
+          if [ "$KIND" = release ]; then
+            # A version with no release yet: publish it.
+            tag_sha="$(git ls-remote origin "refs/tags/v$VER^{}" | cut -f1)"
+            [ -n "$tag_sha" ] || tag_sha="$(git ls-remote origin "refs/tags/v$VER" | cut -f1)"
+            if [ -n "$tag_sha" ] && [ "$tag_sha" != "$GITHUB_SHA" ]; then
+              echo "::error::Tag v$VER already exists at $tag_sha, not at this commit. Delete the tag or bump RD_VERSION in Build.mqh."
+              exit 1
+            fi
+            notes="$(section "$VER")"
+            if [ -z "$(echo "$notes" | tr -d '[:space:]')" ]; then
+              echo "::error::CHANGELOG.md has no section '## [$VER]': add the release notes before bumping RD_VERSION."
+              exit 1
+            fi
+            # SemVer: a version with a pre-release part (1.8.0-rc.1) is a pre-release.
+            pre=()
+            if [[ "$VER" == *-* ]]; then pre=(--prerelease); fi
+            {
+              echo "$notes"
+              echo
+              echo "---"
+              echo "**Files:** \`RiskDesk-$VER.zip\` holds the \`MQL4\` and \`MQL5\` folders laid out like a MetaTrader data folder ([installation]($url/blob/v$VER/docs/installation.md)). \`RiskDesk-$VER.sha256.txt\` lists the SHA-256 checksum of every file."
+              echo
+              echo "Risk Desk is provided as is, without warranty (MIT licence). Test it on a demo account before using it on a live account."
+            } > notes.md
+            gh release delete dev --cleanup-tag --yes 2> /dev/null || true
+            gh release create "v$VER" "dist/RiskDesk-$VER.zip" "dist/RiskDesk-$VER.sha256.txt" \
+              --target "$GITHUB_SHA" --title "Risk Desk $VER" --notes-file notes.md "${pre[@]}"
+            echo "Published v$VER${pre:+ (pre-release)} at $short"
+          else
+            # The version is already released: replace the development build with this commit.
+            # Asset names avoid the "+" of the build version.
+            name="RiskDesk-dev-$short"
+            mv "dist/RiskDesk-$BUILD_VER.zip" "dist/$name.zip"
+            { head -n -1 "dist/RiskDesk-$BUILD_VER.sha256.txt"; (cd dist && sha256sum "$name.zip"); } > "dist/$name.sha256.txt"
+            {
+              echo "Development build of \`main\` at $short ($(date -u '+%Y-%m-%d %H:%M') UTC), built automatically. It reports version \`$BUILD_VER\`."
+              echo
+              echo "**Not a release and not tested on any account.** Use a [numbered release]($url/releases) for trading; try this build on a demo account only."
+              unreleased="$(section Unreleased)"
+              if [ -n "$(echo "$unreleased" | tr -d '[:space:]')" ]; then
+                echo
+                echo "## Changes since the last release"
+                echo "$unreleased"
+              fi
+            } > notes.md
+            gh release delete dev --cleanup-tag --yes 2> /dev/null || true
+            gh release create dev "dist/$name.zip" "dist/$name.sha256.txt" \
+              --target "$GITHUB_SHA" --title "Development build ($short)" --notes-file notes.md --prerelease
+            echo "Replaced the development build with $short"
+          fi

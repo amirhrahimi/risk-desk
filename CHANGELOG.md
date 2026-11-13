@@ -4,9 +4,6 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
-### Changed
-- CI: the MT5 compile check and the Markdown link check were verified on GitHub Actions and now run on every pull request and push to `main` that touches the sources or the docs. MT4 is still checked locally with `build/build.ps1`.
-
 ## [1.7.0] - 2026-11-13
 
 First public pre-release. Tested on demo accounts only (IG MT4, IC Markets EU MT4 and MT5, Dukascopy MT4 and MT5, MetaQuotes-Demo MT5 netting); not yet tested on live accounts. See the README for known limitations.
@@ -20,7 +17,8 @@ First public pre-release. Tested on demo accounts only (IG MT4, IC Markets EU MT
 - Confirmations (optional; Full Close on by default), click cooldown, dimmed invalid side, open-risk readout.
 - Extras: candle countdown, removal of MetaTrader's closed-trade objects, automatic screenshots, panel scaling and two-column layout, persistence across timeframe changes and restarts, daily log files with retention.
 - BrokerProbe script (account and symbol report, no trading), GatewaySmoke script (demo-only gateway test), RiskDeskTests unit tests (842 checks), debug-build panel self-test suites.
-- Open-source project files: `LICENSE` (MIT), `NOTICE.md` (attribution to Map Manager by Mohammad Ali Poursamadi and team), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`, `ROADMAP.md`, user documentation in `docs/`, issue and pull-request templates, `.gitattributes`, `.editorconfig`, draft GitHub workflows (untested).
+- Open-source project files: `LICENSE` (MIT), `NOTICE.md` (attribution to Map Manager by Mohammad Ali Poursamadi and team), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`, `ROADMAP.md`, user documentation in `docs/`, issue and pull-request templates, `.gitattributes`, `.editorconfig`.
+- GitHub workflows: every pull request and push compiles MT4 and MT5 (0 errors, 0 warnings) and attaches the package to the run; a push to `main` publishes the release of a new version or else replaces the *Development build* pre-release; builds that are not a release report their commit in the version (`1.7.0+dev.abc1234`); Markdown link check.
 - `build/package-release.ps1` (release zip with checksums) and `build/redact-report.ps1` (removes the login and data path from reports).
 - SPDX licence header in every source file; `#property version` and `#property link` in every entry file.
 
