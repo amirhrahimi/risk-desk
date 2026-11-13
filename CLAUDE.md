@@ -69,6 +69,7 @@ When docs conflict, precedence is: 03 > 04 > 06 > 01 > the rest. Report every co
 ├─ broker-profiles/            SUMMARY.md (generated) + redacted BrokerProbe/GatewaySmoke reports
 ├─ build/
 │  ├─ build.ps1                compiles every target, prints a summary, exit 1 on any error/warning
+│  ├─ check-version.ps1        RD_VERSION and RD_VERSION_PROP must match (run by build.ps1 and CI)
 │  ├─ package-release.ps1      release build + zip for GitHub Releases (dist/, git-ignored)
 │  ├─ install-junctions.ps1    links src/ into each terminal data folder
 │  ├─ run-tests.ps1            RiskDeskTests headless on each terminal
@@ -122,7 +123,7 @@ Includes are **relative** to the including file, using backslashes as in MetaQuo
 - Never compare doubles with `==`. Use the helpers in `Domain/PriceMath.mqh` (`PriceEq`, `PriceLt`, ... with half-tick tolerance; volume helpers with 1e-8 tolerance).
 - Chart objects: every name starts with `RD_`. Panel objects: `OBJPROP_HIDDEN=true`, `OBJPROP_SELECTABLE=false`, high `OBJPROP_ZORDER`. Trade lines are selectable and not hidden.
 - Logging via `Services/Logger.mqh` macros. Every trade request and result is logged with symbol, side, volume, price, SL, TP, filling/time policy, retcode/error number and its text.
-- Keep `CHANGELOG.md` (Keep a Changelog, SemVer). For a release bump `RD_VERSION` and `RD_VERSION_PROP` in `Build.mqh` together (ADR-029).
+- Keep `CHANGELOG.md` (Keep a Changelog, SemVer). For a release bump `RD_VERSION` and `RD_VERSION_PROP` in `Build.mqh` together (ADR-029); `build/check-version.ps1` fails the build when they differ.
 - Every new or changed input is documented in its trailing comment, in `docs/design/07-settings.md` and in `docs/configuration.md`.
 
 ## 7. How to work in a session

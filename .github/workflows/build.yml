@@ -43,6 +43,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Check that RD_VERSION and RD_VERSION_PROP match
+        shell: pwsh
+        run: ./build/check-version.ps1
+
       - name: Decide release or development build
         id: version
         shell: pwsh

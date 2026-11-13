@@ -20,6 +20,9 @@
     src/Include/RiskDesk/Build.mqh for the duration of the build and restores
     the file afterwards. A release build refuses to run while the define is active.
 
+    Before compiling, check-version.ps1 verifies that RD_VERSION and
+    RD_VERSION_PROP in Build.mqh name the same version.
+
 .PARAMETER Target
     mt4, mt5 or all (default).
 
@@ -182,6 +185,8 @@ if ($originalText -match '(?m)^[ \t]*#define[ \t]+RD_TEST_HOOKS') {
     Write-Status 'FAIL' 'Build.mqh has RD_TEST_HOOKS active. Comment it out again (//#define RD_TEST_HOOKS); use -Debug for debug builds.'
     exit 1
 }
+& (Join-Path $PSScriptRoot 'check-version.ps1') -Path $BuildMqh
+if ($LASTEXITCODE -ne 0) { exit 1 }
 
 $platforms = @($Target)
 if ($Target -eq 'all') { $platforms = @('mt4', 'mt5') }

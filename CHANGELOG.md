@@ -4,6 +4,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+- `build/check-version.ps1`: `build.ps1` and the CI build fail when `RD_VERSION` and `RD_VERSION_PROP` in `Build.mqh` name different versions.
+
 ## [1.7.0] - 2026-11-13
 
 First public pre-release. Tested on demo accounts only (IG MT4, IC Markets EU MT4 and MT5, Dukascopy MT4 and MT5, MetaQuotes-Demo MT5 netting); not yet tested on live accounts. See the README for known limitations.

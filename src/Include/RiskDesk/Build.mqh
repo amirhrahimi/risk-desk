@@ -15,6 +15,8 @@
 //|           (ADR-015, ADR-029). CI builds that are not a release   |
 //|           get the commit appended on the runner only, for        |
 //|           example "1.7.0+dev.abc1234" (ADR-030).                 |
+//|           build/check-version.ps1 fails the build when the two   |
+//|           version values differ.                                 |
 //| Debug   : MetaEditor has no command-line define switch, so       |
 //|           'build.ps1 -Debug' un-comments the test-hooks define   |
 //|           at the end of this file for the duration of the build  |
