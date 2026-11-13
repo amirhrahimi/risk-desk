@@ -162,6 +162,7 @@ bool CTradeGateway::ClosePosition(const ulong ticket, const double volume, STrad
    c.Reset();
    c.side = side;
    int done = 0;
+   datetime sentAt = RdServerTime();
    bool ok = Send(op, GWACT_CLOSE, q, s, c, done, r);
    out.sends = c.sends;
    if(!ok)
@@ -192,6 +193,9 @@ bool CTradeGateway::ClosePosition(const ulong ticket, const double volume, STrad
         }
       if(out.remainder > 0 && SelectLive(out.remainder))
          out.remaining = OrderLots();
+      // the original ticket kept open (IG MT4): the closed part is a new order in the history
+      if(!out.profitKnown && out.remainder == ticket)
+         ClosedPart(ticket, s, type, openTime, openPrice, vol, sentAt, out);
      }
    string msg = "Closed " + RdFormatLots(s, out.volume) + " of " + RdFormatLots(s, posVolume) + " " + symbol + " " + who;
    if(out.price > 0.0)
@@ -225,6 +229,71 @@ ulong CTradeGateway::FindRemainder(const ulong oldTicket, const SSymbolSpec &s, 
          best = (ulong)OrderTicket();
      }
    return best;
+  }
+
+//+------------------------------------------------------------------+
+//| The closed part of a partial close on a server that keeps the    |
+//| original ticket open (IG MT4, BC-16): it is booked as a NEW      |
+//| order in the history (observed: the next ticket number, magic 0).|
+//| Same symbol, type, open price and the closed volume, closed since|
+//| the request, not attributed to another close yet; a comment that |
+//| names the old ticket or the same open time is preferred. Fills   |
+//| out.price / out.profit; false = not found (P/L stays unknown).   |
+//+------------------------------------------------------------------+
+#define RD_GW_CLAIMED 32
+bool CTradeGateway::ClosedPart(const ulong oldTicket, const SSymbolSpec &s, const int type, const datetime openTime,
+                               const double openPrice, const double volume, const datetime sentAt, STradeOutcome &out)
+  {
+   string tag = "#" + IntegerToString((long)oldTicket);
+   for(int k = 0; k < RD_GW_SELECT_TRIES; k++)
+     {
+      int best = 0;
+      int bestScore = -1;
+      for(int i = OrdersHistoryTotal() - 1; i >= 0; i--)
+        {
+         if(!OrderSelect(i, SELECT_BY_POS, MODE_HISTORY))
+            continue;
+         ulong t = (ulong)OrderTicket();
+         if(t == oldTicket || OrderSymbol() != s.name || OrderType() != type || OrderCloseTime() < sentAt - 2 ||
+            !RdVolEq(OrderLots(), volume) || !RdPriceEq(s, OrderOpenPrice(), openPrice))
+            continue;
+         bool claimed = false;
+         for(int j = 0; j < ArraySize(m_claimed) && !claimed; j++)
+            claimed = (m_claimed[j] == t);
+         if(claimed)
+            continue;
+         int score = (StringFind(OrderComment(), tag) >= 0 ? 2 : 0) + (OrderOpenTime() == openTime ? 1 : 0);
+         if(score > bestScore)
+           {
+            bestScore = score;
+            best = OrderTicket();
+           }
+        }
+      if(best > 0 && OrderSelect(best, SELECT_BY_TICKET))
+        {
+         out.price = OrderClosePrice();
+         out.profit = OrderProfit() + OrderSwap() + OrderCommission();
+         out.profitKnown = true;
+         int n = ArraySize(m_claimed);
+         if(n >= RD_GW_CLAIMED)
+           {
+            for(int j = 1; j < n; j++)
+               m_claimed[j - 1] = m_claimed[j];
+            n--;
+           }
+         ArrayResize(m_claimed, n + 1);
+         m_claimed[n] = (ulong)best;
+         RD_LOG_INFO("[G-04] " + s.name + " " + RdTicketText(oldTicket) + " stays open; its closed part is " +
+                     RdTicketText((ulong)best) + " in the history");
+         return true;
+        }
+      if(IsStopped())
+         break;
+      Sleep(RD_GW_SELECT_SLEEP_MS);
+     }
+   RD_LOG_WARN("[G-04] " + s.name + " " + RdTicketText(oldTicket) + " stays open; its closed part was not found in the " +
+               "history - P/L unknown");
+   return false;
   }
 
 //+------------------------------------------------------------------+

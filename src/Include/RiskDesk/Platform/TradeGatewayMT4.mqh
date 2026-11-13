@@ -96,6 +96,9 @@ private:
    bool              WaitUnlisted(const ulong ticket) const;
    ulong             FindRemainder(const ulong oldTicket, const SSymbolSpec &s, const int type, const datetime openTime,
                                    const double openPrice, const double expected) const;
+   bool              ClosedPart(const ulong oldTicket, const SSymbolSpec &s, const int type, const datetime openTime,
+                                const double openPrice, const double volume, const datetime sentAt, STradeOutcome &out);
+   ulong             m_claimed[];      // history orders ClosedPart has attributed already (the last RD_GW_CLAIMED)
 
 public:
    bool              IsHedging() const { return true; }

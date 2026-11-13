@@ -113,6 +113,7 @@ status "Risk-free: 2 moved · 1 not enough profit · 1 already protected"
 screenshot "riskfree" if ≥ 1 moved
 ```
 "In profit" is judged by price versus open price (not by `profit` money, which includes swap/commission), so the result is independent of broker accounting.
+P6 (ADR-026): each position is selected again and planned with a fresh quote (04 §9, D34); the planner returns the skip reason as a code (`SRiskFreeResult.skip`), so the status counts by reason and lists every position (D33). A position that closed meanwhile counts as "already closed". Green only when something moved and nothing needs a look; a click that moved nothing is amber. No confirmation (F-28 does not list Risk Free).
 
 ### OP-10 Half Close (F-12)
 ```
@@ -125,6 +126,7 @@ status "Half-closed 2 positions (0.25 + 0.10 lot) · 1 skipped (0.01 lot indivis
 screenshot "half"
 ```
 MT4: the remainder gets a new ticket; do not reuse the old one. MT5 netting: one position, opposite deal of `closeVol` (BC-10).
+P6 (ADR-026): every position is planned first, then the confirmation names what is closed and what stays (D36), then G-04 each. The status names the rest's new ticket when MT4 gives it one (`rest 0.02 is now #130`); the rest is not in the collected list, so one click never halves a position twice. `CLOSE_ALL` closes an indivisible position whole (amber).
 
 ### OP-11 Chart Close (F-13)
 ```
@@ -134,6 +136,7 @@ for each: G-04 ClosePosition(ticket, full volume)
 status "Closed 3 of 3 positions on EURUSD · P/L −$12.40"   (sum of realized profit from results/history)
 screenshot "chartclose"
 ```
+P6 (ADR-026): the P/L is the gateway's for each close (the closing deal, or the closed MT4 order: profit + swap + commission); when it could not be read for some closes the status says `(2 of 3 closes)`. A position above the maximum volume per request is closed in parts (D35). Nothing in scope: amber `Chart Close: no positions on EURUSD`.
 
 ### OP-12 Full Close (F-14)
 ```
@@ -144,6 +147,7 @@ if InpFullCloseAlsoPending: delete pending in AccountScope as well
 status summary; failures listed (symbol, ticket, reason)
 screenshot "fullclose"
 ```
+P6 (ADR-026): the confirmation lists the positions per symbol, the floating P/L and the pending orders it will delete (D36); the pending orders are deleted after the positions (`Deleting 1/2 pending orders...`). The progress is drawn by the Controller through `CProgressSink` while the synchronous requests run. Status `Closed 9 of 9 positions on 4 symbols · P/L −$12.40 · deleted 2 of 2 pending orders`; an order that filled or went meanwhile is "already gone" (amber). Full Close stays enabled on a symbol whose trading is disabled (D19); each symbol's closes are refused or done on their own.
 
 ### OP-16 Move a pending order by dragging its overlay line (F-22)
 Triggered by `CHARTEVENT_OBJECT_DRAG` on `RD_PO_<ticket>_EN/SL/TP` (sent when the line is dropped). A drop is a deliberate user action (ADR-014) and ends like every command with a status message and a log line; a refused move always puts the line back.
@@ -215,7 +219,7 @@ Both: BC-07 stops and freeze checks first.
 **MT5 hedging:** `TRADE_ACTION_DEAL`, `position=ticket`, opposite type, `volume`, price = fresh bid (closing a buy) / ask (closing a sell), filling ladder, deviation, magic.
 **MT5 netting:** same without relying on `position` (an opposite deal of `volume` on the symbol); never exceed the position volume (that would reverse it).
 **MT4:** `OrderClose(ticket, volume, bid|ask, InpSlippagePoints, clrNONE)`.
-Both: `volume` floored to step; BC-07 freeze check; "already closed" → success.
+Both: `volume` floored to step (Half Close computes it with 04 §10 first, Q23); BC-07 freeze check; "already closed" → success.
 
 ### G-05 DeletePending(ticket)
 **MT5:** `TRADE_ACTION_REMOVE`, `order=ticket`. **MT4:** `OrderDelete(ticket)`.

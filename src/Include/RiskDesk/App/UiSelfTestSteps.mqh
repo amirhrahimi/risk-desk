@@ -322,7 +322,10 @@ void CUiSelfTest::StepRisk()
 //| implemented yet". The order (Add Line, Delete Line, then Buy and |
 //| Sell without lines, Set Pending after the pending lines were     |
 //| removed, Del Pending only when no order is in its scope) never   |
-//| sends an order. Then the cooldown (F-06 AC6).                    |
+//| sends an order. Risk Free, Half Close and Chart Close are        |
+//| clicked only when no position is in their scope; Full Close when |
+//| none is in its scope, else with its confirmation answered No.    |
+//| Then the cooldown (F-06 AC6).                                    |
 //+------------------------------------------------------------------+
 void CUiSelfTest::StepButtons()
   {
@@ -330,10 +333,22 @@ void CUiSelfTest::StepButtons()
      {
       EPanelButton pb = (EPanelButton)b;
       string name = CPanel::ButtonName(pb);
+      bool answerNo = false;
       if(pb == PB_SETPEND)
         {
          CLines::DeleteAll();   // Add Pend Line left its lines: Set Pending must not place an order
          m_state.lineMode = LINES_NONE;
+        }
+      if(pb == PB_RISKFREE || pb == PB_HALF || pb == PB_CHARTCLOSE || pb == PB_FULLCLOSE)
+        {
+         int inScope = ManageScopeCount(pb);
+         if(inScope != 0 && (pb != PB_FULLCLOSE || !m_cfg.confirmFullClose))
+           {
+            Line("INFO R8 " + CPanel::ButtonCaption(pb) + " not clicked: " + (inScope < 0 ? "the trades cannot be listed" :
+                 "it would act on " + IntegerToString(inScope) + " trade(s)") + " (the panel suite never trades; the manage suite checks it)");
+            continue;
+           }
+         answerNo = (inScope != 0);
         }
       if(pb == PB_DELPEND)
         {
@@ -352,7 +367,11 @@ void CUiSelfTest::StepButtons()
            }
         }
       string before = m_status.Text();
+      if(answerNo)
+         m_cmd.SetTestConfirm(RD_CONFIRM_NO);
       ClickObject(name);
+      if(answerNo)
+         m_cmd.SetTestConfirm(RD_CONFIRM_ASK);
       string text = m_status.Text();
       bool refused = m_status.Severity() == SEV_ERROR && StringFind(text, "refused") >= 0;
       bool answered = CCommands::Implemented(pb) ? (text != "" && (text != before || pb == PB_DELLINE)) :
@@ -363,6 +382,14 @@ void CUiSelfTest::StepButtons()
          answered = refused && StringFind(text, "no Entry and SL lines") >= 0;
       if(pb == PB_DELPEND)
          answered = m_status.Severity() == SEV_WARN && StringFind(text, "No ") == 0 && StringFind(text, "pending orders on") > 0;
+      if(pb == PB_RISKFREE || pb == PB_HALF || pb == PB_CHARTCLOSE || pb == PB_FULLCLOSE)
+        {
+         answered = m_status.Severity() == SEV_WARN && StringFind(text, CPanel::ButtonCaption(pb)) == 0 &&
+                    StringFind(text, answerNo ? "cancelled - nothing was sent" : ": no ") > 0;
+         // BC-15 comes first: a terminal or account that does not allow trading is said in red
+         if(!answered && refused && StringFind(text, CPanel::ButtonCaption(pb) + " refused: ") == 0)
+            answered = true;
+        }
       Check(answered && Prop(name, OBJPROP_STATE) == 0, "R8 " + CPanel::ButtonCaption(pb),
             RdSeverityText(m_status.Severity()) + " '" + text + "'");
      }
@@ -497,21 +524,23 @@ void CUiSelfTest::StepRestartCheck()
      }
    FileDelete(ExpectPath());
    if(e.GetString("login", "") != IntegerToString(CAccountSpec::Login()))
-     {
+      // ui.ini is shared by every account (D17): the other account's saved position and
+      // hidden flag apply here too, so the defaults below are still needed
       Line("INFO T-21 restart: the saved state belongs to account " + e.GetString("login", "?") + " - not checked");
-      return;
+   else
+     {
+      double risk = e.GetDouble("risk_pct", -1.0);
+      int x = e.GetInt("panel_x", -1);
+      int y = e.GetInt("panel_y", -1);
+      bool hidden = e.GetBool("hidden", false);
+      bool ok = MathAbs(m_state.riskPct - risk) < 1e-9 && ObjectGetString(0, "RD_E_RISK", OBJPROP_TEXT) == DoubleToString(risk, 2) &&
+                m_state.panelX == x && m_state.panelY == y && m_state.hidden == hidden && m_panel.Collapsed() == hidden;
+      Check(ok, "T-21 restart", "after the terminal restart: risk " + RdNum(m_state.riskPct, 2) + " (saved " + RdNum(risk, 2) +
+            "), position " + IntegerToString(m_state.panelX) + ", " + IntegerToString(m_state.panelY) + " (saved " +
+            IntegerToString(x) + ", " + IntegerToString(y) + "), " + (m_state.hidden ? "hidden" : "shown") + " (saved " +
+            (hidden ? "hidden" : "shown") + ")");
+      Shot("restart_restored");
      }
-   double risk = e.GetDouble("risk_pct", -1.0);
-   int x = e.GetInt("panel_x", -1);
-   int y = e.GetInt("panel_y", -1);
-   bool hidden = e.GetBool("hidden", false);
-   bool ok = MathAbs(m_state.riskPct - risk) < 1e-9 && ObjectGetString(0, "RD_E_RISK", OBJPROP_TEXT) == DoubleToString(risk, 2) &&
-             m_state.panelX == x && m_state.panelY == y && m_state.hidden == hidden && m_panel.Collapsed() == hidden;
-   Check(ok, "T-21 restart", "after the terminal restart: risk " + RdNum(m_state.riskPct, 2) + " (saved " + RdNum(risk, 2) +
-         "), position " + IntegerToString(m_state.panelX) + ", " + IntegerToString(m_state.panelY) + " (saved " +
-         IntegerToString(x) + ", " + IntegerToString(y) + "), " + (m_state.hidden ? "hidden" : "shown") + " (saved " +
-         (hidden ? "hidden" : "shown") + ")");
-   Shot("restart_restored");
    if(m_state.hidden)
       ClickObject("RD_P_HIDE");
    m_panel.SetWanted(m_cfg.panelX, m_cfg.panelY);

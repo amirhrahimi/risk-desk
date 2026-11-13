@@ -124,11 +124,16 @@ Skip reasons: "not enough profit (needs Bid ≥ 1.10043)", "already protected", 
 ## 10. Partial close volume (F-12)
 
 ```
-closeVol = FloorVolume(vol × InpPartialClosePct / 100)          (NONE → indivisible)
+raw      = vol × InpPartialClosePct / 100
+hi       = FloorVolume(vol − volMin)          the largest close that leaves a minimum lot (NONE → indivisible)
+closeVol = NearestVolume(raw)                 grid volume nearest to raw, a tie rounds DOWN (the larger part stays);
+                                              below volMin: volMin when raw > volMin / 2, else NONE (→ indivisible)
+if closeVol > hi:  closeVol = hi  when raw − hi ≤ vol − raw,  else indivisible (closing all is nearer)
 remain   = vol − closeVol
-indivisible ⇔ closeVol is NONE  OR  (remain > 0 AND remain < volMin − 1e-8)
+indivisible ⇔ any NONE above  OR  remain ≤ 0  OR  remain < volMin − 1e-8
 indivisible → InpPartialIndivisible: SKIP (default, report) | CLOSE_ALL
 ```
+The split nearest to the percentage, a tie keeping the larger part (Q23, the owner's rule): at 50 %, 3 lots → close 1 keep 2, 5 → 2 + 3, 0.25 → 0.12 + 0.13, so Half Close again and again from 2 lots keeps 1 → 0.50 → 0.25 → 0.13 → 0.07 → 0.04 → 0.02 → 0.01, and the minimum lot cannot be split. At 50 % this equals the earlier floor rule; at other percentages it is the nearest (70 % of 4 lots → close 3, keep 1; the floor closed 2). `hi` only matters where the minimum lot is larger than the step (min 1, step 0.01: 70 % of 2.40 → close 1.40, keep 1.00).
 
 ## 11. Display formatting
 
@@ -159,7 +164,7 @@ Unless stated: `volMin 0.01, volStep 0.01, volMax 100`, commission 0, base = bal
 | V-15 | Risk budget | base 10,000, cap 10 %; open risks 300, 450, −20 (BE); new 200 · new 300 | open 750 (7.5 %); 9.5 % **allowed** · 10.5 % **refused** |
 | V-16 | Risk budget equality | open 800, new 200, cap 10 % of 10,000 | **allowed** (exactly 10 %) |
 | V-17 | No-SL tool position | one tool position with sl 0 | **refused** with ticket in message |
-| V-18 | Partial close | vol 0.03 · 0.05 · 0.01 · 1 (min 1, step 1) at 50 % | close 0.01 keep 0.02 · close 0.02 keep 0.03 · indivisible · indivisible |
+| V-18 | Partial close (Q23) | vol 0.03 · 0.05 · 0.01 · 1 (min 1, step 1) at 50 % | close 0.01 keep 0.02 · close 0.02 keep 0.03 · indivisible · indivisible |
 | V-19 | Risk Free buy | open 1.10000, spread 0.00012, S 30 pts; bid 1.10050 · bid 1.10035 | target 1.10012 **applied** · **skipped** (needs bid ≥ 1.10043) |
 | V-20 | Risk Free never loosens | buy open 1.10000, current SL 1.10020, target 1.10012 | **skipped**: already protected |
 | V-21 | Risk input parsing | "1,5" · "0" · "12" · "abc" · " 0.25 " | 1.5 · reject · reject (max 10) · reject · 0.25 |

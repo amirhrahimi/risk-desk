@@ -87,7 +87,7 @@ powershell -File build/build.ps1
 ```
 The runner writes the one-time request file `Files/RiskDesk/uitest.request`, starts the terminal with RiskDesk (`InpTestUiSelfTest=true`) on a temporary chart, waits for `Files/RiskDesk/uitest/<PLATFORM>_<login>_report.txt` and copies the report and the screenshots to `-OutDir` (default `%TEMP%\RiskDesk-uitest`). The EA removes itself and closes the terminal. It never trades and uses `Files/RiskDesk/uitest/store/` instead of `ui.ini` / `acct_*.ini`.
 
-Covered: T-01 (objects, in view, ready status, prices, spread, fields, tooltips), T-02 (the five inputs), every button's status (R8; from P5 Set Pending is clicked only after the pending lines were removed, and Del Pending only when no order is in its scope, so the suite still never trades), T-25 cooldown, hide/show, drag, clamp, T-20 (timeframe and symbol change with a planning line), T-21 (two runs: the second checks, after the real restart, what the first saved), text fit at scales 0.40–1.60 and every font preset, one and two columns (widgets inside the panel, none overlapping, rows level; ADR-023), T-37 (this chart and the fit arithmetic for 52 chart sizes per layout, and the Auto columns rule), the key=value file layer, the chart look (Chart on foreground switched off again, panel kept clear of the One-Click Trading panel); screenshots of each state and glyph sheets of Wingdings/Webdings. `ChartScreenShot` does not draw terminal overlays, so for the One-Click check the self-test writes `uitest/capture.request` and the runner saves a capture of the real terminal window (`<PLATFORM>_<login>_window_<name>.png` in `-OutDir`). Not covered: Windows scaling (T-24) and real mouse/keyboard input.
+Covered: T-01 (objects, in view, ready status, prices, spread, fields, tooltips), T-02 (the five inputs), every button's status (R8; from P5 Set Pending is clicked only after the pending lines were removed, and Del Pending only when no order is in its scope; from P6 Risk Free, Half Close and Chart Close only when no position is in their scope, Full Close otherwise with its confirmation answered No; so the suite still never trades), T-25 cooldown, hide/show, drag, clamp, T-20 (timeframe and symbol change with a planning line), T-21 (two runs: the second checks, after the real restart, what the first saved), text fit at scales 0.40–1.60 and every font preset, one and two columns (widgets inside the panel, none overlapping, rows level; ADR-023), T-37 (this chart and the fit arithmetic for 52 chart sizes per layout, and the Auto columns rule), the key=value file layer, the chart look (Chart on foreground switched off again, panel kept clear of the One-Click Trading panel); screenshots of each state and glyph sheets of Wingdings/Webdings. `ChartScreenShot` does not draw terminal overlays, so for the One-Click check the self-test writes `uitest/capture.request` and the runner saves a capture of the real terminal window (`<PLATFORM>_<login>_window_<name>.png` in `-OutDir`). Not covered: Windows scaling (T-24) and real mouse/keyboard input.
 
 ## 3e. Trade self-test (`build/run-uitest.ps1 -Suite trade`, debug build, phase P4)
 
@@ -151,6 +151,53 @@ powershell -File build/build.ps1
 | Netting account only: with an open buy, a Buy Stop is placed after the merge confirmation; a Sell Limit is refused | BC-10 (D27) |
 
 T-23 as written needs a symbol whose probe shows no GTC; none of the six accounts has one (2026-11-12 probes: GTC everywhere, XAUUSD.eu.custom on A3/A5 lacks only DAY), so the suite checks the expiry the user asks for instead. A ladder fallback after a real `INVALID_EXPIRATION` stays with the P8 test hooks.
+
+## 3g. Manage suite (`build/run-uitest.ps1 -Suite manage`, debug build, phase P6)
+
+The same runner, debug build and safety rules as §3e (demo accounts only, own sandbox), with REAL test positions opened through the gateway (minimum lot, 3 × for T-17; SL at the test distance, no TP) and the four management buttons clicked through the EA's event handlers (`App/UiSelfTestManage*.mqh`, ADR-026). "RiskDesk" test positions have magic 772288, a "manual" one 772289. When anyone else's positions are on the chart symbol, the chart buttons act on the test's own only (tool scope) and the manual part of T-18 is skipped; when anyone else's positions or orders are on the account, Full Close does the same. So no other trade is ever touched. Every test position and order is closed / deleted again, also those of an aborted earlier run. Report and screenshots: `Files/RiskDesk/uitest/<PLATFORM>_<login>_manage_<symbol>_*`.
+
+```
+powershell -File build/build.ps1 -Debug
+powershell -File build/run-uitest.ps1 -Platform mt5 -Login A3 -Server ICMarketsEU-Demo -Symbol EURUSD -Suite manage -TimeoutSec 900
+powershell -File build/build.ps1
+```
+
+| Check | Covers |
+|---|---|
+| Two buys and two sells, Risk Free at once: status `Risk-free on EURUSD: n moved …` with n = the SLs that changed, every position listed with its reason, no SL loosened | T-16 (skips), F-11 AC2/AC4 |
+| Waits (≤ 180 s) until both positions of one side would be moved with a margin, sets the second one's SL by hand a few ticks (or one spread) beyond break-even, so a spread that widens before the click does not move it again, Risk Free: 1 moved with SL = open ± (spread + commission distance) at the click, 1 already protected, the other side not in profit / not enough profit, amber, screenshot `_riskfree_<ticket>`; again: the moved one is already protected (or tightened if the spread widened), never loosened. When the market does not move enough in 180 s an INFO line says so | T-16, 04 §9 |
+| 3 × min lot buy and (hedging) a min lot sell: `InpConfirmHalfClose` answered No → nothing changes, dialog names what is closed and what stays; Yes → the buy keeps the 04 §10 rest of 3 × min (2 × min, Q23) with its SL (a new MT4 ticket is named), the sell is skipped "cannot be split" (amber), screenshot `_half_<ticket>`. On a whole-contract CFD (min 1) this is T-17's "1 lot" case | T-17, F-12, F-28, BC-16 |
+| RiskDesk buy + sell, a manual buy on the chart symbol, a RiskDesk buy on a second symbol: tool scope → the two RiskDesk ones closed, `Closed 2 of 2 RiskDesk positions on EURUSD · P/L x` with x = the history's P/L of those exits; all on the symbol, `InpConfirmChartClose` No → kept, Yes → the manual one closed; the other symbol untouched; nothing left → amber `Chart Close: no positions on EURUSD` | T-18, F-13, F-28 |
+| RiskDesk positions on the chart symbol and up to two other symbols, a far Buy Limit: the open-risk readout = their risk at SL (+ the order) in % of the balance | T-32 (one chart; the readout is account-wide, so a second chart shows the same) |
+| `InpConfirmFullClose` No → everything kept, dialog `Close 3 positions on 3 symbols? … Also delete 1 pending order.`; Yes with `InpFullCloseAlsoPending` → every position closed and the order deleted, `Closing 3/3...` shown on the way, `Closed 3 of 3 positions on 3 symbols · P/L x · deleted 1 of 1 pending order`; nothing left → amber `Full Close: no positions on this account …` | T-19, F-14, F-28 |
+| Netting account only: two buys of 2 × min lot merge at the averaged open; Half Close leaves half on the same position and open price; Risk Free (after the same wait) sets SL = averaged open + spread, or skips with its reason; Chart Close closes it | T-30 (half close, Risk Free; the merge confirmation and the opposite refusal are §3e) |
+
+The panel suite (§3d) clicks Risk Free, Half Close and Chart Close only when no position is in their scope, and Full Close only when nothing is in its scope or with its confirmation answered No, so it still never trades. Not covered: a freeze level (every account reports 0; the Domain tests cover it) and a position above the maximum volume per request (D35; unit-tested).
+
+## 3h. Half Close suite (`build/run-uitest.ps1 -Suite half`, debug build)
+
+Half Close (OP-10, F-12, 04 §10) over the volume grid of the chart symbol, so the index grids (min 1 / step 1, 0.1 / 0.1, 0.01 / 0.01) and the FX grid of every broker are covered: one run per symbol, indices and majors on every account. Same runner, debug build and safety rules as §3g (demo only, magic 772288, tool scope when anyone else's positions are on the symbol; on a netting account with someone else's position on the symbol it does not run). REAL test positions through the gateway, SL at 0.1 % of the price (at least 2 × stops level + 3 × spread + 10 ticks; they live a few seconds) and TP at twice it; a case runs only when its positions risk at most 2.5 % of the balance at the SL and need at most half the free margin (else an INFO line). Every test position is closed after each case. Symbols whose minimum lot is not one step are not run (the unit tests cover them). Report and screenshots: `Files/RiskDesk/uitest/<PLATFORM>_<login>_half_<symbol>_*`.
+
+```
+powershell -File build/build.ps1 -Debug
+powershell -File build/run-uitest.ps1 -Platform mt4 -Login A2 -Server ICMarketsEU-Demo03 -Symbol US30 -Suite half -TimeoutSec 400
+powershell -File build/build.ps1
+```
+
+Every click is checked against the split expected in whole grid steps (u = one step; 04 §10: the nearest to the percentage, a tie keeping the larger part, Q23): the rest's volume, side, open price, SL and TP, and its ticket (MT4: the new ticket, which the status must name, BC-16); the volume closed and the P/L in the account history, which the status P/L must equal; the status text, colour and progress. One INFO line per run lists the splits.
+
+| Case | Positions, setting | Expected |
+|---|---|---|
+| H-1 even | buy 2u | 1u closed, 1u left, green |
+| H-2 odd | sell 3u | 1u closed (1.5u is a tie: the larger part stays, Q23), 2u left, green |
+| H-3 repeated | buy 4u, three clicks | 2u + 2u; then 1u + 1u on the rest (MT4: the new ticket); then the 1u is kept, amber `Half Close: nothing closed … cannot be split` |
+| H-4 min lot, Close all | buy 1u, `INDIV_CLOSE_ALL` | closed whole, amber `… all 1u lot (cannot be split)` |
+| H-5 30 % | buy 10u | 3u closed, 7u left |
+| H-6 70 % | sell 3u | 2u closed (nearest to 2.1u), 1u left |
+| H-7 several (hedging) | buy 2u, sell 3u, buy 1u | 1u + 1u closed in one click, `Half Close: closing 2/2...`, the 1u skipped, amber, P/L = the history's sum |
+| H-8 several, Close all (hedging) | buy 3u, sell 1u, `INDIV_CLOSE_ALL` | 1u of the buy, all of the sell, amber |
+| H-9 merged (netting) | buy 2u + buy 1u = one position of 3u | 1u closed by an opposite deal, the same position keeps 2u, its averaged open, SL and TP |
+| H-10 halving to the minimum | buy 25u, six clicks | 25u → 13u → 7u → 4u → 2u → 1u kept (the rest named each time on MT4), then `cannot be split` (amber): the owner\'s path, at 0.01 steps 0.25 → 0.13 → 0.07 → 0.04 → 0.02 → 0.01 |
 
 ## 4. Account and symbol matrix (L4)
 

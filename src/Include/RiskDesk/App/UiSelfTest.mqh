@@ -22,6 +22,13 @@
 //|             and dragging its lines (OP-16) with REAL pending     |
 //|             orders far from the price, same safety rules:        |
 //|             App/UiSelfTestPending*.mqh.                          |
+//|           - manage (P6): Risk Free, Half Close, Chart Close and  |
+//|             Full Close on REAL test positions, same safety       |
+//|             rules, never touching anyone else's trades:          |
+//|             App/UiSelfTestManage*.mqh.                           |
+//|           - half: Half Close over the symbol's volume grid       |
+//|             (index and FX grids of every broker), same safety    |
+//|             rules: App/UiSelfTestHalf.mqh.                       |
 //|           Neither replaces T-24 (Windows DPI) or real clicks.    |
 //| Safety : runs only when the runner left the request file         |
 //|          RiskDesk/uitest.request (deleted at start), so a chart  |
@@ -58,7 +65,21 @@
 #define RD_UITEST_DIR     "RiskDesk\\uitest"
 #define RD_UITEST_STEP_MS 400
 #define RD_UITEST_MAGIC   772288    // trade suite: not the EA's magic, so the owner's RiskDesk trades never count
+#define RD_UITEST_MAGIC2  772289    // manage suite: a "manual" trade (another magic) on the chart symbol
 #define RD_UITEST_T28_S   90        // T-28: wait at most 90 s for the SL or TP to be hit
+#define RD_UITEST_RF_S    180       // T-16 / T-30: wait at most 180 s for a position to be far enough in profit
+
+// half suite: a test position before a Half Close click (App/UiSelfTestHalf.mqh)
+struct SUiHalfPos
+  {
+   ulong             ticket;
+   ESide             side;
+   double            volume;
+   double            open;
+   double            sl;
+   double            tp;
+   int               units;           // volume in grid steps (min = step)
+  };
 
 class CUiSelfTest
   {
@@ -78,7 +99,7 @@ private:
    CLines           *m_plan;            // the planning lines (the report text is m_lines)
    CPendingOverlay  *m_overlay;
 
-   string            m_suite;           // "panel", "trade", "trade-basic", "pending"
+   string            m_suite;           // "panel", "trade", "trade-basic", "pending", "manage", "half"
    bool              m_active;
    bool              m_closeOnDeinit;
    int               m_step;
@@ -132,6 +153,22 @@ private:
    ulong             m_pendTickets[];   // T-13 orders (T-15 deletes them)
    string            m_otherSymbol2;    // T-15: the second symbol with a test order
    ulong             m_otherTicket;
+   //--- manage suite (P6, App/UiSelfTestManage*.mqh)
+   bool              m_mgOthersSym;     // someone else's positions on the chart symbol: chart buttons in tool scope
+   bool              m_mgOthersAcc;     // someone else's trades on the account: Full Close in tool scope
+   string            m_mgSym2;          // other symbols for T-18 / T-19 ("" = none)
+   string            m_mgSym3;
+   ulong             m_mgBuy[];         // T-16: two buys and two sells
+   ulong             m_mgSell[];
+   ulong             m_mgMoved;         // T-16: the position Risk Free moved
+   uint              m_mgWaitFrom;      // T-16 / T-30: start of the wait for enough profit
+   ulong             m_mgT19[];         // T-19 positions
+   ulong             m_mgOrder;         // T-19 pending order
+   ulong             m_mgNet;           // T-30 netting position
+   //--- half suite (App/UiSelfTestHalf.mqh)
+   bool              m_hfOk;            // the cases can run on this symbol and account
+   datetime          m_hfFrom;          // start of the current case (history window)
+   string            m_hfTable;         // the splits of the run, for the summary line
 
    void              Line(const string text);
    void              Check(const bool ok, const string id, const string detail);
@@ -255,6 +292,50 @@ private:
    void              PendT23();
    void              PendT15();
    void              PendNet();
+   //--- manage suite (P6, App/UiSelfTestManage*.mqh)
+   void              StepManage(const uint now);
+   bool              MgIsTest(const long magic) const;
+   int               MgOthers(const string symbol, const bool orders);
+   void              MgScopes();
+   void              MgStart();
+   void              MgCleanup(const string why);
+   double            MgDist(const SSymbolSpec &s, const SQuote &q) const;
+   ulong             MgOpen(const string sym, const ESide side, const double lots, const long magic, double &price);
+   string            MgPickSymbol(const string not1, const string not2);
+   void              MgT16Tickets(ulong &t[]);
+   void              MgSls(const ulong &t[], double &sl[]);
+   bool              MgNotLoosened(const ulong &t[], const double &before[], string &why);
+   double            MgPerTick(const ESide side, const double open);
+   double            MgRfTarget(const SPosition &p, const SQuote &q);
+   bool              MgRfReady(const SPosition &p, const SQuote &q, const double margin, SRiskFreeResult &rf);
+   int               ManageScopeCount(const EPanelButton b);
+   double            MgRisk(const ulong ticket);
+   double            MgClosedPl(const ulong &t[], const datetime from, int &found);
+   void              MgT16Open();
+   bool              MgT16Wait(const uint now);
+   void              MgT16Again();
+   void              MgT17();
+   void              MgT18();
+   void              MgT19Open();
+   void              MgT19Close();
+   void              MgT30Open();
+   bool              MgT30Wait(const uint now);
+   //--- half suite (App/UiSelfTestHalf.mqh)
+   void              StepHalf(const uint now);
+   void              HfStart();
+   int               HfExpectClose(const int units, const double pct) const;
+   double            HfLots(const int units) const;
+   double            HfDist(const SQuote &q) const;
+   bool              HfAffordable(const string id, const int &units[]);
+   ulong             HfOpen(const ESide side, const int units);
+   void              HfHistory(double &vol, double &pl, SClosedTrade &ct[]);
+   bool              HfFind(const SPosition &arr[], const ulong ticket, SPosition &p) const;
+   ulong             HfNewTicket(const SPosition &before[], const SPosition &after[], const SUiHalfPos &was,
+                                 const double restVol, SPosition &p) const;
+   void              HfCase(const string id, const int &sides[], const int &units[], const double pct,
+                            const EIndivisible indiv, const int clicks);
+   bool              HfClick(const string id, SUiHalfPos &p[], const double pct, const EIndivisible indiv, string &split);
+   void              HfNetMerged();
 
 public:
                      CUiSelfTest();
@@ -334,6 +415,17 @@ CUiSelfTest::CUiSelfTest()
    m_pendBuyStop = 0;
    m_otherSymbol2 = "";
    m_otherTicket = 0;
+   m_mgOthersSym = true;   // tool scope until MgStart has looked
+   m_mgOthersAcc = true;
+   m_mgSym2 = "";
+   m_mgSym3 = "";
+   m_mgMoved = 0;
+   m_mgWaitFrom = 0;
+   m_mgOrder = 0;
+   m_mgNet = 0;
+   m_hfOk = false;
+   m_hfFrom = 0;
+   m_hfTable = "";
   }
 
 //+------------------------------------------------------------------+
@@ -353,7 +445,7 @@ string CUiSelfTest::ReadSuite()
          suite = RdTrim(StringSubstr(line, 6));
      }
    FileClose(h);
-   if(suite != "trade" && suite != "trade-basic" && suite != "pending")
+   if(suite != "trade" && suite != "trade-basic" && suite != "pending" && suite != "manage" && suite != "half")
       suite = "panel";
    return suite;
   }
@@ -401,8 +493,8 @@ void CUiSelfTest::Start(CSettings *cfg, CState *state, CTheme *theme, CLayout *l
 string CUiSelfTest::FilePrefix() const
   {
    string p = RD_UITEST_DIR + "\\" + RD_PLATFORM + "_" + IntegerToString(CAccountSpec::Login());
-   if(m_suite == "pending")
-      p += "_pending_" + CScreenshot::Sanitize(_Symbol);
+   if(m_suite == "pending" || m_suite == "manage" || m_suite == "half")
+      p += "_" + m_suite + "_" + CScreenshot::Sanitize(_Symbol);
    else
       if(m_suite != "panel")
          p += "_trade_" + CScreenshot::Sanitize(_Symbol);
@@ -516,7 +608,13 @@ void CUiSelfTest::Step()
       if(m_suite == "pending")
          StepPending(now);
       else
-         StepTrade(now);
+         if(m_suite == "manage")
+            StepManage(now);
+         else
+            if(m_suite == "half")
+               StepHalf(now);
+            else
+               StepTrade(now);
   }
 
 //+------------------------------------------------------------------+
@@ -678,5 +776,7 @@ void CUiSelfTest::OnDeinit(const int reason)
 #include "UiSelfTestTrade.mqh"
 #include "UiSelfTestPending.mqh"
 #include "UiSelfTestPendingMove.mqh"
+#include "UiSelfTestManage.mqh"
+#include "UiSelfTestHalf.mqh"
 
 #endif // RD_APP_UISELFTEST_MQH

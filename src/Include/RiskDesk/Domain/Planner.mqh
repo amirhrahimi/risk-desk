@@ -57,14 +57,25 @@ struct SRiskFreeInput
      }
   };
 
+// Why Risk Free leaves a position alone (04 section 9; reported in this order, D11).
+enum ERfSkip
+  {
+   RFSKIP_NONE,              // applied, or refused (r.sev == SEV_ERROR)
+   RFSKIP_NOT_IN_PROFIT,
+   RFSKIP_PROTECTED,         // the SL is already at or beyond the target
+   RFSKIP_NOT_ENOUGH,        // in profit, but the target would be too close to the price
+   RFSKIP_FROZEN             // BC-07 freeze level
+  };
+
 struct SRiskFreeResult
   {
    double            offset;          // price distance from the open price
    double            costDistance;    // commission (or booked cost) part of the offset
    double            target;          // the new SL
    double            needPrice;       // Bid (buy) / Ask (sell) from which the target can be applied
+   ERfSkip           skip;            // the skip reason when RiskFree returns false with SEV_WARN
 
-   void              Reset() { offset = 0.0; costDistance = 0.0; target = 0.0; needPrice = 0.0; }
+   void              Reset() { offset = 0.0; costDistance = 0.0; target = 0.0; needPrice = 0.0; skip = RFSKIP_NONE; }
   };
 
 // Default prices of the planning lines (05 section 5). 0 = no such line.
@@ -261,7 +272,10 @@ bool CPlanner::RiskFree(const SRiskFreeInput &in, const SQuote &q, const SSymbol
 
    // OP-09: "in profit" is judged by price versus open, not by money.
    if(isBuy ? !RdPriceGt(s, q.bid, in.open) : !RdPriceLt(s, q.ask, in.open))
+     {
+      rf.skip = RFSKIP_NOT_IN_PROFIT;
       return RdSkip(r, "not in profit");
+     }
 
    double spread = MathMax(0.0, q.ask - q.bid);
    double cost = 0.0;
@@ -293,23 +307,38 @@ bool CPlanner::RiskFree(const SRiskFreeInput &in, const SQuote &q, const SSymbol
       rf.target = RdRoundPriceUp(s, in.open + rf.offset);
       rf.needPrice = RdNormalizePrice(s, rf.target + stops + tick);
       if(in.sl > 0.0 && !RdPriceGt(s, rf.target, in.sl))
+        {
+         rf.skip = RFSKIP_PROTECTED;
          return RdSkip(r, "already protected (SL " + RdFormatPrice(s, in.sl) + ")");
+        }
       if(RdPriceGt(s, rf.target, q.bid - stops - tick))
+        {
+         rf.skip = RFSKIP_NOT_ENOUGH;
          return RdSkip(r, "not enough profit (needs Bid >= " + RdFormatPrice(s, rf.needPrice) + ")");
+        }
      }
    else
      {
       rf.target = RdRoundPriceDown(s, in.open - rf.offset);
       rf.needPrice = RdNormalizePrice(s, rf.target - stops - tick);
       if(in.sl > 0.0 && !RdPriceLt(s, rf.target, in.sl))
+        {
+         rf.skip = RFSKIP_PROTECTED;
          return RdSkip(r, "already protected (SL " + RdFormatPrice(s, in.sl) + ")");
+        }
       if(RdPriceLt(s, rf.target, q.ask + stops + tick))
+        {
+         rf.skip = RFSKIP_NOT_ENOUGH;
          return RdSkip(r, "not enough profit (needs Ask <= " + RdFormatPrice(s, rf.needPrice) + ")");
+        }
      }
 
    SResult frozen;
    if(!CValidators::PositionNotFrozen(in.side, in.sl, in.tp, q, s, frozen))
+     {
+      rf.skip = RFSKIP_FROZEN;
       return RdSkip(r, "frozen: " + frozen.message);
+     }
    return RdOk(r, "SL to " + RdFormatPrice(s, rf.target));
   }
 

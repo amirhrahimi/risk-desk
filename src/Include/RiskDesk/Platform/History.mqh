@@ -1,19 +1,24 @@
 //+------------------------------------------------------------------+
 //| RiskDesk - Platform/History.mqh                                  |
 //| Layer   : Platform (uses #ifdef __MQL5__, rule R2)               |
-//| Purpose : closed trades, for the realized P/L of close summaries |
-//|           (OP-11/OP-12, phase P6) and a future history overlay.  |
-//|           One record per exit: MT5 exit deals (DEAL_ENTRY_OUT /  |
-//|           INOUT / OUT_BY; grouping by position is the caller's), |
-//|           MT4 closed orders of the history pool.                 |
-//| Status  : P2 minimal implementation (the roadmap allows a stub). |
-//|           The gateway already reports the P/L of each close it   |
-//|           makes (STradeOutcome.profit).                          |
+//| Purpose : - ClosedTrades: closed trades (one record per exit:    |
+//|             MT5 exit deals DEAL_ENTRY_OUT / INOUT / OUT_BY,      |
+//|             grouping by position is the caller's; MT4 closed     |
+//|             orders of the history pool), for checks of close     |
+//|             summaries and a future history overlay. The close    |
+//|             commands (OP-10..OP-12) take the P/L of each close   |
+//|             from the gateway (STradeOutcome.profit).             |
+//|           - BookedCost: commission + swap already booked on an   |
+//|             open position, for Risk Free RF_COMMISSION (04       |
+//|             section 9; P6). MT5 sums the commission and fee of   |
+//|             the position's deals (POSITION_COMMISSION is not     |
+//|             filled by MT5); MT4 reads OrderCommission/OrderSwap. |
 //+------------------------------------------------------------------+
 #ifndef RD_PLATFORM_HISTORY_MQH
 #define RD_PLATFORM_HISTORY_MQH
 
 #include "..\Domain\Types.mqh"
+#include "..\Domain\Format.mqh"
 #include "Compat.mqh"
 
 // One exit: the closed part of a position.
@@ -35,7 +40,41 @@ class CHistory
 public:
    // Exits since 'from' (server time) on 'symbol' ("" = every symbol), oldest first.
    static bool       ClosedTrades(const string symbol, const datetime from, SClosedTrade &arr[], SResult &r);
+   // Commission + swap (+ MT5 fee) booked so far on open position 'ticket', as a cost:
+   // > 0 = charged; a net credit is 0 (D10). False when the position is not open.
+   static bool       BookedCost(const ulong ticket, double &cost, SResult &r);
   };
+
+//+------------------------------------------------------------------+
+bool CHistory::BookedCost(const ulong ticket, double &cost, SResult &r)
+  {
+   r.Reset();
+   cost = 0.0;
+   double booked = 0.0;   // as the terminal shows it: negative = charged
+#ifdef __MQL5__
+   if(!PositionSelectByTicket(ticket))
+      return RdFail(r, "Position " + RdTicketText(ticket) + " not found (closed?)");
+   booked = PositionGetDouble(POSITION_SWAP);
+   long id = PositionGetInteger(POSITION_IDENTIFIER);
+   if(!HistorySelectByPosition(id))
+      return RdFail(r, "Trade history of position " + RdTicketText(ticket) + " not available");
+   int total = HistoryDealsTotal();
+   for(int i = 0; i < total; i++)
+     {
+      ulong deal = HistoryDealGetTicket(i);
+      if(deal > 0)
+         booked += HistoryDealGetDouble(deal, DEAL_COMMISSION) + HistoryDealGetDouble(deal, DEAL_FEE);
+     }
+#else
+   if(!OrderSelect((int)ticket, SELECT_BY_TICKET) || OrderCloseTime() > 0 || OrderType() > OP_SELL)
+      return RdFail(r, "Position " + RdTicketText(ticket) + " not found (closed?)");
+   booked = OrderCommission() + OrderSwap();
+#endif
+   if(!MathIsValidNumber(booked))
+      return RdFail(r, "Booked costs of " + RdTicketText(ticket) + " are not a number");
+   cost = MathMax(0.0, -booked);
+   return RdOk(r, "");
+  }
 
 //+------------------------------------------------------------------+
 bool CHistory::ClosedTrades(const string symbol, const datetime from, SClosedTrade &arr[], SResult &r)

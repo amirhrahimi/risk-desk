@@ -223,7 +223,7 @@ void TestV18(CTestRunner &t)
    SResult r;
    bool ok = CRiskMath::PartialClose(0.03, s, cfg, pc, r);
    ASSERT_TRUE("0.03 divisible", ok);
-   ASSERT_NEAR("0.03: close", pc.closeVolume, 0.01, 1e-12);
+   ASSERT_NEAR("0.03: close (0.015 is a tie: the larger part stays)", pc.closeVolume, 0.01, 1e-12);
    ASSERT_NEAR("0.03: keep", pc.remainVolume, 0.02, 1e-12);
    ok = CRiskMath::PartialClose(0.05, s, cfg, pc, r);
    ASSERT_TRUE("0.05 divisible", ok);
@@ -387,6 +387,94 @@ void TestPartialCloseEdgeCases(CTestRunner &t)
   }
 
 //+------------------------------------------------------------------+
+//| Q23: the split nearest to the percentage, a tie keeping the      |
+//| larger part, never leaving less than the minimum lot.            |
+//+------------------------------------------------------------------+
+void TestPartialCloseNearest(CTestRunner &t)
+  {
+   t.Begin("Partial close: nearest split, a tie keeps the larger part (Q23)");
+   SSymbolSpec s;
+   SPlanSettings cfg;
+   cfg.Defaults();
+   SPartialClose pc;
+   SResult r;
+   // the owner's path: Half Close again and again from 2.00 lot (min 0.01, step 0.01)
+   TfFx(s);
+   double path[] = {1.0, 0.5, 0.25, 0.13, 0.07, 0.04, 0.02, 0.01};
+   double v = 2.0;
+   for(int i = 0; i < ArraySize(path); i++)
+     {
+      string id = "halving " + DoubleToString(v, 2);
+      bool ok = CRiskMath::PartialClose(v, s, cfg, pc, r);
+      ASSERT_TRUE(id + " divisible", ok);
+      ASSERT_NEAR(id + " -> keep " + DoubleToString(path[i], 2), pc.remainVolume, path[i], 1e-12);
+      ASSERT_NEAR(id + ": close + keep = the position", pc.closeVolume + pc.remainVolume, v, 1e-9);
+      v = pc.remainVolume;
+     }
+   ASSERT_FALSE("halving 0.01: the minimum lot cannot be split", CRiskMath::PartialClose(v, s, cfg, pc, r));
+   ASSERT_TRUE("halving 0.01: indivisible", pc.indivisible);
+
+   TfSpec(s, "US30", 2, 0.01, 0.01, 0.01, 1.0, 1.0, 250.0);   // whole lots
+   double vols[] = {2.0, 3.0, 4.0, 5.0, 11.0};
+   double want[] = {1.0, 1.0, 2.0, 2.0, 5.0};
+   for(int i = 0; i < ArraySize(vols); i++)
+     {
+      bool ok = CRiskMath::PartialClose(vols[i], s, cfg, pc, r);
+      string id = "whole lots, 50 % of " + DoubleToString(vols[i], 0);
+      ASSERT_TRUE(id + " divisible", ok);
+      ASSERT_NEAR(id + ": close", pc.closeVolume, want[i], 1e-12);
+      ASSERT_NEAR(id + ": keep", pc.remainVolume, vols[i] - want[i], 1e-12);
+     }
+   ASSERT_FALSE("whole lots: 1 at 50 % cannot be split", CRiskMath::PartialClose(1.0, s, cfg, pc, r));
+   cfg.partialClosePct = 30.0;
+   CRiskMath::PartialClose(5.0, s, cfg, pc, r);
+   ASSERT_NEAR("30 % of 5: 1.5 is a tie -> close 1, keep 4", pc.closeVolume, 1.0, 1e-12);
+   CRiskMath::PartialClose(4.0, s, cfg, pc, r);
+   ASSERT_NEAR("30 % of 4: 1.2 -> close 1", pc.closeVolume, 1.0, 1e-12);
+   CRiskMath::PartialClose(10.0, s, cfg, pc, r);
+   ASSERT_NEAR("30 % of 10: close 3", pc.closeVolume, 3.0, 1e-12);
+   ASSERT_FALSE("30 % of 1: nothing is nearest", CRiskMath::PartialClose(1.0, s, cfg, pc, r));
+   ASSERT_TRUE("30 % of 1: indivisible", pc.indivisible);
+   cfg.partialClosePct = 70.0;
+   CRiskMath::PartialClose(3.0, s, cfg, pc, r);
+   ASSERT_NEAR("70 % of 3: 2.1 -> close 2, keep 1", pc.closeVolume, 2.0, 1e-12);
+   CRiskMath::PartialClose(4.0, s, cfg, pc, r);
+   ASSERT_NEAR("70 % of 4: 2.8 -> close 3 (nearest, not the floor), keep 1", pc.closeVolume, 3.0, 1e-12);
+   cfg.partialClosePct = 99.0;
+   ASSERT_FALSE("99 % of 2: closing all is nearest -> indivisible", CRiskMath::PartialClose(2.0, s, cfg, pc, r));
+   bool ok = CRiskMath::PartialClose(200.0, s, cfg, pc, r);
+   ASSERT_TRUE("99 % of 200 divisible", ok);
+   ASSERT_NEAR("99 % of 200: close 198", pc.closeVolume, 198.0, 1e-12);
+   // a minimum above the step (seen: min 1, step 0.01): never a rest below the minimum
+   TfSpec(s, "AUSD", 4, 0.0001, 0.0001, 1.0, 1.0, 0.01, 100.0);
+   cfg.partialClosePct = 50.0;
+   ASSERT_FALSE("min 1 step 0.01: 1.50 at 50 % leaves < min", CRiskMath::PartialClose(1.5, s, cfg, pc, r));
+   ok = CRiskMath::PartialClose(2.5, s, cfg, pc, r);
+   ASSERT_TRUE("min 1 step 0.01: 2.50 at 50 %", ok);
+   ASSERT_NEAR("min 1 step 0.01: 2.50 -> close 1.25", pc.closeVolume, 1.25, 1e-12);
+   cfg.partialClosePct = 70.0;
+   ok = CRiskMath::PartialClose(2.4, s, cfg, pc, r);
+   ASSERT_TRUE("min 1 step 0.01: 2.40 at 70 %", ok);
+   ASSERT_NEAR("min 1 step 0.01: 2.40 at 70 % -> close 1.40, keep the minimum", pc.closeVolume, 1.4, 1e-12);
+   ASSERT_NEAR("min 1 step 0.01: keep 1.00", pc.remainVolume, 1.0, 1e-12);
+   // the volume helper itself
+   double lots = 0.0;
+   ASSERT_TRUE("nearest 0.015 at step 0.01", RdNearestVolume(0.015, 0.01, 0.01, lots));
+   ASSERT_NEAR("nearest 0.015 -> 0.01 (a tie rounds down)", lots, 0.01, 1e-12);
+   RdNearestVolume(0.125, 0.01, 0.01, lots);
+   ASSERT_NEAR("nearest 0.125 -> 0.12 (a tie rounds down)", lots, 0.12, 1e-12);
+   RdNearestVolume(0.0151, 0.01, 0.01, lots);
+   ASSERT_NEAR("nearest 0.0151 -> 0.02", lots, 0.02, 1e-12);
+   RdNearestVolume(0.0149, 0.01, 0.01, lots);
+   ASSERT_NEAR("nearest 0.0149 -> 0.01", lots, 0.01, 1e-12);
+   ASSERT_FALSE("nearest 0.005 at min 0.01: a tie -> nothing", RdNearestVolume(0.005, 0.01, 0.01, lots));
+   ASSERT_TRUE("nearest 0.006 at min 0.01 -> 0.01", RdNearestVolume(0.006, 0.01, 0.01, lots) && RdVolEq(lots, 0.01));
+   ASSERT_FALSE("nearest 0.004 at min 0.01: nothing", RdNearestVolume(0.004, 0.01, 0.01, lots));
+   ASSERT_FALSE("nearest of 0", RdNearestVolume(0.0, 0.01, 0.01, lots));
+   ASSERT_FALSE("nearest on an invalid grid", RdNearestVolume(1.0, 0.01, 0.0, lots));
+  }
+
+//+------------------------------------------------------------------+
 void TestCostAndTickValue(CTestRunner &t)
   {
    t.Begin("Cost distance, position risk, loss tick value");
@@ -410,6 +498,39 @@ void TestCostAndTickValue(CTestRunner &t)
   }
 
 //+------------------------------------------------------------------+
+//| D35: a full close above the maximum volume per request is sent   |
+//| in parts; no part leaves a rest below the minimum lot.           |
+//+------------------------------------------------------------------+
+void TestCloseChunk(CTestRunner &t)
+  {
+   t.Begin("Close chunks above the max volume (D35)");
+   SSymbolSpec s;
+   TfSpec(s, "IDX", 1, 0.1, 0.1, 1.0, 1.0, 0.1, 100.0);
+   double c = 0.0;
+   ASSERT_TRUE("50 fits", CRiskMath::CloseChunk(50.0, s, c));
+   ASSERT_NEAR("50 in one request", c, 50.0, 1e-12);
+   ASSERT_TRUE("exactly the max fits", CRiskMath::CloseChunk(100.0, s, c));
+   ASSERT_NEAR("100 in one request", c, 100.0, 1e-12);
+   ASSERT_TRUE("150", CRiskMath::CloseChunk(150.0, s, c));
+   ASSERT_NEAR("150: first part 100 (rest 50)", c, 100.0, 1e-12);
+   ASSERT_TRUE("100.5", CRiskMath::CloseChunk(100.5, s, c));
+   ASSERT_NEAR("100.5: 99.5, so the rest is the min lot 1", c, 99.5, 1e-12);
+   ASSERT_TRUE("100.9", CRiskMath::CloseChunk(100.9, s, c));
+   ASSERT_NEAR("100.9: 99.9 (rest 1.0)", c, 99.9, 1e-12);
+   ASSERT_TRUE("101", CRiskMath::CloseChunk(101.0, s, c));
+   ASSERT_NEAR("101: 100 (rest = min lot)", c, 100.0, 1e-12);
+   ASSERT_FALSE("0 volume", CRiskMath::CloseChunk(0.0, s, c));
+   TfSpec(s, "FX", 5, 0.00001, 0.00001, 1.0, 0.01, 0.01, 50.0);
+   ASSERT_TRUE("FX 120.37", CRiskMath::CloseChunk(120.37, s, c));
+   ASSERT_NEAR("FX 120.37: 50", c, 50.0, 1e-12);
+   ASSERT_TRUE("FX 50.01", CRiskMath::CloseChunk(50.01, s, c));
+   ASSERT_NEAR("FX 50.01: 50 (rest = min lot 0.01)", c, 50.0, 1e-12);
+   s.volMax = 0.0;
+   ASSERT_TRUE("no max reported", CRiskMath::CloseChunk(500.0, s, c));
+   ASSERT_NEAR("no max: whole volume", c, 500.0, 1e-12);
+  }
+
+//+------------------------------------------------------------------+
 void RunRiskMathTests(CTestRunner &t)
   {
    TestV01(t);
@@ -427,7 +548,9 @@ void RunRiskMathTests(CTestRunner &t)
    TestRiskNeverExceeded(t);
    TestTpEdgeCases(t);
    TestPartialCloseEdgeCases(t);
+   TestPartialCloseNearest(t);
    TestCostAndTickValue(t);
+   TestCloseChunk(t);
   }
 
 #endif // RD_TESTS_RISKMATH_MQH

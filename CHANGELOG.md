@@ -3,7 +3,33 @@
 All notable changes to this project are documented here. Format: Keep a Changelog; versions: SemVer.
 
 ## [Unreleased]
+### Added
+- Debug Half Close suite (`build/run-uitest.ps1 -Suite half`, 08 §3h, `App/UiSelfTestHalf.mqh`): Half Close over the chart symbol's volume grid with real demo positions (even / odd multiples of the minimum lot, repeated clicks down to the minimum lot, Skip and Close all, 30 % / 70 %, several positions in one click, a merged netting position), each click checked against the expected split, the rest's ticket, open price, SL and TP, the history's closed volume and P/L, and the status. Run on indices (whole-lot, 0.1 and 0.01 grids) and majors on all six demo accounts.
+
 ### Changed
+- Half Close rounding (Q23, 04 §10, F-12 AC1): the closed part is the volume nearest to `InpPartialClosePct`, a tie keeping the larger part, instead of the floor. At 50 % (the default) the splits are the same as before (3 lots → close 1 keep 2; 0.25 → close 0.12 keep 0.13; repeated clicks from 2 lots keep 1 → 0.50 → 0.25 → 0.13 → 0.07 → 0.04 → 0.02 → 0.01, then the minimum lot is skipped, Q11). At other percentages the nearest replaces the floor (70 % of 4 lots → close 3, was 2), and where the minimum lot is larger than the step the closest split that leaves a minimum lot is used. `RdNearestVolume` (Domain/PriceMath) with unit tests (the owner's halving path among them).
+
+### Fixed
+- Half Close / G-04 on IG MT4: the server keeps the original ticket open and books the closed part as a new history order with magic 0, so the status showed no P/L, or only that of the other closes of the click (`(1 of 2 closes)`). The gateway now reads the closed part's P/L and close price from that order (D37, BC-16).
+
+## [0.6.0] - 2026-11-12 - Phase P6: Trade management
+### Added
+- Risk Free (OP-09, F-11, `App/CommandsManage.mqh`): every position in chart scope (`InpScopeChartOps`) that is far enough in profit gets its SL at the open price ± (spread + commission distance) (04 §9, `InpRiskFreeMode`, `InpRiskFreeExtraPoints`); the SL never loosens, the TP stays; netting positions use the averaged open price (BC-10). Status `Risk-free on EURUSD: 1 moved · 2 not in profit · 1 already protected - #… SL 1.10262 -> 1.10539; #… not in profit; #… already at SL 1.10539`; screenshot `riskfree`.
+- Half Close (OP-10, F-12): `InpPartialClosePct` of every position in chart scope, floored to the volume step; positions that cannot be split are skipped and named (`InpPartialIndivisible`); `InpConfirmHalfClose`; MT4's new ticket for the rest is named (BC-16); netting: an opposite deal. Status `Half-closed 1 position on EURUSD (0.01 lot) · P/L -€0.04 · 1 skipped - …`; screenshot `half`.
+- Chart Close (OP-11, F-13): every position in chart scope, pending orders stay; `InpConfirmChartClose`. Status `Closed 2 of 2 positions on EURUSD · P/L -€0.06`; screenshot `chartclose`.
+- Full Close (OP-12, F-14): every position on the account (`InpScopeFullClose`), grouped by symbol, with `Closing 3/3...` shown while it runs; pending orders too with `InpFullCloseAlsoPending`; confirmed by default (`InpConfirmFullClose`) with the positions per symbol and the floating P/L. Status `Closed 3 of 3 positions on 3 symbols · P/L -€0.09 · deleted 1 of 1 pending order`, failures listed with symbol, ticket and reason; screenshot `fullclose`.
+- Every management status lists each skipped or failed item with its reason and is green only when everything was done (D33). A position above the maximum volume per request is closed in parts (D35, `CRiskMath::CloseChunk`).
+- `CHistory::BookedCost` (commission + swap booked on an open position) for `RF_COMMISSION`.
+- Debug manage suite (`build/run-uitest.ps1 -Suite manage`, 08 §3g): T-16..T-19, T-32 and (netting) T-30 with real test positions on demo accounts, never touching anyone else's trades.
+- Unit tests: Risk Free skip reasons, `CloseChunk`.
+- `build/summarize-profiles.ps1` and the generated `broker-profiles/SUMMARY.md`: account and test-symbol properties, probe items to check, and the latest GatewaySmoke result for every demo account (14 KB instead of 590 KB of raw reports).
+
+### Fixed
+- Panel self-test: when the T-21 state saved by the previous run belonged to another account, the run kept that account's hidden panel from the shared `ui.ini` (D17) and failed the hide, clamp and T-20 checks; it now goes back to the defaults on that path too.
+- `build/run-uitest.ps1`: a terminal that exits early without a report (MetaTrader 5 updating itself and restarting without the startup configuration) is reported as such, with a note when it is running again, instead of "Is a DEBUG build installed?".
+
+### Changed
+- Every panel button now works; the panel self-test clicks the management buttons only when nothing is in their scope (Full Close otherwise with its confirmation answered No), so it still never trades.
 - Q20 answered: the candle countdown turns red when 10 % or less of the candle time is left, and at `00:00`. The input `InpCandleTimeWarnPct` (10, range 0–100, 0 = only at `00:00`) replaces `InpCandleTimeWarnSec` (60). The countdown itself comes in P7 (01 F-21, 05 §6, 07, 08 T-33).
 - Q22 answered: requotes stay as they are. There is one `InpSlippagePoints` for every symbol and broker, with no broker-specific settings, and a requote that outlasts the retries ends red with nothing opened (03 §3, 07).
 - Less context per Claude Code session (no change to the EA or scripts):
@@ -12,9 +38,6 @@ All notable changes to this project are documented here. Format: Keep a Changelo
   - `docs/10-decisions.md` is now an index; each ADR moved unchanged into `docs/adr/ADR-NNN-<slug>.md`.
   - The implementation log moved from `docs/11-open-questions.md` to `docs/history/implementation-log.md`.
   - CLAUDE.md §8 "Context budget".
-
-### Added
-- `build/summarize-profiles.ps1` and the generated `broker-profiles/SUMMARY.md`: account and test-symbol properties, probe items to check, and the latest GatewaySmoke result for every demo account (14 KB instead of 590 KB of raw reports).
 
 ## [0.5.0] - 2026-11-12 - Phase P5: Pending orders
 ### Added

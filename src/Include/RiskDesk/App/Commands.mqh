@@ -13,8 +13,11 @@
 //|           Set Pending (OP-07), Del Pending (OP-08) and moving a  |
 //|           placed order by its overlay line (OP-16):              |
 //|           App/CommandsPending.mqh.                               |
-//| Status  : P5. The management buttons (P6) answer amber "not     |
-//|           implemented yet" with the phase that brings them.      |
+//|           Risk Free, Half Close, Chart Close, Full Close         |
+//|           (OP-09..OP-12): App/CommandsManage.mqh.                |
+//|           A long command reports its steps ("Closing 4/9...")    |
+//|           through CProgressSink (the Controller draws them).     |
+//| Status  : P6: every button works.                                |
 //+------------------------------------------------------------------+
 #ifndef RD_APP_COMMANDS_MQH
 #define RD_APP_COMMANDS_MQH
@@ -32,6 +35,7 @@
 #include "..\Platform\Market.mqh"
 #include "..\Platform\Money.mqh"
 #include "..\Platform\TradeGateway.mqh"
+#include "..\Platform\History.mqh"
 #include "..\Services\Logger.mqh"
 #include "..\Services\Persistence.mqh"
 #include "..\UI\Theme.mqh"
@@ -43,6 +47,44 @@
 #define RD_CONFIRM_ASK  0   // show the dialog
 #define RD_CONFIRM_YES  1   // debug builds only: answered by the self-test
 #define RD_CONFIRM_NO   2
+
+//+------------------------------------------------------------------+
+//| A command that sends several requests shows each step at once    |
+//| (06 OP-12 "Closing 4/9..."). The Controller implements it; the   |
+//| default does nothing (scripts, tests).                           |
+//+------------------------------------------------------------------+
+class CProgressSink
+  {
+public:
+   virtual void      Progress(const string text) { }
+  };
+
+// What a close command did, for its summary (06 OP-11/OP-12).
+struct SCloseTally
+  {
+   int               closed;
+   int               gone;          // closed elsewhere between listing and closing
+   int               failed;
+   int               known;         // closes whose realized P/L the gateway found
+   double            pl;            // their profit + swap + commission (+ MT5 fee)
+   double            volume;
+   ulong             one;           // a closed ticket (the screenshot names it when only one was closed)
+   string            failures;      // "#123 (reason); XAUUSD #124 (reason)"
+   string            notes;         // amber notes of closes that went through
+
+   void              Reset()
+     {
+      closed = 0;
+      gone = 0;
+      failed = 0;
+      known = 0;
+      pl = 0.0;
+      volume = 0.0;
+      one = 0;
+      failures = "";
+      notes = "";
+     }
+  };
 
 class CCommands
   {
@@ -58,6 +100,8 @@ private:
    ulong             m_shotTicket;
    string            m_lastConfirm;    // text of the last confirmation asked
    int               m_testConfirm;    // RD_CONFIRM_*; only a debug build changes it
+   CProgressSink    *m_progress;       // draws "Closing 4/9..." (the Controller); NULL = none
+   string            m_lastProgress;   // last progress text of the last command ("" = none)
 
    string            RiskBaseText() const;
    bool              SpecQuote(const string what, SSymbolSpec &s, SQuote &q, SResult &r);
@@ -96,6 +140,24 @@ private:
    bool              DelPending(SResult &r);
    static bool       SameLevel(const SSymbolSpec &s, const double a, const double b);
 
+   //--- App/CommandsManage.mqh (OP-09..OP-12)
+   bool              RiskFree(SResult &r);
+   bool              PlanRiskFree(const SPosition &pos, const SSymbolSpec &s, const SAccountSpec &acc, const SPlanSettings &p,
+                                  SRiskFreeResult &rf, SResult &r);
+   bool              MoneyPerTick(const SSymbolSpec &s, const SAccountSpec &acc, const ESide side, const double open,
+                                  double &perTick, SResult &r);
+   bool              HalfClose(SResult &r);
+   bool              ChartClose(SResult &r);
+   bool              FullClose(SResult &r);
+   bool              CloseWhole(const ulong ticket, STradeOutcome &out, SResult &r);
+   void              CloseTickets(const ulong &tickets[], const string &labels[], SCloseTally &t);
+   string            CloseSummary(const SAccountSpec &acc, const SCloseTally &t) const;
+   bool              CloseResult(const string msg, const SCloseTally &t, SResult &r) const;
+   void              ChartFilter(STradeFilter &f) const;
+   void              AccountFilter(STradeFilter &f) const;
+   string            PlText(const SAccountSpec &acc, const double pl) const;
+   void              Progress(const string text);
+
 public:
                      CCommands();
    void              Init(CSettings *cfg, CState *state, CPersistence *store, CTradeGateway *gw, CMoney *money,
@@ -107,6 +169,8 @@ public:
    bool              TakeRaise();
    bool              TakeShot(string &action, ulong &ticket);
    string            LastConfirm() const { return m_lastConfirm; }
+   void              SetProgress(CProgressSink *sink) { m_progress = sink; }
+   string            LastProgress() const { return m_lastProgress; }
 #ifdef RD_TEST_HOOKS
    void              SetTestConfirm(const int answer) { m_testConfirm = answer; }
 #endif
@@ -131,6 +195,8 @@ CCommands::CCommands()
    m_shotTicket = 0;
    m_lastConfirm = "";
    m_testConfirm = RD_CONFIRM_ASK;
+   m_progress = NULL;
+   m_lastProgress = "";
   }
 
 void CCommands::Init(CSettings *cfg, CState *state, CPersistence *store, CTradeGateway *gw, CMoney *money, CLines *lines)
@@ -183,6 +249,7 @@ bool CCommands::Run(const EPanelButton b, SResult &r)
    m_raise = false;
    m_shotAction = "";
    m_shotTicket = 0;
+   m_lastProgress = "";
    switch(b)
      {
       case PB_ADDLINE:
@@ -199,6 +266,14 @@ bool CCommands::Run(const EPanelButton b, SResult &r)
          return SetPending(r);
       case PB_DELPEND:
          return DelPending(r);
+      case PB_RISKFREE:
+         return RiskFree(r);
+      case PB_HALF:
+         return HalfClose(r);
+      case PB_CHARTCLOSE:
+         return ChartClose(r);
+      case PB_FULLCLOSE:
+         return FullClose(r);
       case PB_SHOT:
          return CameraShot(r);
       default:
@@ -430,7 +505,7 @@ string CCommands::LevelsText(const SSymbolSpec &s, const double sl, const double
   }
 
 //+------------------------------------------------------------------+
-//| Which phase brings a button that does not work yet (09).         |
+//| The phase that brought each button (09).                         |
 //+------------------------------------------------------------------+
 string CCommands::Phase(const EPanelButton b)
   {
@@ -453,7 +528,8 @@ string CCommands::Phase(const EPanelButton b)
 
 bool CCommands::Implemented(const EPanelButton b)
   {
-   return Phase(b) == "P4" || Phase(b) == "P5";
+   string phase = Phase(b);
+   return phase == "P4" || phase == "P5" || phase == "P6";
   }
 
 //+------------------------------------------------------------------+
@@ -508,5 +584,6 @@ string CCommands::RiskTooltip() const
 
 #include "CommandsTrade.mqh"
 #include "CommandsPending.mqh"
+#include "CommandsManage.mqh"
 
 #endif // RD_APP_COMMANDS_MQH
