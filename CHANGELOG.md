@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-11-14
+
+The trading logic is the same as in 1.8.0.
+
+### Changed
+- The EA's properties dialog (Common tab in MT5, About tab in MT4) describes Risk Desk in more detail: how the lot is sized from the risk % and the stop-loss line, the order and trade-management buttons, the status message after every click, and that it never trades on its own.
+
 ## [1.8.0] - 2026-11-14
 
 First stable release. Changes since 1.8.0-rc.1; the trading logic is otherwise as in 1.7.0 and 1.8.0-rc.1. Tested on demo accounts only; not yet tested on live accounts. See the README for known limitations.
@@ -65,7 +72,8 @@ Internal versions, not published. The BrokerProbe and GatewaySmoke reports in `b
 | 0.1.0 | 2026-11-12 | P1: domain layer and unit tests |
 | 0.0.1 | 2026-11-12 | P0: build tooling and BrokerProbe |
 
-[Unreleased]: https://github.com/amirhrahimi/risk-desk/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/amirhrahimi/risk-desk/compare/v1.8.1...HEAD
+[1.8.1]: https://github.com/amirhrahimi/risk-desk/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/amirhrahimi/risk-desk/compare/v1.8.0-rc.1...v1.8.0
 [1.8.0-rc.1]: https://github.com/amirhrahimi/risk-desk/compare/v1.7.0...v1.8.0-rc.1
 [1.7.0]: https://github.com/amirhrahimi/risk-desk/releases/tag/v1.7.0

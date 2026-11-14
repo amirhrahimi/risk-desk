@@ -66,7 +66,7 @@ Step by step, with the optional scripts: [docs/installation.md](docs/installatio
 ## Quick start on a demo account
 
 1. Open a **demo** account with your broker and a chart of a liquid symbol (for example EURUSD).
-2. Drag **RiskDesk** from the Navigator onto the chart, tick *Allow live trading* / *Allow Algo Trading*, and press OK. The status bar at the bottom of the panel shows `Risk Desk 1.8.0 ready`.
+2. Drag **RiskDesk** from the Navigator onto the chart, tick *Allow live trading* / *Allow Algo Trading*, and press OK. The status bar at the bottom of the panel shows `Risk Desk 1.8.1 ready`.
 3. Type a small value in **Risk %**, for example `0.5`.
 4. Click **Add Line**. A red SL line appears; drag it below the price for a buy (above the price for a sell).
 5. Read **Lots** and the label on the SL line: the money you would lose at that stop, the %, the lot size and the distance.
