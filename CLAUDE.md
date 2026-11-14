@@ -69,9 +69,10 @@ When docs conflict, precedence is: 03 > 04 > 06 > 01 > the rest. Report every co
 ├─ broker-profiles/            SUMMARY.md (generated) + redacted BrokerProbe/GatewaySmoke reports
 ├─ build/
 │  ├─ build.ps1                compiles every target, prints a summary, exit 1 on any error/warning
+│  ├─ host.ps1                 Windows vs macOS/Linux+Wine helpers dot-sourced by the scripts (ADR-032)
 │  ├─ check-version.ps1        RD_VERSION and RD_VERSION_PROP must match (run by build.ps1 and CI)
 │  ├─ package-release.ps1      release build + zip for GitHub Releases (dist/, git-ignored)
-│  ├─ install-junctions.ps1    links src/ into each terminal data folder
+│  ├─ install-junctions.ps1    links src/ into each terminal data folder (junctions; symlinks on macOS/Linux)
 │  ├─ run-tests.ps1            RiskDeskTests headless on each terminal
 │  ├─ run-script.ps1           BrokerProbe / GatewaySmoke on one demo account
 │  ├─ run-uitest.ps1           debug panel/trade/pending self-test on one demo account
@@ -101,10 +102,11 @@ Includes are **relative** to the including file, using backslashes as in MetaQuo
 ## 5. Build and run
 
 - Paths live in `build/paths.local.ps1` (MetaEditor executables and the data folder of every terminal). If it is missing, create it from `paths.example.ps1` and ask the owner to fill it.
-- Compile everything: `powershell -ExecutionPolicy Bypass -File build/build.ps1` (or `-Target mt4` / `-Target mt5`).
+- Compile everything: `powershell -ExecutionPolicy Bypass -File build/build.ps1` (or `-Target mt4` / `-Target mt5`). On macOS and Linux every script runs as `pwsh build/<script>.ps1` and starts MetaEditor and the terminals through Wine (ADR-032).
 - Underlying commands (build.ps1 wraps them):
   - MT5: `"<MT5 dir>\metaeditor64.exe" /compile:"<repo>\src\Experts\RiskDesk.mq5" /log`
   - MT4: `"<MT4 dir>\metaeditor.exe" /compile:"<repo>\src\Experts\RiskDesk.mq4" /log`
+  - Wine: `WINEPREFIX=<prefix> wine "<prefix>/drive_c/Program Files/MetaTrader 5/MetaEditor64.exe" /compile:Z:\<repo path with backslashes>\src\Experts\RiskDesk.mq5 /log`
   - build.ps1 then copies the compiled EA to `MQLx\Experts\RiskDesk.ex4/.ex5` of every terminal in `paths.local.ps1`; a compile done by hand does not.
   - The `.log` file is written next to the source file. **Do not trust MetaEditor's exit code.** Parse the log (it may be UTF-16 encoded) for the final `N errors, M warnings` result.
   - `.ex4/.ex5/.log` are build artefacts and are git-ignored.
@@ -125,6 +127,7 @@ Includes are **relative** to the including file, using backslashes as in MetaQuo
 - Logging via `Services/Logger.mqh` macros. Every trade request and result is logged with symbol, side, volume, price, SL, TP, filling/time policy, retcode/error number and its text.
 - Keep `CHANGELOG.md` (Keep a Changelog, SemVer). For a release bump `RD_VERSION` and `RD_VERSION_PROP` in `Build.mqh` together (ADR-029); `build/check-version.ps1` fails the build when they differ.
 - Every new or changed input is documented in its trailing comment, in `docs/design/07-settings.md` and in `docs/configuration.md`.
+- Build scripts (`build/*.ps1`) run on Windows PowerShell 5.1 and on PowerShell 7 under Windows, macOS and Linux (ADR-032): file paths joined with forward slashes (`Join-Path $data "$mql/Files"`), no `$env:TEMP` (use `Get-RdTempDir`), and programs started, found and closed only through the helpers in `build/host.ps1`. Paths inside a terminal's startup `.ini` (`Script=RiskDesk\RiskDeskTests`) stay Windows paths.
 
 ## 7. How to work in a session
 

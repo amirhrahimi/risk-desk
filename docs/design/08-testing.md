@@ -66,6 +66,8 @@ Output: one line per step in the Experts tab, an Alert with the summary, and a b
 
 ## 3c. Unattended runs (`build/run-script.ps1`)
 
+The commands in §3c–§3j are written for Windows. On macOS and Linux run the same scripts with `pwsh -File build/<script>.ps1 ...`; the terminal then runs under Wine (ADR-032).
+
 Runs BrokerProbe or GatewaySmoke on one saved account without clicking (ADR-020). The terminal must not be running; it logs into `-Login` on `-Server` with the password it has saved, opens a chart of `-Symbol`, runs the script, and closes when the report appears in `MQLx/Files/RiskDesk`.
 
 ```

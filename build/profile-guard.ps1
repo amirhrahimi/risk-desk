@@ -18,30 +18,32 @@
     Restore-ChartProfile $snap  (call after the terminal process has exited)
 #>
 
+if (-not (Get-Command -Name Get-RdTempDir -ErrorAction SilentlyContinue)) { . (Join-Path $PSScriptRoot 'host.ps1') }
+
 function Get-ChartProfileDir([string]$data, [string]$platform) {
     if ($platform -eq 'mt4') {
-        $last = Join-Path $data 'profiles\lastprofile.ini'
+        $last = Join-RdPath $data 'profiles/lastprofile.ini'
         $name = 'default'
         if (Test-Path -LiteralPath $last) {
             $n = ([string](Get-Content -LiteralPath $last -TotalCount 1)).Trim()
             if ($n -ne '') { $name = $n }
         }
-        return (Join-Path $data "profiles\$name")
+        return (Join-RdPath $data "profiles/$name")
     }
     $name = 'Default'
-    $common = Join-Path $data 'config\common.ini'
+    $common = Join-RdPath $data 'config/common.ini'
     if (Test-Path -LiteralPath $common) {
         $m = Select-String -LiteralPath $common -Encoding Unicode -Pattern '^ProfileLast=(.+)$' | Select-Object -First 1
         if ($m) { $name = $m.Matches[0].Groups[1].Value.Trim() }
     }
-    return (Join-Path $data "MQL5\Profiles\Charts\$name")
+    return (Join-RdPath $data "MQL5/Profiles/Charts/$name")
 }
 
 function Save-ChartProfile([string]$data, [string]$platform) {
     $dir = Get-ChartProfileDir $data $platform
     $snap = [pscustomobject]@{ Dir = $dir; Backup = $null; Files = 0 }
     if (-not (Test-Path -LiteralPath $dir)) { return $snap }
-    $bak = Join-Path $env:TEMP ("RiskDesk-profile-" + $platform + "-" + $PID + "-" + (Get-Date -Format 'HHmmss'))
+    $bak = Join-Path (Get-RdTempDir) ("RiskDesk-profile-" + $platform + "-" + $PID + "-" + (Get-Date -Format 'HHmmss'))
     New-Item -ItemType Directory -Path $bak -Force | Out-Null
     $files = @(Get-ChildItem -LiteralPath $dir -File)
     foreach ($f in $files) { Copy-Item -LiteralPath $f.FullName -Destination (Join-Path $bak $f.Name) -Force }

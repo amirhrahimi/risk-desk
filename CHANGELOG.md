@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+The EA and the scripts are unchanged; this concerns developing Risk Desk.
+
+### Added
+- Risk Desk can be developed on macOS and Linux. The build scripts in `build/` run with PowerShell 7 (`pwsh`) and start MetaEditor and the terminals under Wine: MetaQuotes' MetaTrader 5 app on macOS, `mt5linux.sh` or the distribution's Wine on Linux. `install-junctions.ps1` creates symbolic links there (ADR-032). See CONTRIBUTING.md.
+- `build/test-build-scripts.ps1` checks the build scripts without MetaTrader, and the `scripts` workflow runs it on Linux, macOS and Windows.
+- `build.ps1 -PathsFile` and `package-release.ps1 -OutDir`.
+
+### Fixed
+- `package-release.ps1` run with Windows PowerShell 5.1 wrote zip entries with backslashes (`MQL5\Experts\RiskDesk.ex5`), which unpack into wrongly named files on macOS and Linux. Entry names now always use `/`. Released zips were not affected: CI packs them with PowerShell 7.
+- The runners (`run-tests.ps1`, `run-script.ps1`, `run-uitest.ps1`) also find a terminal whose data folder is its install folder (portable mode), where there is no `origin.txt`.
+
 ## [1.8.1] - 2026-11-14
 
 The trading logic is the same as in 1.8.0.

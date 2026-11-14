@@ -17,9 +17,10 @@
 
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File build/check-version.ps1
+    pwsh build/check-version.ps1              (macOS / Linux)
 #>
 param(
-    [string]$Path = (Join-Path (Split-Path -Parent $PSScriptRoot) 'src\Include\RiskDesk\Build.mqh')
+    [string]$Path = (Join-Path (Split-Path -Parent $PSScriptRoot) 'src/Include/RiskDesk/Build.mqh')
 )
 
 $ErrorActionPreference = 'Stop'

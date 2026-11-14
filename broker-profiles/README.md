@@ -13,11 +13,12 @@ Reports from real demo accounts, produced by Risk Desk's diagnostic scripts. The
 ## Adding a report
 
 1. Run the script on a **demo** account ([docs/installation.md](../docs/installation.md#run-brokerprobe-optional-recommended-for-a-new-broker)). It writes to `MQL4/Files/RiskDesk/` or `MQL5/Files/RiskDesk/`, with your login in the file name and in the text.
-2. Redact it. This replaces the login with the label and blanks the data path, which contains your Windows user name:
+2. Redact it. This replaces the login with the label and blanks the data path, which contains your user name:
    ```
    powershell -ExecutionPolicy Bypass -File build/redact-report.ps1 -Path <report> -Label C1 -OutDir broker-profiles
+   pwsh build/redact-report.ps1 -Path <report> -Label C1 -OutDir broker-profiles     # macOS / Linux
    ```
-3. Check the copy: no login, no `C:\Users\<name>`, no password (the scripts never write one).
+3. Check the copy: no login, no `C:\Users\<name>` (under Wine `C:\users\<name>`), no password (the scripts never write one).
 4. Run `build/summarize-profiles.ps1`, or attach the redacted report to a [broker test report](https://github.com/amirhrahimi/risk-desk/issues/new?template=broker_test_report.yml) and a maintainer will add it.
 
 Never commit an unredacted report, a live-account report with balances you consider private, or an account statement.

@@ -84,6 +84,11 @@
     The terminal must NOT be running (a running instance ignores the
     startup configuration).
 
+    On macOS and Linux (PowerShell 7) the terminal runs under Wine
+    (build/host.ps1, ADR-032). The window captures that the self-test asks
+    for (the One-Click Trading panel) use Win32 calls: there the runner
+    skips them with a NOTE and the self-test goes on without them.
+
 .EXAMPLE
     powershell -File build/build.ps1 -Debug -Target mt5
     powershell -File build/run-uitest.ps1 -Platform mt5 -Login <login> -Server ICMarketsEU-Demo -Symbol EURUSD
@@ -106,7 +111,7 @@ param(
     # did not stop the startup EA from trading). The terminal keeps the setting: the next normal
     # run switches it on again.
     [ValidateSet('on', 'off')][string]$Permissions = 'on',
-    [string]$OutDir = (Join-Path $env:TEMP 'RiskDesk-uitest'),
+    [string]$OutDir = (Join-Path ([IO.Path]::GetTempPath()) 'RiskDesk-uitest'),
     [int]$TimeoutSec = 240,
     [switch]$Full                    # print the whole report instead of the short result
 )
@@ -114,30 +119,38 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2.0
 
+. (Join-Path $PSScriptRoot 'host.ps1')
+
 $PathsFile = Join-Path $PSScriptRoot 'paths.local.ps1'
 if (-not (Test-Path -LiteralPath $PathsFile)) { Write-Host 'FAIL  build/paths.local.ps1 not found'; exit 1 }
+$Wine4 = $null
+$Wine5 = $null
 $Terminals = @()
 . $PathsFile
 $t = @(@($Terminals) | Where-Object { ([string]$_.Platform).ToLowerInvariant() -eq $Platform }) | Select-Object -First 1
 if (-not $t) { Write-Host "FAIL  no $Platform terminal in build/paths.local.ps1"; exit 1 }
 
-$data = [string]$t.DataPath
+$data = Expand-RdHome ([string]$t.DataPath)
 $mql = 'MQL5'; $exeName = 'terminal64.exe'; $ext = '.ex5'; $tag = 'MT5'
 if ($Platform -eq 'mt4') { $mql = 'MQL4'; $exeName = 'terminal.exe'; $ext = '.ex4'; $tag = 'MT4' }
-$install = (Get-Content -LiteralPath (Join-Path $data 'origin.txt') -TotalCount 1).Trim()
-$exe = Join-Path $install $exeName
-if (-not (Test-Path -LiteralPath (Join-Path $data "$mql\Experts\RiskDesk$ext"))) {
-    Write-Host "FAIL  $mql\Experts\RiskDesk$ext missing: run install-junctions.ps1 and build.ps1 -Debug"; exit 1
+$exe = Find-RdTerminalExe $data $exeName
+if (-not $exe) { Write-Host "FAIL  $exeName not found through $data (no origin.txt naming its install folder, and not in the folder itself): is DataPath right?"; exit 1 }
+$wine = $null
+if (-not $RdOnWindows) {
+    $wine = Find-RdWine $Platform (Get-RdWineSetting $t $Platform $Wine4 $Wine5)
+    if (-not $wine) { Write-Host "FAIL  $(Get-RdWineHint $Platform)"; exit 1 }
 }
-$buildMqh = Join-Path (Split-Path -Parent $PSScriptRoot) 'src\Include\RiskDesk\Build.mqh'
+if (-not (Test-Path -LiteralPath (Join-RdPath $data "$mql/Experts/RiskDesk$ext"))) {
+    Write-Host "FAIL  $mql/Experts/RiskDesk$ext missing: run install-junctions.ps1 and build.ps1 -Debug"; exit 1
+}
+$buildMqh = Join-Path (Split-Path -Parent $PSScriptRoot) 'src/Include/RiskDesk/Build.mqh'
 if (-not (Select-String -LiteralPath $buildMqh -Pattern '^\s*#define\s+RD_TEST_HOOKS' -Quiet)) {
     Write-Host 'NOTE  Build.mqh is in release mode now; the installed build must be a debug build (build.ps1 -Debug) or the test will not start'
 }
-$running = @(Get-Process -ErrorAction SilentlyContinue | Where-Object { try { $_.Path -and ($_.Path -ieq $exe) } catch { $false } })
-if ($running.Count -gt 0) { Write-Host "FAIL  $exe is running; close it first"; exit 1 }
+if (@(Get-RdProgramProcesses $exe).Count -gt 0) { Write-Host "FAIL  $exe is running; close it first"; exit 1 }
 
-$filesDir = Join-Path $data "$mql\Files\RiskDesk"
-$testDir = Join-Path $filesDir 'uitest'
+$filesDir = Join-RdPath $data "$mql/Files/RiskDesk"
+$testDir = Join-RdPath $filesDir 'uitest'
 if (-not (Test-Path -LiteralPath $filesDir)) { New-Item -ItemType Directory -Path $filesDir -Force | Out-Null }
 $request = Join-Path $filesDir 'uitest.request'
 [IO.File]::WriteAllText($request, "requested by build/run-uitest.ps1 $(Get-Date -Format s)`r`nsuite=$Suite`r`n", [Text.Encoding]::ASCII)
@@ -147,8 +160,8 @@ $setName = "RiskDesk-uitest-$PID.set"
 $setLines = @('InpTestUiSelfTest=true') + @($Inputs -split ';' | Where-Object { $_.Trim() -ne '' } | ForEach-Object { $_.Trim() })
 $setText = ($setLines -join "`r`n") + "`r`n"
 $setFiles = @()
-$dirs = @(Join-Path $data "$mql\Presets")
-if ($Platform -eq 'mt4') { $dirs += (Join-Path $data 'presets') }
+$dirs = @(Join-RdPath $data "$mql/Presets")
+if ($Platform -eq 'mt4') { $dirs += (Join-RdPath $data 'presets') }
 foreach ($d in $dirs) {
     if (-not (Test-Path -LiteralPath $d)) { New-Item -ItemType Directory -Path $d -Force | Out-Null }
     $f = Join-Path $d $setName
@@ -158,24 +171,27 @@ foreach ($d in $dirs) {
 }
 
 #--- startup configuration (no password: the terminal's saved one is used)
-$ini = Join-Path $env:TEMP "RiskDesk-run-uitest-$PID.ini"
+$ini = Join-Path (Get-RdTempDir) "RiskDesk-run-uitest-$PID.ini"
+$iniArg = ConvertTo-RdWinPath $ini (Get-RdWinePrefix $exe)
 $algo = if ($Permissions -eq 'off') { 0 } else { 1 }
 if ($Platform -eq 'mt5') {
     $lines = @('[Common]', "Login=$Login", "Server=$Server",
                '[Experts]', 'AllowLiveTrading=1', 'AllowDllImport=0', "Enabled=$algo",
                '[StartUp]', 'Expert=RiskDesk', "ExpertParameters=$setName", "Symbol=$Symbol", "Period=$Period")
-    $arguments = @("/config:`"$ini`"")
+    $arguments = @((Format-RdPathArg '/config:' $iniArg))
 } else {
     $trades = if ($algo -eq 1) { 'true' } else { 'false' }
     $lines = @("Login=$Login", "Server=$Server", 'ExpertsEnable=true', "ExpertsTrades=$trades", 'ExpertsDllImport=false',
                'Expert=RiskDesk', "ExpertParameters=$setName", "Symbol=$Symbol", "Period=$Period")
-    $arguments = @("`"$ini`"")
+    $arguments = @((Format-RdPathArg '' $iniArg))
 }
 [IO.File]::WriteAllText($ini, (($lines -join "`r`n") + "`r`n"), [Text.Encoding]::ASCII)
 
 #--- window captures on request: ChartScreenShot does not draw terminal overlays such as
 #--- the One-Click Trading panel, so the self-test asks for a capture of the real window
 #--- (PrintWindow, also when the window is covered) by writing uitest\capture.request.
+#--- Windows only: under Wine the request is answered without a capture.
+if ($RdOnWindows) {
 Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @"
 using System;
 using System.Drawing;
@@ -205,6 +221,7 @@ public static class RdWindowCapture {
     }
 }
 "@
+}
 if (-not (Test-Path -LiteralPath $OutDir)) { New-Item -ItemType Directory -Path $OutDir -Force | Out-Null }
 $captureRequest = Join-Path $testDir 'capture.request'
 Remove-Item -LiteralPath $captureRequest -Force -ErrorAction SilentlyContinue
@@ -236,32 +253,36 @@ $started = (Get-Date).AddSeconds(-1)
 $found = $null
 $proc = $null
 try {
-    $proc = Start-Process -FilePath $exe -ArgumentList $arguments -PassThru
+    $proc = Start-RdProgram $exe $arguments $wine
     $deadline = (Get-Date).AddSeconds($TimeoutSec)
     while ((Get-Date) -lt $deadline) {
         $found = Get-FreshReport $started
-        if ($found -or $proc.HasExited) { break }
+        if ($found -or -not (Test-RdProgramRunning $proc $exe)) { break }
         if (Test-Path -LiteralPath $captureRequest) {
             $name = ([string](Get-Content -LiteralPath $captureRequest -TotalCount 1)).Trim()
-            $proc.Refresh()
-            $png = Join-Path $OutDir "${tag}_${Login}_window_$name.png"
-            if ([RdWindowCapture]::Save($proc.MainWindowHandle, $png)) { Write-Host "SHOT  window $png" }
-            else { Write-Host "WARN  window capture '$name' failed" }
+            if ($RdOnWindows) {
+                $proc.Refresh()
+                $png = Join-Path $OutDir "${tag}_${Login}_window_$name.png"
+                if ([RdWindowCapture]::Save($proc.MainWindowHandle, $png)) { Write-Host "SHOT  window $png" }
+                else { Write-Host "WARN  window capture '$name' failed" }
+            } else {
+                Write-Host "NOTE  window capture '$name' skipped (Windows only)"
+            }
             Remove-Item -LiteralPath $captureRequest -Force -ErrorAction SilentlyContinue
         }
         Start-Sleep -Milliseconds 500
     }
-    if (-not $proc.WaitForExit(30000)) {
+    if (-not (Wait-RdProgramExit $proc $exe 30000)) {
         Write-Host "WARN  the terminal did not close itself; closing its window"
-        $null = $proc.CloseMainWindow()
-        if (-not $proc.WaitForExit(30000)) {
+        Close-RdProgram $proc $exe $wine
+        if (-not (Wait-RdProgramExit $proc $exe 30000)) {
             Write-Host "WARN  terminal (pid $($proc.Id)) did not close; stopping it"
-            Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+            Stop-RdProgram $proc $exe $wine
         }
     }
     if (-not $found) { $found = Get-FreshReport $started }
 } finally {
-    if ($proc -and -not $proc.HasExited) { $null = $proc.WaitForExit(30000) }
+    if ($proc) { $null = Wait-RdProgramExit $proc $exe 30000 }
     Restore-ChartProfile $profileSnap
     Remove-Item -LiteralPath $ini -Force -ErrorAction SilentlyContinue
     foreach ($f in $setFiles) { Remove-Item -LiteralPath $f -Force -ErrorAction SilentlyContinue }
@@ -273,11 +294,11 @@ if (-not $found) {
     if ($ranFor -lt $TimeoutSec) {
         # seen on 2026-11-12: MT5 updated itself at the start, exited, and the updater restarted it
         # without the startup configuration (logged into the terminal's own account, no self-test)
-        Write-Host "FAIL  the terminal exited after $ranFor s without $reportName. If its journal ($data\logs) shows 'LiveUpdate' and 'cannot load config', MetaTrader updated itself: close the restarted terminal and run again"
-        $again = @(Get-Process -ErrorAction SilentlyContinue | Where-Object { try { $_.Path -and ($_.Path -ieq $exe) } catch { $false } })
+        Write-Host "FAIL  the terminal exited after $ranFor s without $reportName. If its journal ($data/logs) shows 'LiveUpdate' and 'cannot load config', MetaTrader updated itself: close the restarted terminal and run again"
+        $again = @(Get-RdProgramProcesses $exe)
         if ($again.Count -gt 0) { Write-Host "NOTE  $exe is running again (pid $($again[0].Id))" }
     } else {
-        Write-Host "FAIL  no fresh $reportName within $TimeoutSec s. Is a DEBUG build installed? Check the login and $mql\Logs in $data"
+        Write-Host "FAIL  no fresh $reportName within $TimeoutSec s. Is a DEBUG build installed? Check the login and $mql/Logs in $data"
     }
     exit 1
 }
