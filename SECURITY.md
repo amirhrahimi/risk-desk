@@ -4,7 +4,8 @@
 
 | Version | Supported |
 |---|---|
-| 1.8.0 | yes |
+| 1.8.1 | yes |
+| 1.8.0 | no (update to 1.8.1) |
 | 1.8.0 release candidates and 1.7.x (pre-releases) | no |
 | internal builds before 1.7.0 | no |
 

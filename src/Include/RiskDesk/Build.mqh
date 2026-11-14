@@ -28,8 +28,8 @@
 
 #define RD_PRODUCT       "RiskDesk"          // identifier: file, log and folder names, log tags
 #define RD_PRODUCT_NAME  "Risk Desk"         // the name the user reads: panel, dialogs, messages, tooltips
-#define RD_VERSION       "1.8.0"
-#define RD_VERSION_PROP  "1.80"
+#define RD_VERSION       "1.8.1"
+#define RD_VERSION_PROP  "1.81"
 #define RD_COPYRIGHT     "Copyright 2026, Amir Rahimi (MIT licence)"
 #define RD_LINK          "https://github.com/amirhrahimi/risk-desk"
 
