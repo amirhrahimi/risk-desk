@@ -37,3 +37,5 @@ Read only the ADRs a task names or touches; the titles below say what each one d
 | [ADR-029](adr/ADR-029-open-source-publication.md) | Open-source publication: MIT licence, attribution, docs layout, redacted reports, version 1.7.0 |
 | [ADR-030](adr/ADR-030-releases-from-ci.md) | Releases are built and published by CI: MT4+MT5 build on every pull request and push, versioned release or development build on `main` |
 | [ADR-031](adr/ADR-031-fault-injection-for-the-safety-paths.md) | Fault injection for the safety paths (T-29, T-35, BC-06 fallback) driven by the `safety` self-test suite; BC-14 ignores trades that existed before the request |
+| [ADR-032](adr/ADR-032-development-on-macos-and-linux.md) | Development on macOS and Linux: the build scripts run on PowerShell 7 and start MetaEditor and the terminals under Wine (`build/host.ps1`); `test-build-scripts.ps1` checked on Linux, macOS and Windows by CI |
+| [ADR-033](adr/ADR-033-ci-builds-on-linux-under-wine.md) | CI builds on `ubuntu-latest` with MetaEditor under Wine (`build/install-metatrader-wine.sh`, pinned WineHQ version, `build.ps1`); replaces the Windows runner of ADR-030 |

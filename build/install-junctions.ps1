@@ -9,6 +9,9 @@
         MQLx\Scripts\RiskDesk  ->  <repo>\src\Scripts\RiskDesk
         MQLx\Include\RiskDesk  ->  <repo>\src\Include\RiskDesk
 
+    On macOS and Linux (PowerShell 7, terminals under Wine) they are symbolic
+    links; Wine shows them to MetaTrader as ordinary folders (ADR-032).
+
     The EA is not linked: it sits in the root of MQLx\Experts (no sub-folder in
     the Navigator), and build.ps1 copies the compiled RiskDesk.ex4/.ex5 there.
     The former MQLx\Experts\RiskDesk junction to this repository is removed.
@@ -17,7 +20,7 @@
     already point to the repo are left alone, links pointing elsewhere are
     re-pointed. A real folder that already exists with files in it is never
     touched: the script reports it and you move it away yourself.
-    Junctions need no administrator rights.
+    Junctions and symbolic links need no administrator rights.
 
 .PARAMETER Uninstall
     Removes the junctions that point to this repository (only those).
@@ -32,6 +35,7 @@
     powershell -ExecutionPolicy Bypass -File build/install-junctions.ps1
     powershell -ExecutionPolicy Bypass -File build/install-junctions.ps1 -DryRun
     powershell -ExecutionPolicy Bypass -File build/install-junctions.ps1 -Uninstall
+    pwsh build/install-junctions.ps1          (macOS / Linux)
 #>
 param(
     [switch]$Uninstall,
@@ -42,13 +46,17 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2.0
 
-$RepoRoot = Split-Path -Parent $PSScriptRoot
+. (Join-Path $PSScriptRoot 'host.ps1')
+
+$RepoRoot = Get-RdFullPath (Split-Path -Parent $PSScriptRoot)
 if (-not $PathsFile) { $PathsFile = Join-Path $PSScriptRoot 'paths.local.ps1' }
 
 $Links = @(
-    @{ Sub = 'Scripts\RiskDesk'; Source = 'src\Scripts\RiskDesk' }
-    @{ Sub = 'Include\RiskDesk'; Source = 'src\Include\RiskDesk' }
+    @{ Sub = 'Scripts/RiskDesk'; Source = 'src/Scripts/RiskDesk' }
+    @{ Sub = 'Include/RiskDesk'; Source = 'src/Include/RiskDesk' }
 )
+$LinkKind = 'junction'
+if (-not $RdOnWindows) { $LinkKind = 'symbolic link' }
 
 function Write-Action([string]$action, [string]$text) {
     $color = 'Gray'
@@ -60,10 +68,13 @@ function Write-Action([string]$action, [string]$text) {
     Write-Host $text
 }
 
+# Comparable form of a path: full, no trailing separator; lower case on Windows only.
 function Get-NormalizedPath([string]$path) {
     $p = $path
     if ($p.StartsWith('\??\')) { $p = $p.Substring(4) }
-    return ([IO.Path]::GetFullPath($p)).TrimEnd('\').ToLowerInvariant()
+    $p = ([IO.Path]::GetFullPath($p)).TrimEnd('\', '/')
+    if ($RdOnWindows) { $p = $p.ToLowerInvariant() }
+    return $p
 }
 
 # Target of a junction/symlink, or $null for a normal folder.
@@ -72,12 +83,21 @@ function Get-LinkTarget([string]$path) {
     if (-not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) { return $null }
     $target = @($item.Target) | Select-Object -First 1
     if (-not $target) { return '' }
-    return [string]$target
+    $target = [string]$target
+    # a relative symbolic link is relative to the folder that holds it
+    if (-not $RdOnWindows -and -not [IO.Path]::IsPathRooted($target)) { $target = Join-Path (Split-Path -Parent $item.FullName) $target }
+    return $target
 }
 
-# Removes the junction itself, never the folder it points to.
+# Removes the junction / symbolic link itself, never the folder it points to.
 function Remove-Junction([string]$path) {
-    [IO.Directory]::Delete($path, $false)
+    if ($RdOnWindows) { [IO.Directory]::Delete($path, $false) }
+    else { [IO.File]::Delete($path) }   # unlink: removes the link only
+}
+
+function New-DirLink([string]$path, [string]$target) {
+    if ($RdOnWindows) { New-Item -ItemType Junction -Path $path -Value $target | Out-Null }
+    else { New-Item -ItemType SymbolicLink -Path $path -Value $target | Out-Null }
 }
 
 if (-not (Test-Path -LiteralPath $PathsFile)) {
@@ -106,14 +126,14 @@ foreach ($l in $Links) {
 $mode = 'install'
 if ($Uninstall) { $mode = 'uninstall' }
 if ($DryRun) { $mode += ' (dry run, nothing is changed)' }
-Write-Host "RiskDesk junctions - $mode"
+Write-Host "RiskDesk links ($LinkKind) - $mode"
 Write-Host "Repository: $RepoRoot"
 $problems = 0
 
 foreach ($t in $Terminals) {
     $name = [string]$t.Name
     $platform = ([string]$t.Platform).ToLowerInvariant()
-    $data = [string]$t.DataPath
+    $data = Expand-RdHome ([string]$t.DataPath)
     Write-Host ''
     Write-Host "$name  [$platform]  $data"
 
@@ -124,7 +144,7 @@ foreach ($t in $Terminals) {
         $problems++
         continue
     }
-    $mqlDir = Join-Path $data $mql
+    $mqlDir = Join-RdPath $data $mql
     if (-not (Test-Path -LiteralPath $mqlDir)) {
         Write-Action 'ERROR' "$mqlDir not found. DataPath must be the folder that contains $mql (File > Open Data Folder)."
         $problems++
@@ -132,25 +152,26 @@ foreach ($t in $Terminals) {
     }
 
     # Former EA folder junction (the EA now sits in the Experts root, copied by build.ps1).
-    $old = Join-Path $mqlDir 'Experts\RiskDesk'
+    $old = Join-RdPath $mqlDir 'Experts/RiskDesk'
     if (Test-Path -LiteralPath $old) {
         $current = Get-LinkTarget $old
-        if ($current -and (Get-NormalizedPath $current).StartsWith((Get-NormalizedPath $RepoRoot) + '\')) {
-            if ($DryRun) { Write-Action 'would' "remove obsolete junction $mql\Experts\RiskDesk" }
-            else { Remove-Junction $old; Write-Action 'removed' "$mql\Experts\RiskDesk (obsolete: the EA is now $mql\Experts\RiskDesk.ex$($mql.Substring(3)), copied by build.ps1)" }
+        if ($current -and (Get-NormalizedPath $current).StartsWith((Get-NormalizedPath $RepoRoot) + [IO.Path]::DirectorySeparatorChar)) {
+            if ($DryRun) { Write-Action 'would' "remove obsolete $LinkKind $mql/Experts/RiskDesk" }
+            else { Remove-Junction $old; Write-Action 'removed' "$mql/Experts/RiskDesk (obsolete: the EA is now $mql/Experts/RiskDesk.ex$($mql.Substring(3)), copied by build.ps1)" }
         }
     }
 
     foreach ($l in $Links) {
-        $link = Join-Path $mqlDir $l.Sub
+        $link = Join-RdPath $mqlDir $l.Sub
         $target = Join-Path $RepoRoot $l.Source
-        $shown = "$mql\$($l.Sub)"
-        $exists = Test-Path -LiteralPath $link
+        $shown = "$mql/$($l.Sub)"
+        # a link whose target is gone counts as existing (Test-Path follows the link)
+        $exists = (Test-Path -LiteralPath $link) -or ($null -ne (Get-Item -LiteralPath $link -Force -ErrorAction SilentlyContinue))
 
         if ($Uninstall) {
             if (-not $exists) { Write-Action 'absent' $shown; continue }
             $current = Get-LinkTarget $link
-            if ($null -eq $current) { Write-Action 'SKIPPED' "$shown is a real folder, not a RiskDesk junction"; $problems++; continue }
+            if ($null -eq $current) { Write-Action 'SKIPPED' "$shown is a real folder, not a RiskDesk $LinkKind"; $problems++; continue }
             if ((Get-NormalizedPath $current) -ne (Get-NormalizedPath $target)) {
                 Write-Action 'SKIPPED' "$shown points to $current, not to this repository"
                 continue
@@ -170,7 +191,7 @@ foreach ($t in $Terminals) {
                     $problems++
                     continue
                 }
-                if ($DryRun) { Write-Action 'would' "replace empty folder $shown with a junction to $target"; continue }
+                if ($DryRun) { Write-Action 'would' "replace empty folder $shown with a $LinkKind to $target"; continue }
                 Remove-Item -LiteralPath $link -Force
             }
             elseif ((Get-NormalizedPath $current) -eq (Get-NormalizedPath $target)) {
@@ -180,7 +201,7 @@ foreach ($t in $Terminals) {
             else {
                 if ($DryRun) { Write-Action 'would' "re-point $shown from $current to $target"; continue }
                 Remove-Junction $link
-                New-Item -ItemType Junction -Path $link -Value $target | Out-Null
+                New-DirLink $link $target
                 Write-Action 'relinked' "$shown -> $target (was $current)"
                 continue
             }
@@ -189,7 +210,7 @@ foreach ($t in $Terminals) {
         $parent = Split-Path -Parent $link
         if ($DryRun) { Write-Action 'would' "link $shown -> $target"; continue }
         if (-not (Test-Path -LiteralPath $parent)) { New-Item -ItemType Directory -Path $parent | Out-Null }
-        New-Item -ItemType Junction -Path $link -Value $target | Out-Null
+        New-DirLink $link $target
         Write-Action 'created' "$shown -> $target"
     }
 }

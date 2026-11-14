@@ -5,7 +5,8 @@
 .DESCRIPTION
     Compiles each .mq4 under src/Experts and src/Scripts with the MT4 MetaEditor
     and each .mq5 with the MT5 MetaEditor (paths from build/paths.local.ps1),
-    using MetaEditor's /compile and /log switches. MetaEditor's exit code is
+    using MetaEditor's /compile and /log switches. On macOS and Linux
+    (PowerShell 7) MetaEditor runs under Wine (build/host.ps1, ADR-032). MetaEditor's exit code is
     meaningless, so the result is read from the .log file it writes next to the
     source (UTF-16 or UTF-8; decoded here). Prints one line per file and a summary.
     Exit code 0 only when every file compiled with 0 errors and 0 warnings.
@@ -13,7 +14,8 @@
     The EA (src/Experts/RiskDesk.mq4/.mq5) is then copied into the root of
     MQLx\Experts of every terminal of that platform in $Terminals, so the
     Navigator shows it without a sub-folder. Scripts and includes reach the
-    terminals through the junctions of install-junctions.ps1.
+    terminals through the junctions (macOS / Linux: symbolic links) of
+    install-junctions.ps1.
 
     -Debug builds with RD_TEST_HOOKS: MetaEditor has no command-line define, so
     the script un-comments '//#define RD_TEST_HOOKS' in
@@ -32,26 +34,33 @@
 .PARAMETER TimeoutSec
     Maximum time for one compile. Default 180.
 
+.PARAMETER PathsFile
+    Alternative paths file (default build/paths.local.ps1).
+
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File build/build.ps1
     powershell -ExecutionPolicy Bypass -File build/build.ps1 -Target mt5
     powershell -ExecutionPolicy Bypass -File build/build.ps1 -Debug
+    pwsh build/build.ps1                      (macOS / Linux)
 #>
 param(
     [ValidateSet('mt4', 'mt5', 'all')]
     [string]$Target = 'all',
     [switch]$Debug,
-    [int]$TimeoutSec = 180
+    [int]$TimeoutSec = 180,
+    [string]$PathsFile = ''
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2.0
 
+. (Join-Path $PSScriptRoot 'host.ps1')
+
 $RepoRoot  = Split-Path -Parent $PSScriptRoot
-$PathsFile = Join-Path $PSScriptRoot 'paths.local.ps1'
-$BuildMqh  = Join-Path $RepoRoot 'src\Include\RiskDesk\Build.mqh'
-$ExpertsDir = Join-Path $RepoRoot 'src\Experts'
-$SrcDirs   = @($ExpertsDir, (Join-Path $RepoRoot 'src\Scripts'))
+if (-not $PathsFile) { $PathsFile = Join-Path $PSScriptRoot 'paths.local.ps1' }
+$BuildMqh  = Get-RdFullPath (Join-Path $RepoRoot 'src/Include/RiskDesk/Build.mqh')
+$ExpertsDir = Get-RdFullPath (Join-Path $RepoRoot 'src/Experts')
+$SrcDirs   = @($ExpertsDir, (Get-RdFullPath (Join-Path $RepoRoot 'src/Scripts')))
 
 function Write-Status([string]$status, [string]$text) {
     $color = 'Gray'
@@ -64,7 +73,7 @@ function Write-Status([string]$status, [string]$text) {
 
 function Get-RelativePath([string]$path) {
     if ($path.StartsWith($RepoRoot, [StringComparison]::OrdinalIgnoreCase)) {
-        return $path.Substring($RepoRoot.Length).TrimStart('\')
+        return $path.Substring($RepoRoot.Length).TrimStart('\', '/')
     }
     return $path
 }
@@ -87,7 +96,7 @@ function Read-CompileLog([string]$path) {
     return [Text.Encoding]::Default.GetString($bytes)
 }
 
-function Invoke-Compile([string]$platform, [string]$editor, [string]$file) {
+function Invoke-Compile([string]$platform, [string]$editor, [string]$wine, [string]$file) {
     $log = [IO.Path]::ChangeExtension($file, '.log')
     $outExt = '.ex5'
     if ($platform -eq 'mt4') { $outExt = '.ex4' }
@@ -101,12 +110,31 @@ function Invoke-Compile([string]$platform, [string]$editor, [string]$file) {
         Ok = $false; Note = ''; Issues = @()
     }
 
+    # Windows: the path itself. Wine: Z:\<path> (C:\... inside the prefix); the log
+    # then names the files in that form, which is cut from the issue lines below.
+    $prefix = Get-RdWinePrefix $editor
+    $winFile = ConvertTo-RdWinPath $file $prefix
+    $winRoot = ConvertTo-RdWinPath $RepoRoot $prefix
     $watch = [Diagnostics.Stopwatch]::StartNew()
-    $proc = Start-Process -FilePath $editor -ArgumentList @("/compile:`"$file`"", '/log') -PassThru -WindowStyle Hidden
+    $proc = Start-RdProgram $editor @((Format-RdPathArg '/compile:' $winFile), '/log') $wine -Hidden
     if (-not $proc.WaitForExit($TimeoutSec * 1000)) {
         try { $proc.Kill() } catch { }
         $result.Note = "MetaEditor did not finish within $TimeoutSec s"
         return $result
+    }
+    # Wine: in case the process started was only a launcher, wait until the log is complete
+    if (-not $RdOnWindows) {
+        $lastSize = -1
+        while ($watch.Elapsed.TotalSeconds -lt $TimeoutSec) {
+            if (Test-Path -LiteralPath $log) {
+                $size = (Get-Item -LiteralPath $log).Length
+                if ($size -gt 0 -and $size -eq $lastSize) { break }
+                $lastSize = $size
+            } elseif (@(Get-RdProgramProcesses $editor).Count -eq 0) {
+                break
+            }
+            Start-Sleep -Milliseconds 500
+        }
     }
     $watch.Stop()
 
@@ -123,8 +151,10 @@ function Invoke-Compile([string]$platform, [string]$editor, [string]$file) {
     $last = $found[$found.Count - 1]
     $result.Errors = [int]$last.Groups[1].Value
     $result.Warnings = [int]$last.Groups[2].Value
+    $rootPattern = '(?i)(' + [regex]::Escape($RepoRoot.TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar) + '|' +
+                   [regex]::Escape($winRoot.TrimEnd('\') + '\') + ')'
     $result.Issues = @($text -split "`r?`n" | Where-Object { $_ -match ':\s*(error|warning)\s+\d+\s*:' } |
-        ForEach-Object { $_.Replace($RepoRoot + '\', '').Trim() })
+        ForEach-Object { ($_ -replace $rootPattern, '').Trim() })
 
     $after = [datetime]::MinValue
     if (Test-Path -LiteralPath $out) { $after = (Get-Item -LiteralPath $out).LastWriteTimeUtc }
@@ -148,7 +178,7 @@ function Install-Expert([string]$platform, [string]$source) {
     $failed = 0
     foreach ($t in @($Terminals)) {
         if (([string]$t.Platform).ToLowerInvariant() -ne $platform) { continue }
-        $dir = Join-Path ([string]$t.DataPath) "$mql\Experts"
+        $dir = Join-RdPath (Expand-RdHome ([string]$t.DataPath)) "$mql/Experts"
         if (-not (Test-Path -LiteralPath $dir)) {
             Write-Status 'FAIL' "$platform  install $name - $dir not found"
             $failed++
@@ -156,7 +186,7 @@ function Install-Expert([string]$platform, [string]$source) {
         }
         try {
             Copy-Item -LiteralPath $built -Destination (Join-Path $dir $name) -Force
-            Write-Status 'INFO' "$platform  installed $mql\Experts\$name  ($($t.Name))"
+            Write-Status 'INFO' "$platform  installed $mql/Experts/$name  ($($t.Name))"
         } catch {
             Write-Status 'FAIL' "$platform  install $name into $dir - $($_.Exception.Message)"
             $failed++
@@ -172,8 +202,12 @@ if (-not (Test-Path -LiteralPath $PathsFile)) {
 }
 $MetaEditor4 = $null
 $MetaEditor5 = $null
+$Wine4 = $null
+$Wine5 = $null
 $Terminals = @()
 . $PathsFile
+$MetaEditor4 = Resolve-RdFile $MetaEditor4
+$MetaEditor5 = Resolve-RdFile $MetaEditor5
 
 if (-not (Test-Path -LiteralPath $BuildMqh)) {
     Write-Status 'FAIL' "missing $(Get-RelativePath $BuildMqh)"
@@ -211,7 +245,8 @@ try {
         $editor = $MetaEditor5
         $ext = '.mq5'
         $var = '$MetaEditor5'
-        if ($platform -eq 'mt4') { $editor = $MetaEditor4; $ext = '.mq4'; $var = '$MetaEditor4' }
+        $wineSetting = $Wine5
+        if ($platform -eq 'mt4') { $editor = $MetaEditor4; $ext = '.mq4'; $var = '$MetaEditor4'; $wineSetting = $Wine4 }
 
         $files = @(Get-ChildItem -Path $SrcDirs -Recurse -File -ErrorAction SilentlyContinue |
             Where-Object { $_.Extension -eq $ext } | Sort-Object FullName)
@@ -225,9 +260,22 @@ try {
             $failures++
             continue
         }
+        $wine = $null
+        if (-not $RdOnWindows) {
+            $wine = Find-RdWine $platform $wineSetting
+            if (-not $wine) {
+                Write-Status 'FAIL' "$platform  $(Get-RdWineHint $platform) ($($files.Count) files not compiled)"
+                $failures++
+                continue
+            }
+            Write-Status 'INFO' "$platform  MetaEditor under Wine: $wine (prefix $(Get-RdWinePrefix $editor))"
+            if ($RepoRoot.Contains(' ')) {
+                Write-Status 'WARN' "$platform  the repository path contains a space; MetaEditor under Wine may not find the files. Clone it to a path without spaces."
+            }
+        }
 
         foreach ($f in $files) {
-            $r = Invoke-Compile $platform $editor $f.FullName
+            $r = Invoke-Compile $platform $editor $wine $f.FullName
             $results.Add($r)
             if ($r.Errors -ge 0) {
                 $summary = '{0} errors, {1} warnings' -f $r.Errors, $r.Warnings
