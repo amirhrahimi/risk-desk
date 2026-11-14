@@ -23,6 +23,8 @@ You need Git, PowerShell and at least one MetaTrader 4 and one MetaTrader 5 term
 
 On macOS and Linux the build scripts start MetaEditor and the terminals through Wine ([ADR-032](docs/design/adr/ADR-032-development-on-macos-and-linux.md)). Clone the repository to a path **without spaces**, and run each command below as `pwsh build/<script>.ps1 ...` instead of `powershell -ExecutionPolicy Bypass -File build/<script>.ps1 ...`.
 
+On Debian or Ubuntu, `bash build/install-metatrader-wine.sh --install-wine --paths-file build/paths.local.ps1` sets up what CI uses: WineHQ's Wine 11.21, MT4 and MT5 in the prefix `~/.wine-riskdesk`, and a paths file with the MetaEditor paths. Start each terminal once and log in to a demo account, then add its install folder to `$Terminals` in that file (`--help` lists the options).
+
 Before the first build, start the terminal and MetaEditor once by hand, and again after installing or updating Wine. Wine's own first-run prompts (installing Mono or Gecko) would otherwise block the unattended start. If either program says **"A debugger has been found running in your system"**, MetaTrader refuses that Wine version, and MetaEditor would wait behind the message until the build's timeout. On Linux, WineHQ's Wine 11.21 worked with the prefix set to Windows 11 (`WINEPREFIX=~/.mt5 winecfg -v win11`). Ubuntu 24.04's own Wine 9.0 and WineHQ's Wine 10.0 did not.
 
 1. Fork and clone the repository.
@@ -97,7 +99,7 @@ The layout, the build and the specifications are described in [docs/architecture
 
 Releases are built and published by GitHub Actions ([.github/workflows/build.yml](.github/workflows/build.yml)); binaries are never committed.
 
-- **Every pull request and push** compiles the eight targets with MetaEditor 4 and 5 (0 errors, 0 warnings) and attaches the package to the workflow run, so reviewers can download and try it on a demo account.
+- **Every pull request and push** compiles the eight targets with MetaEditor 4 and 5 (0 errors, 0 warnings) and attaches the package to the workflow run, so reviewers can download and try it on a demo account. The build runs on a Linux runner with MetaEditor under Wine (`build/install-metatrader-wine.sh`, then `build/build.ps1`; [ADR-033](docs/design/adr/ADR-033-ci-builds-on-linux-under-wine.md)).
 - **A new version:** maintainers bump `RD_VERSION` and `RD_VERSION_PROP` in `src/Include/RiskDesk/Build.mqh` and move the `[Unreleased]` notes in `CHANGELOG.md` to a `## [x.y.z]` section, in one pull request (`build.ps1` and CI fail when the two version values don't match, for example `1.8.0` with `"1.70"`). When it is merged, the workflow creates release `vx.y.z` with `RiskDesk-x.y.z.zip`, its `.sha256.txt` and the CHANGELOG section as notes. Following [SemVer](https://semver.org/), a version with a pre-release part such as `1.8.0-rc.1` is published as a pre-release (`RD_VERSION_PROP` stays `"1.80"`: MetaTrader's `#property version` has no room for a suffix).
 - **Any other push to `main`** replaces the *Development build* pre-release (tag `dev`) with a build of that commit. It is untested.
 - Builds that are not a release carry their commit in the version they report (SemVer build metadata, set on the runner only): `1.7.0+dev.abc1234` for a development build, `1.7.0+pr.12.abc1234` for pull request 12. A bug report then shows exactly which build was used.

@@ -190,11 +190,19 @@ function Start-RdProgram([string]$exe, [string[]]$arguments, [string]$wine, [swi
     $psi = New-Object Diagnostics.ProcessStartInfo
     $psi.FileName = $wine
     $psi.UseShellExecute = $false
+    # Wine's output goes to a pipe of this script, not to its console: the wineserver that Wine
+    # starts inherits the output and outlives the program, and would keep the console's pipe
+    # open (a CI step or "| tail" would then wait for it).
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
     $psi.ArgumentList.Add((ConvertTo-RdWinPath $exe $prefix))
     foreach ($a in @($arguments)) { if ($null -ne $a) { $psi.ArgumentList.Add([string]$a) } }
     $psi.Environment['WINEPREFIX'] = $prefix
     if (-not $env:WINEDEBUG) { $psi.Environment['WINEDEBUG'] = '-all' }
-    return [Diagnostics.Process]::Start($psi)
+    $p = [Diagnostics.Process]::Start($psi)
+    $null = $p.StandardOutput.ReadToEndAsync()   # drained, so Wine never blocks on a full pipe
+    $null = $p.StandardError.ReadToEndAsync()
+    return $p
 }
 
 # Runs a Wine built-in program (taskkill, ...) in a prefix and waits for it.

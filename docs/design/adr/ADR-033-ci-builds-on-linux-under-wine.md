@@ -1,0 +1,23 @@
+# ADR-033 CI builds on a Linux runner, with MetaEditor under Wine
+
+- **Context:** ADR-030 builds and publishes Risk Desk on a GitHub-hosted Windows runner, with its own compile loop written into the workflow. After ADR-032 the build scripts run on Linux with MetaEditor under Wine, and the owner wants the pipelines to run on `ubuntu-latest` instead of Windows (2026-11-14). MetaTrader refuses some Wine versions with "A debugger has been found running in your system" (ADR-032).
+- **Decision:**
+  - **Runner:** the `build` job of `.github/workflows/build.yml` runs on `ubuntu-latest`. The `release` job and `docs-links` already ran on Ubuntu.
+  - **Setup:** `build/install-metatrader-wine.sh --install-wine` sets up the runner. One script serves CI and Linux developers, and it can be run in a container to try a change before it reaches CI. It does the following:
+    - installs WineHQ's development Wine at the version pinned in the workflow (`WINE_VERSION`, 11.21) and Xvfb;
+    - creates one prefix set to Windows 11, with Wine's Mono and Gecko switched off so that no install prompt waits for a click;
+    - installs MT4 and MT5 with MetaQuotes' `mt4setup.exe /auto` and `mt5setup.exe /auto`, as the Windows job did;
+    - writes a paths file for `build.ps1`.
+  - **Compile:** `xvfb-run pwsh build/build.ps1 -PathsFile ...`, the same script as a local build. It replaces the compile loop that the workflow carried. It compiles every `.mq4`/`.mq5` under `src/Experts` and `src/Scripts` and fails on any error or warning, or when no new `.ex4`/`.ex5` was written.
+  - **Unchanged:** the version stamping, `package-release.ps1 -SkipBuild`, the artifacts, and the release rules of ADR-030.
+  - **The pinned Wine version changes only after a check.** Run the simulation below with the new version: all eight targets must compile, then set `WINE_VERSION`. The pin also makes a newer `ubuntu-latest` fail clearly when WineHQ offers no package of that version for its Ubuntu release: the step says so and names `apt-cache madison`.
+- **Consequences:**
+  - **Verified 2026-11-14** in a container built like the runner (Ubuntu 24.04, passwordless `sudo`, PowerShell 7, no Wine), running the job's steps:
+    - Wine 11.21 and both terminals installed from scratch.
+    - 8 of 8 targets compiled with 0 errors and 0 warnings, including MT4. No first start of the terminals was needed.
+    - The package was made.
+    - The job took about 4 minutes, against about 2 on Windows.
+    - The Wine-built binaries passed the unit tests in the owner's Windows terminals: MT4 build 1492 and MT5 build 6320, 842 passed each. A Wine-built debug EA passed the panel self-test on MT5.
+  - **Not verified on GitHub itself** until the first pull request with this workflow. Two things can only be seen there: the `i386` packages on the real runner image (preinstalled packages can conflict), and the download speed of MetaQuotes' servers. The pull request runs no release, so the first run is safe.
+  - **Releases depend on Wine.** If a MetaTrader update stops passing under the pinned Wine, the build fails, and it never publishes a broken build: the job stops before packaging. The fallback is the Windows job of ADR-030 from git history, a self-contained set of steps.
+  - `.github/workflows/scripts.yml` keeps its Windows and macOS runs. They test the build scripts where contributors use them (ADR-032), not the release build.

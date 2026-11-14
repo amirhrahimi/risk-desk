@@ -11,10 +11,11 @@ This page lists **plans, not commitments**. Order and scope can change; nothing 
 
 ## Development on macOS and Linux
 
-The build scripts run on macOS and Linux with PowerShell 7 and MetaTrader under Wine ([ADR-032](docs/design/adr/ADR-032-development-on-macos-and-linux.md)). On Linux, linking, the MT5 build and the headless unit tests are verified. Still to check:
+The build scripts run on macOS and Linux with PowerShell 7 and MetaTrader under Wine ([ADR-032](docs/design/adr/ADR-032-development-on-macos-and-linux.md)). On Linux, linking, the MT4 and MT5 builds and the MT5 headless unit tests are verified, and CI builds there ([ADR-033](docs/design/adr/ADR-033-ci-builds-on-linux-under-wine.md)). Still to check:
 
+- The first CI run on GitHub's Linux runner (a pull request; no release).
 - MetaQuotes' MetaTrader 5 app on a Mac: the Wine the scripts find, `install-junctions.ps1`, `build.ps1` and `run-tests.ps1`.
-- MT4 under Wine on Linux and macOS: links, compile, `run-tests.ps1`.
+- MT4's `run-tests.ps1` under Wine.
 - `run-script.ps1` and `run-uitest.ps1` against a logged-in demo account under Wine.
 
 ## Broader broker coverage
