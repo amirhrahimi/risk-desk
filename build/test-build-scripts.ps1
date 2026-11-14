@@ -20,7 +20,9 @@
          when no MetaEditor is configured;
       7. package-release.ps1 -SkipBuild lays out the zip with '/' in every
          entry name. Needs the compiled .ex4/.ex5 in src/; with -FakeBinaries
-         (CI) placeholders are written there for the check and removed again.
+         (CI) placeholders are written there for the check and removed again;
+      8. publish-wiki.ps1 writes every wiki page, with no relative link left
+         (nothing is published).
 
     Exit code 0 when every check passes.
 
@@ -176,6 +178,23 @@ try {
         foreach ($a in $absent) { Write-Host "        missing entry $a" }
         foreach ($s in $slashes) { Write-Host "        backslash in entry $s" }
     }
+
+    #--- 8. publish-wiki (pages only)
+    $wiki = Join-Path $Temp 'wiki'
+    $r = Invoke-BuildScript 'publish-wiki.ps1' @('-OutDir', $wiki, '-Repo', 'owner/repo')
+    $pages = @(Get-ChildItem -LiteralPath $wiki -Filter '*.md' -File -ErrorAction SilentlyContinue)
+    $names = @($pages | ForEach-Object { $_.Name })
+    $absent = @(@('Home.md', 'Installation.md', 'Configuration.md', '_Sidebar.md', '_Footer.md') | Where-Object { $names -notcontains $_ })
+    $relative = @()
+    foreach ($p in $pages) {
+        foreach ($m in [regex]::Matches([IO.File]::ReadAllText($p.FullName), '\]\(([^)\s]+)')) {
+            if ($m.Groups[1].Value -notmatch '^(#|https?:|mailto:)') { $relative += "$($p.Name): $($m.Groups[1].Value)" }
+        }
+    }
+    Write-Check ($r.Code -eq 0 -and $absent.Count -eq 0 -and $relative.Count -eq 0) "publish-wiki.ps1: $($pages.Count) wiki files, no relative links"
+    if ($r.Code -ne 0) { Show-Output $r.Out }
+    foreach ($a in $absent) { Write-Host "        missing page $a" }
+    foreach ($l in $relative) { Write-Host "        relative link in $l" }
 } finally {
     foreach ($f in $fakes) { Remove-Item -LiteralPath $f -Force -ErrorAction SilentlyContinue }
     # Links first, on their own: Remove-Item -Recurse of Windows PowerShell 5.1 can follow a

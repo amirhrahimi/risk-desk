@@ -1,0 +1,40 @@
+# Publishes the GitHub wiki from README.md, docs/*.md and ROADMAP.md (ADR-035): build/publish-wiki.ps1
+# rewrites the links for the wiki and replaces all of its pages. The wiki is never edited by hand;
+# a page changed there is overwritten by the next run. Pull requests publish nothing: the scripts
+# workflow checks the generated pages (build/test-build-scripts.ps1).
+name: wiki
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'README.md'
+      - 'ROADMAP.md'
+      - 'docs/*.md'
+      - 'build/publish-wiki.ps1'
+      - '.github/workflows/wiki.yml'
+
+# contents: write lets GITHUB_TOKEN push to the wiki repository.
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki
+  cancel-in-progress: false
+
+jobs:
+  wiki:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Publish the wiki
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          ./build/publish-wiki.ps1 -Publish

@@ -11,6 +11,7 @@ The EA and the scripts are unchanged; this concerns developing Risk Desk.
 - `build/test-build-scripts.ps1` checks the build scripts without MetaTrader, and the `scripts` workflow runs it on Linux, macOS and Windows.
 - `build.ps1 -PathsFile` and `package-release.ps1 -OutDir`.
 - `build/install-metatrader-wine.sh` installs Wine and MetaTrader 4 and 5 into one Wine prefix on Debian or Ubuntu, for CI and for development.
+- A [GitHub wiki](https://github.com/amirhrahimi/risk-desk/wiki) with the user documentation. It is generated from `README.md`, `docs/*.md` and `ROADMAP.md` by `build/publish-wiki.ps1`, and the `wiki` workflow republishes it on every push to `main` that changes them (ADR-035).
 
 ### Changed
 - CI builds Risk Desk twice on every pull request and push, both times with `build.ps1`, the same script as a local build: on a Windows runner, whose files are released as before, and on a Linux runner (`ubuntu-24.04`) with MetaEditor under Wine, the way macOS and Linux contributors build (ADR-033, ADR-034). A failed Linux build does not hold back a release. The release rules are unchanged.
