@@ -15,7 +15,7 @@ It is a clean-room reimplementation of the *behaviour* described in the public u
 
 It is a manual-trading tool. It never opens, modifies or closes anything unless the user clicks a button or drops a dragged line of a placed pending order (ADR-014).
 
-The project is public and MIT-licensed (`LICENSE`, ADR-029). 1.7.0 was the first pre-release and 1.8.0-rc.1 is the release candidate; 1.8.0 is the first stable release, after the hardening work in `ROADMAP.md`.
+The project is public and MIT-licensed (`LICENSE`, ADR-029). 1.7.0 was the first pre-release and 1.8.0-rc.1 the release candidate; 1.8.0 is the first stable release. The test work left over from it is in `ROADMAP.md`.
 
 ## 2. Read order (source of truth = `docs/design/`)
 
@@ -29,7 +29,7 @@ The project is public and MIT-licensed (`LICENSE`, ADR-029). 1.7.0 was the first
 | 6 | `docs/design/06-trade-operations.md` | Algorithm for every button (OP-xx) |
 | 7 | `docs/design/07-settings.md` | Every input parameter and its default |
 | 8 | `docs/design/08-testing.md` | Unit tests, BrokerProbe, demo test matrix (T-xx) |
-| 9 | `ROADMAP.md` | Planned work: P8 hardening, the 1.8.0 release, backlog |
+| 9 | `ROADMAP.md` | Planned work: the test work left over from 1.8.0, broker coverage, backlog |
 | 10 | `docs/design/10-decisions.md` | Index of the ADRs (one file each in `docs/design/adr/`): why things are the way they are |
 | 11 | `docs/design/11-open-questions.md` | Open questions, the owner's answers as decisions (Q-xx), assumed details (D-xx) |
 | - | `broker-profiles/SUMMARY.md` | Account and test-symbol properties of every demo account, generated from the BrokerProbe/GatewaySmoke reports beside it |

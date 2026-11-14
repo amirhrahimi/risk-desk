@@ -51,9 +51,12 @@ struct SSendCtx
    double            sl;            // G-01: for the R/R TP refresh
    double            tp;            // G-01: TP of the latest attempt
    double            tpRR;
+   ulong             known[RD_GW_KNOWN_MAX];   // BC-14: tickets of ours (same symbol and magic) that existed before the first send
+   int               knownCount;
 
    void              Reset()
      {
+      knownCount = 0;
       requestTime = 0;
       sends = 0;
       retries = 0;
@@ -80,6 +83,7 @@ private:
    bool              FreshPrice(const EGwAction act, SMt4Request &q, const SSymbolSpec &s, SSendCtx &c);
    bool              Executed(const EGwAction act, const SMt4Request &q, const SSymbolSpec &s, const SSendCtx &c,
                               int &ticket);
+   void              Baseline(const EGwAction act, const SMt4Request &q, SSendCtx &c) const;
    string            CmdText(const int cmd) const;
    string            Detail(const STradeCode &tc, const SMt4Request &q, const SSymbolSpec &s, const SSendCtx &c) const;
    void              LogRequest(const string op, const EGwAction act, const SMt4Request &q, const SSymbolSpec &s,
@@ -168,6 +172,13 @@ bool CTradeGateway::OpenMarket(const string symbol, const ESide side, const doub
       return Refused(op, symbol, r);
 
    bool attach = WantStopsWithOrder(symbol);
+#ifdef RD_TEST_HOOKS
+   if(FaultIs(GWFAULT_SL_ATTACH))
+     {
+      attach = false;
+      RD_LOG_WARN("[" + op + "] " + symbol + " TEST FAULT: the open carries no SL/TP and later SL/TP modifies are refused");
+     }
+#endif
    SMt4Request q;
    BaseRequest(q, symbol);
    q.cmd    = (side == SIDE_BUY) ? OP_BUY : OP_SELL;

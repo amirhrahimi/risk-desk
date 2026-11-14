@@ -47,6 +47,10 @@ bool CTradeGateway::ModifyPositionSLTP(const ulong ticket, const double sl, cons
       RD_LOG_INFO("[" + op + "] " + symbol + " " + who + " SL/TP already " + Px(s, nsl) + "/" + Px(s, ntp));
       return RdOk(r, "Already set");
      }
+#ifdef RD_TEST_HOOKS
+   if(FaultIs(GWFAULT_SL_ATTACH))
+      return Failed(op, symbol, r, "TEST FAULT: the server refuses to set SL/TP", RD_GW_TEST_FAULT_CODE);
+#endif
    if(!CValidators::PositionNotFrozen(side, curSl, curTp, quote, s, r) ||
       !CValidators::MarketStops(side, slChange ? nsl : 0.0, tpChange ? ntp : 0.0, quote, s, r))
       return Refused(op, symbol, r);

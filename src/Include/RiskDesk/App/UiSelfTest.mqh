@@ -36,6 +36,10 @@
 //|             screenshot names, cent display, log retention (T-31, |
 //|             T-33, T-34), one test Buy with the same safety       |
 //|             rules: App/UiSelfTestExtras.mqh.                     |
+//|           - safety (ADR-031): rule R7 (SL cannot be attached,    |
+//|             T-29), rule R9 / BC-14 (lost replies, T-35) and the  |
+//|             MT5 filling fallback (BC-06) with REAL requests and  |
+//|             a fault armed in the gateway: UiSelfTestSafety.mqh.  |
 //|           Neither replaces T-24 (Windows DPI) or real clicks.    |
 //| Safety : runs only when the runner left the request file         |
 //|          RiskDesk/uitest.request (deleted at start), so a chart  |
@@ -106,7 +110,7 @@ private:
    CLines           *m_plan;            // the planning lines (the report text is m_lines)
    CPendingOverlay  *m_overlay;
 
-   string            m_suite;           // "panel", "trade", "trade-basic", "pending", "manage", "half", "extras"
+   string            m_suite;           // "panel", "trade", "trade-basic", "pending", "manage", "half", "extras", "safety"
    bool              m_active;
    bool              m_closeOnDeinit;
    int               m_step;
@@ -372,6 +376,22 @@ private:
    void              ExCent();
    void              ExLogs();
    void              ExEnd();
+   //--- safety suite (ADR-031, App/UiSelfTestSafety.mqh)
+   void              StepSafety(const uint now);
+   long              SfLogMark() const;
+   string            SfLogSince(const long mark) const;
+   int               SfCountLines(const string text, const string a, const string b) const;
+   string            SfLastFill(const string text) const;
+   void              SfSettings(const bool closeIfStopFails);
+   bool              SfBuy(const EGwFault fault, int &before, int &after, string &log);
+   string            SfState(const int before, const int after) const;
+   void              SfEnd(const string shot);
+   void              SfSlAttach(const bool closeIfFails);
+   void              SfReplyLost();
+   void              SfSendLost();
+   void              SfNeverAnswered();
+   void              SfNotAdopted();
+   void              SfFillFallback();
 
 public:
                      CUiSelfTest();
@@ -490,7 +510,7 @@ string CUiSelfTest::ReadSuite()
      }
    FileClose(h);
    if(suite != "trade" && suite != "trade-basic" && suite != "pending" && suite != "manage" && suite != "half" &&
-      suite != "extras")
+      suite != "extras" && suite != "safety")
       suite = "panel";
    return suite;
   }
@@ -538,7 +558,7 @@ void CUiSelfTest::Start(CSettings *cfg, CState *state, CTheme *theme, CLayout *l
 string CUiSelfTest::FilePrefix() const
   {
    string p = RD_UITEST_DIR + "\\" + RD_PLATFORM + "_" + IntegerToString(CAccountSpec::Login());
-   if(m_suite == "pending" || m_suite == "manage" || m_suite == "half" || m_suite == "extras")
+   if(m_suite == "pending" || m_suite == "manage" || m_suite == "half" || m_suite == "extras" || m_suite == "safety")
       p += "_" + m_suite + "_" + CScreenshot::Sanitize(_Symbol);
    else
       if(m_suite != "panel")
@@ -673,7 +693,10 @@ void CUiSelfTest::Step()
                if(m_suite == "extras")
                   StepExtras(now);
                else
-                  StepTrade(now);
+                  if(m_suite == "safety")
+                     StepSafety(now);
+                  else
+                     StepTrade(now);
   }
 
 //+------------------------------------------------------------------+
@@ -838,5 +861,6 @@ void CUiSelfTest::OnDeinit(const int reason)
 #include "UiSelfTestManage.mqh"
 #include "UiSelfTestHalf.mqh"
 #include "UiSelfTestExtras.mqh"
+#include "UiSelfTestSafety.mqh"
 
 #endif // RD_APP_UISELFTEST_MQH

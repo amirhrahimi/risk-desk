@@ -28,7 +28,10 @@ bool CTradeGateway::Send(const string op, const EGwAction act, SMt4Request &q, c
    ticket = 0;
    bool isDeal = (act == GWACT_OPEN || act == GWACT_CLOSE);
    if(c.requestTime == 0)
+     {
       c.requestTime = RdServerTime();
+      Baseline(act, q, c);
+     }
 
    while(!IsStopped())
      {
@@ -53,12 +56,29 @@ bool CTradeGateway::Send(const string op, const EGwAction act, SMt4Request &q, c
          bool ok = false;
          int newTicket = -1;
          int slippage = (m_cfg.slippagePoints > 0) ? m_cfg.slippagePoints : 0;
+#ifdef RD_TEST_HOOKS
+         EGwSendFault fault = SendFault(act, c.sends);
+         if(fault != GWSEND_NONE)
+            RD_LOG_WARN("[" + op + "] TEST FAULT: " + (fault == GWSEND_SWALLOW ? "request not sent" : "request sent, reply dropped") +
+                        " (attempt " + IntegerToString(c.sends) + ")");
+#endif
          switch(act)
            {
             case GWACT_OPEN:
+#ifdef RD_TEST_HOOKS
+               if(fault == GWSEND_SWALLOW)
+                  break;   // nothing is sent: ok stays false and GetLastError() is 0 ("no reply", BC-14)
+#endif
                newTicket = OrderSend(q.symbol, q.cmd, q.volume, q.price, slippage, q.sl, q.tp, m_cfg.comment,
                                      (int)m_cfg.magic, 0, clrNONE);
                ok = (newTicket > 0);
+#ifdef RD_TEST_HOOKS
+               if(fault == GWSEND_DROP_REPLY)
+                 {
+                  ok = false;   // the order was sent and opened, its reply is dropped
+                  ResetLastError();
+                 }
+#endif
                break;
             case GWACT_PENDING:
                newTicket = OrderSend(q.symbol, q.cmd, q.volume, q.price, 0, q.sl, q.tp, m_cfg.comment,
@@ -230,6 +250,27 @@ bool CTradeGateway::FreshPrice(const EGwAction act, SMt4Request &q, const SSymbo
   }
 
 //+------------------------------------------------------------------+
+//| BC-14: the open trades and pending orders of ours (same symbol   |
+//| and magic) that exist BEFORE the first send. A trade of the      |
+//| seconds before (a second click) matches symbol, type and volume  |
+//| just as well as the request's own effect would; only an order    |
+//| that is not in this list can be the effect.                      |
+//+------------------------------------------------------------------+
+void CTradeGateway::Baseline(const EGwAction act, const SMt4Request &q, SSendCtx &c) const
+  {
+   c.knownCount = 0;
+   if(act != GWACT_OPEN && act != GWACT_PENDING)
+      return;
+   for(int i = OrdersTotal() - 1; i >= 0 && c.knownCount < RD_GW_KNOWN_MAX; i--)
+     {
+      if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES))
+         continue;
+      if(OrderSymbol() == q.symbol && OrderMagicNumber() == (int)m_cfg.magic)
+         c.known[c.knownCount++] = (ulong)OrderTicket();
+     }
+  }
+
+//+------------------------------------------------------------------+
 //| BC-14: did the ambiguous request take effect?                    |
 //+------------------------------------------------------------------+
 bool CTradeGateway::Executed(const EGwAction act, const SMt4Request &q, const SSymbolSpec &s, const SSendCtx &c,
@@ -248,6 +289,8 @@ bool CTradeGateway::Executed(const EGwAction act, const SMt4Request &q, const SS
                continue;
             if(OrderSymbol() != q.symbol || OrderMagicNumber() != (int)m_cfg.magic || OrderType() != q.cmd)
                continue;
+            if(RdGwKnown(c.known, c.knownCount, (ulong)OrderTicket()))
+               continue;   // older than the request
             if(!RdVolEq(OrderLots(), q.volume) || OrderOpenTime() < from)
                continue;
             if(act == GWACT_PENDING && !RdPriceEq(s, OrderOpenPrice(), q.price))

@@ -50,6 +50,14 @@
                    forced on (T-31) and log file retention (F-32). One REAL
                    test Buy on a DEMO account only (magic 772288), closed
                    again.
+      safety       the safety paths no healthy server takes (ADR-031), with
+                   a fault armed in the gateway and REAL requests on a DEMO
+                   account only (magic 772288): T-29 (SL cannot be attached:
+                   position closed / kept open with a warning), T-35 (lost
+                   reply: executed, not sent, never answered, an earlier
+                   trade not taken for it) and, on MT5, the filling-policy
+                   fallback after a real rejection (BC-06). One run per
+                   account; every test position is closed again.
 
     The runner
       1. writes the one-time request file MQLx\Files\RiskDesk\uitest.request
@@ -92,7 +100,7 @@ param(
     [Parameter(Mandatory = $true)][string]$Symbol,
     [string]$Inputs = '',            # extra EA inputs 'Key=Value;Key=Value'
     [string]$Period = 'H1',
-    [ValidateSet('panel', 'trade', 'trade-basic', 'pending', 'manage', 'half', 'extras')][string]$Suite = 'panel',
+    [ValidateSet('panel', 'trade', 'trade-basic', 'pending', 'manage', 'half', 'extras', 'safety')][string]$Suite = 'panel',
     # T-26: 'off' starts the terminal with Algo/AutoTrading switched off (MT5 [Experts] Enabled=0,
     # MT4 ExpertsTrades=false; tested in P4 - MT5 AllowLiveTrading=0 and MT4 ExpertsEnable=false
     # did not stop the startup EA from trading). The terminal keeps the setting: the next normal
@@ -206,7 +214,7 @@ $filePrefix = "${tag}_${Login}_"
 if ($Suite -ne 'panel') {
     # the EA names the trade, pending, manage, half and extras reports after the symbol: / \ : * ? " < > | and spaces become _
     $safe = ($Symbol -replace '[\\/:*?"<>| ]', '_')
-    $kind = if ($Suite -eq 'pending' -or $Suite -eq 'manage' -or $Suite -eq 'half' -or $Suite -eq 'extras') { $Suite } else { 'trade' }
+    $kind = if ($Suite -eq 'pending' -or $Suite -eq 'manage' -or $Suite -eq 'half' -or $Suite -eq 'extras' -or $Suite -eq 'safety') { $Suite } else { 'trade' }
     $reportName = "${tag}_${Login}_${kind}_${safe}_report.txt"
     $filePrefix = "${tag}_${Login}_${kind}_${safe}_"
 }

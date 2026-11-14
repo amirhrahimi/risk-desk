@@ -93,7 +93,7 @@ bool CCommands::RiskFree(SResult &r)
    if(!m_gw.ListPositions(f, pos, lr))
       return RdFail(r, name + " failed: " + lr.message);
    int n = ArraySize(pos);
-   string which = (f.toolOnly ? "RiskDesk " : "") + "positions";
+   string which = (f.toolOnly ? "Risk Desk " : "") + "positions";
    if(n == 0)
       return RdWarn(r, name + ": no " + which + " on " + _Symbol);
    SAccountSpec acc;
@@ -297,7 +297,7 @@ bool CCommands::HalfClose(SResult &r)
    if(!m_gw.ListPositions(f, pos, lr))
       return RdFail(r, name + " failed: " + lr.message);
    int n = ArraySize(pos);
-   string which = (f.toolOnly ? "RiskDesk " : "") + "positions";
+   string which = (f.toolOnly ? "Risk Desk " : "") + "positions";
    if(n == 0)
       return RdWarn(r, name + ": no " + which + " on " + _Symbol);
    SAccountSpec acc;
@@ -593,7 +593,7 @@ bool CCommands::ChartClose(SResult &r)
    if(!m_gw.ListPositions(f, pos, lr))
       return RdFail(r, name + " failed: " + lr.message);
    int n = ArraySize(pos);
-   string which = (f.toolOnly ? "RiskDesk " : "") + "position";
+   string which = (f.toolOnly ? "Risk Desk " : "") + "position";
    if(n == 0)
       return RdWarn(r, name + ": no " + which + "s on " + _Symbol);
    SAccountSpec acc;
@@ -654,7 +654,7 @@ bool CCommands::FullClose(SResult &r)
       return RdFail(r, name + " failed: " + lr.message);
    int n = ArraySize(pos);
    int no = ArraySize(ord);
-   string which = (f.toolOnly ? "RiskDesk " : "") + "position";
+   string which = (f.toolOnly ? "Risk Desk " : "") + "position";
    if(n == 0 && no == 0)
       return RdWarn(r, name + ": no " + which + "s on this account" + (m_cfg.fullCloseAlsoPending ? " and no pending orders" : ""));
    SAccountSpec acc;

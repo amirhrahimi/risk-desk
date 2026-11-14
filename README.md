@@ -11,7 +11,7 @@ Risk Desk is a chart panel (Expert Advisor) for MetaTrader 4 and MetaTrader 5 th
 > [!WARNING]
 > **Risk disclaimer.** Trading foreign exchange, CFDs and other leveraged products carries a high risk of losing money, and you can lose more than you expect. Risk Desk is provided "as is", without warranty of any kind (see [LICENSE](LICENSE)); you use it entirely at your own risk. It is not financial advice. A bug in this software, a broker's behaviour or a market gap can cause losses. The "risk %" is the planned loss at the stop-loss price: a stop can fill worse than its price (slippage, gaps, weekends), and commissions and swaps are only included where you configure them. **Always test on a demo account with your broker before using a live account**, and check every lot size and stop-loss yourself.
 
-**Status:** 1.8.0-rc.1 is a **release candidate** (pre-release) for 1.8.0, the first stable release. It has been tested on demo accounts only (six accounts, four broker companies, both platforms; see [Broker compatibility](#broker-compatibility)). It has not been tested on live accounts. A few safety paths still lack a test against a real server; see [Known limitations](#known-limitations). 1.8.0 follows once the hardening work in [ROADMAP.md](ROADMAP.md) is done.
+**Status:** 1.8.0 is the first stable release. It has been tested on demo accounts only (six accounts, four broker companies, both platforms; see [Broker compatibility](#broker-compatibility)). It has not been tested on live accounts. The last full pass of the demo test matrix on EURUSD, gold and index symbols and on the netting account is still to be done: the final run, on a weekend, covered the panel, trade, pending, manage, half and extras suites on a crypto CFD (BTCUSD) only. See [Known limitations](#known-limitations) and [ROADMAP.md](ROADMAP.md).
 
 ## Contents
 
@@ -49,7 +49,7 @@ Both platforms are built from one source tree and offer the same features. The d
 
 ## Requirements
 
-- MetaTrader 4 or MetaTrader 5 desktop terminal on Windows. Tested with MT4 build 1492 and MT5 builds 6311 and 6316; older builds are untested.
+- MetaTrader 4 or MetaTrader 5 desktop terminal on Windows. Tested with MT4 build 1492 and MT5 builds 6311, 6316 and 6320; older builds are untested.
 - Algo trading enabled: the **AutoTrading** / **Algo Trading** toolbar button, and *Allow live trading* (MT4) / *Allow Algo Trading* (MT5) in the EA's properties. MetaTrader's One-Click Trading is not needed.
 - An account on which the broker allows Expert Advisors: hedging or netting (MT5), any account currency. Cent accounts are supported, but the cent display has only been tested in forced mode, not on a real cent account.
 - Any symbol and timeframe: symbol properties are read from the broker at run time. Tested symbols are listed under [Broker compatibility](#broker-compatibility).
@@ -66,7 +66,7 @@ Step by step, with the optional scripts: [docs/installation.md](docs/installatio
 ## Quick start on a demo account
 
 1. Open a **demo** account with your broker and a chart of a liquid symbol (for example EURUSD).
-2. Drag **RiskDesk** from the Navigator onto the chart, tick *Allow live trading* / *Allow Algo Trading*, and press OK. The status bar at the bottom of the panel shows `RiskDesk 1.8.0-rc.1 ready`.
+2. Drag **RiskDesk** from the Navigator onto the chart, tick *Allow live trading* / *Allow Algo Trading*, and press OK. The status bar at the bottom of the panel shows `Risk Desk 1.8.0 ready`.
 3. Type a small value in **Risk %**, for example `0.5`.
 4. Click **Add Line**. A red SL line appears; drag it below the price for a buy (above the price for a sell).
 5. Read **Lots** and the label on the SL line: the money you would lose at that stop, the %, the lot size and the distance.
@@ -125,7 +125,7 @@ Risk Desk is a manual tool, so there is no strategy to backtest or optimize. In 
 
 ## Known limitations
 
-- **Pre-release.** Three safety paths have not yet been triggered on a real server: closing a position whose stop-loss could not be attached (`InpCloseIfStopFails`), handling an unclear result such as a timeout (no blind resend), and the MT5 filling-policy fallback after a real rejection. They are covered by design and code review only. Tests for them are planned for 1.8.0.
+- **Safety paths are tested with injected faults.** Closing a position whose stop-loss could not be attached (`InpCloseIfStopFails`), handling an unclear result such as a timeout (no blind resend) and the MT5 filling-policy fallback were run on demo servers by making the terminal drop a reply or the gateway withhold the stop-loss. That shows what Risk Desk does with such an answer; no demo server can be made to really time out on demand.
 - A stop-loss can fill beyond its price. On index CFDs, demo SL hits filled up to 7.5 % beyond the displayed risk on MT5.
 - One slippage value is used for every symbol. On fast markets (for example gold at the US open on IG MT4) market orders can be requoted until the retries run out; the status bar then says so and nothing is opened.
 - Screenshots, log lines and BrokerProbe reports contain your account number. Remove it before sharing them ([SUPPORT.md](SUPPORT.md)).

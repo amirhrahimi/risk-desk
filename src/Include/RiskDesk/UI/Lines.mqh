@@ -279,12 +279,12 @@ color CLines::LineColor(const ELineRole role) const
 string CLines::Tooltip(const ELineRole role, const bool tpFree) const
   {
    if(role == LINEROLE_ENTRY)
-      return "RiskDesk entry line of the pending order - drag it to the entry price";
+      return "Risk Desk entry line of the pending order - drag it to the entry price";
    if(role == LINEROLE_SL)
-      return "RiskDesk SL line - drag it to your stop-loss; the lot size follows";
+      return "Risk Desk SL line - drag it to your stop-loss; the lot size follows";
    if(tpFree)
-      return "RiskDesk TP line, " + RD_LINE_TIP_FREE + " (it no longer follows the SL)";
-   return "RiskDesk TP line - keeps R/R " + RdNum(m_style.tpRR, 2) +
+      return "Risk Desk TP line, " + RD_LINE_TIP_FREE + " (it no longer follows the SL)";
+   return "Risk Desk TP line - keeps R/R " + RdNum(m_style.tpRR, 2) +
           " while you move the SL; drag it to place it yourself";
   }
 

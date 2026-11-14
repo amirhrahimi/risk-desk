@@ -199,7 +199,7 @@ int CApp::Init()
          RdWarn(r, symbolNote);
       else
          if(firstRun)
-            RdOk(r, RD_PRODUCT + " " + RD_VERSION + " ready - risk " + RdFormatPct(m_state.riskPct) +
+            RdOk(r, RD_PRODUCT_NAME + " " + RD_VERSION + " ready - risk " + RdFormatPct(m_state.riskPct) +
                  " per trade. Add Line, drag the SL, then Buy or Sell");
    if(r.message != "")
       m_ctl.Report(r);
