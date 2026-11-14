@@ -13,7 +13,7 @@ The EA and the scripts are unchanged; this concerns developing Risk Desk.
 - `build/install-metatrader-wine.sh` installs Wine and MetaTrader 4 and 5 into one Wine prefix on Debian or Ubuntu, for CI and for development.
 
 ### Changed
-- CI builds Risk Desk on a Linux runner (`ubuntu-latest`) with MetaEditor under Wine instead of on a Windows runner (ADR-033). It uses `build.ps1`, the same script as a local build. The released files and the release rules are unchanged.
+- CI builds Risk Desk twice on every pull request and push, both times with `build.ps1`, the same script as a local build: on a Windows runner, whose files are released as before, and on a Linux runner (`ubuntu-24.04`) with MetaEditor under Wine, the way macOS and Linux contributors build (ADR-033, ADR-034). A failed Linux build does not hold back a release. The release rules are unchanged.
 
 ### Fixed
 - `package-release.ps1` run with Windows PowerShell 5.1 wrote zip entries with backslashes (`MQL5\Experts\RiskDesk.ex5`), which unpack into wrongly named files on macOS and Linux. Entry names now always use `/`. Released zips were not affected: CI packs them with PowerShell 7.
