@@ -128,7 +128,7 @@ Let `S = stopsLevel × point`, `F = freezeLevel × point`, prices normalized. Re
 
 ### BC-14 Ambiguous results (no blind resend)
 - MT4 128 (trade timeout), MT5 `TRADE_RETCODE_TIMEOUT` / `TRADE_RETCODE_CONNECTION`, or `OrderSend` returning false without a usable retcode: the request may or may not have executed.
-- Wait 1 s, then scan positions/orders for one with our magic, same symbol, side/type, volume, and open time ≥ request time − 5 s. Found → treat as success and continue (verify SL/TP). Not found → retry once. Log both branches.
+- Wait 1 s, then scan positions/orders for one with our magic, same symbol, side/type, volume, and open time ≥ request time − 5 s, **that did not exist before the first send** (ADR-031: the gateway records our trades of that symbol before sending; a trade of the seconds before, such as a second click, is not the request's effect). Found → treat as success and continue (verify SL/TP). Not found → retry once. Log both branches.
 
 ### BC-15 Trade permissions (checked before every command, with specific messages)
 | Check | Message |

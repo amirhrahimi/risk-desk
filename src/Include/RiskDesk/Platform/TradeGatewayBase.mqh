@@ -38,6 +38,41 @@
 #define RD_GW_VERIFY_PASSES      3      // BC-11: read/fix rounds after an open
 #define RD_GW_SELECT_TRIES       20     // wait up to 20 x 50 ms for a new position/order to show up
 #define RD_GW_SELECT_SLEEP_MS    50
+#define RD_GW_KNOWN_MAX          16     // BC-14: trades of ours (same symbol and magic) that existed before the request
+
+// BC-14: is 'ticket' one of the 'count' tickets that existed before the request was sent?
+bool RdGwKnown(const ulong &known[], const int count, const ulong ticket)
+  {
+   for(int i = 0; i < count; i++)
+      if(known[i] == ticket)
+         return true;
+   return false;
+  }
+
+#ifdef RD_TEST_HOOKS
+// Faults the self-test's safety suite arms (App/UiSelfTestSafety.mqh, ADR-031) to drive
+// paths a healthy demo server never takes. They act on REAL requests: the server sees
+// either a real order (and the gateway must then clean up) or nothing at all.
+// Debug builds only: a release build contains none of this.
+enum EGwFault
+  {
+   GWFAULT_NONE = 0,
+   GWFAULT_SL_ATTACH,        // T-29: the open goes out without SL/TP and every SL/TP modify is refused (R7)
+   GWFAULT_REPLY_LOST,       // T-35: the first open is sent and executes, its reply is dropped (BC-14, R9)
+   GWFAULT_SEND_LOST,        // T-35: the first open never reaches the server (BC-14 finds nothing, resends once)
+   GWFAULT_NEVER_ANSWERED,   // T-35: no open ever reaches the server (BC-14 resends once, then reports)
+   GWFAULT_BAD_FILL          // BC-06 (MT5): the first filling policy is one the server should reject
+  };
+
+enum EGwSendFault
+  {
+   GWSEND_NONE = 0,
+   GWSEND_SWALLOW,           // do not send the request, answer "no reply"
+   GWSEND_DROP_REPLY         // send the request for real, then answer "no reply"
+  };
+
+#define RD_GW_TEST_FAULT_CODE 99001   // r.code of a refusal made by GWFAULT_SL_ATTACH
+#endif
 
 // The gateway primitives (06 section 5).
 enum EGwAction
@@ -143,6 +178,11 @@ class CTradeGatewayBase
 protected:
    SGatewaySettings  m_cfg;
    string            m_modifyAfter[];   // BC-11: symbols whose server refused SL/TP on market orders
+#ifdef RD_TEST_HOOKS
+   EGwFault          m_fault;           // armed by the self-test, GWFAULT_NONE otherwise
+   bool              FaultIs(const EGwFault f) const { return m_fault == f; }
+   EGwSendFault      SendFault(const EGwAction act, const int attempt) const;
+#endif
 
    bool              Prepare(const string op, const string symbol, SSymbolSpec &s, SQuote &q, SResult &r);
    bool              SpecQuote(const string op, const string symbol, SSymbolSpec &s, SQuote &q, SResult &r);
@@ -173,11 +213,36 @@ protected:
    string            AccountMoney(const double amount) const;
 
 public:
+#ifdef RD_TEST_HOOKS
+                     CTradeGatewayBase() { m_cfg.Defaults(); m_fault = GWFAULT_NONE; }
+   void              ArmFault(const EGwFault f) { m_fault = f; }
+#else
                      CTradeGatewayBase() { m_cfg.Defaults(); }
+#endif
    void              Configure(const SGatewaySettings &cfg) { m_cfg = cfg; }
    long              Magic() const { return m_cfg.magic; }
    bool              NeedsModifyAfter(const string symbol) const;
   };
+
+#ifdef RD_TEST_HOOKS
+//+------------------------------------------------------------------+
+//| What the armed fault does to this send. Only market opens are    |
+//| touched (never a close, modify or delete); 'attempt' is the      |
+//| number of the OrderSend call within the request (1 = first).     |
+//+------------------------------------------------------------------+
+EGwSendFault CTradeGatewayBase::SendFault(const EGwAction act, const int attempt) const
+  {
+   if(act != GWACT_OPEN)
+      return GWSEND_NONE;
+   if(m_fault == GWFAULT_REPLY_LOST && attempt == 1)
+      return GWSEND_DROP_REPLY;
+   if(m_fault == GWFAULT_SEND_LOST && attempt == 1)
+      return GWSEND_SWALLOW;
+   if(m_fault == GWFAULT_NEVER_ANSWERED && attempt <= 2)
+      return GWSEND_SWALLOW;
+   return GWSEND_NONE;
+  }
+#endif
 
 //+------------------------------------------------------------------+
 //| BC-15 permissions, then spec and quote.                          |
@@ -231,7 +296,7 @@ bool CTradeGatewayBase::CheckOpen(const string op, const SSymbolSpec &s, const E
       return Refuse(op, s.name, r, "Broker does not accept " + (kind == KIND_MARKET ? "market" : RdOrderText(side, kind)) +
                     " orders on " + s.name);
    if(!(sl > 0.0))
-      return Refuse(op, s.name, r, "No SL: RiskDesk never opens a trade without a stop-loss");
+      return Refuse(op, s.name, r, "No SL: Risk Desk never opens a trade without a stop-loss");
    if(!RdSymbolAcceptsSl(s))
       return Refuse(op, s.name, r, "Broker does not accept SL on " + s.name);
    if(tp > 0.0 && !RdSymbolAcceptsTp(s))

@@ -229,7 +229,7 @@ void CSettings::Load()
    magic                     = InpMagic;
    if(magic <= 0)
      {
-      Warn("Magic number " + IntegerToString(InpMagic) + " cannot identify RiskDesk trades - using 772211");
+      Warn("Magic number " + IntegerToString(InpMagic) + " cannot identify Risk Desk trades - using 772211");
       magic = 772211;
      }
    comment                   = InpComment;

@@ -23,8 +23,7 @@ Claude Code cannot click inside MetaTrader. At the end of each phase it outputs 
 - Done in P1: `build/run-tests.ps1 [-Target mt4|mt5|all] [-Symbol EURUSD]` starts each terminal of `paths.local.ps1` (which must not be running) with a startup configuration that runs `RiskDesk\RiskDeskTests` on one chart, waits for `tests_<platform>.txt`, prints the summary and failures and exits 1 on any failure. MT5 closes itself (`ShutdownTerminal=1`); MT4 has no such switch for scripts, so the runner closes its window. The terminal logs into its last account; the script never trades. Needs `build.ps1` and `install-junctions.ps1` first.
 
 ### Test hooks (debug builds only)
-Compile-time `#define RD_TEST_HOOKS` (off in release) exposes hidden inputs used by T-29/T-35:
-`InpTestFailSlAttach` (pretend SL attach failed), `InpTestForceAmbiguous` (pretend the first send timed out after executing), `InpTestForceFill` (start the ladder with a wrong policy). Release builds must not contain them (`build.ps1` compiles release by default).
+Compile-time `#define RD_TEST_HOOKS` (off in release) compiles the self-test (`InpTestUiSelfTest`) and, for T-29/T-35 and the filling fallback, the gateway's **fault injection** (ADR-031): `EGwFault` in `Platform/TradeGatewayBase.mqh`, armed by the safety suite (§3j) and not by inputs (the hidden inputs `InpTestFailSlAttach`, `InpTestForceAmbiguous` and `InpTestForceFill` that this section used to describe were never built). A fault changes what is sent or what the terminal is told, never what the gateway does with the answer. Release builds must not contain any of it (`build.ps1` compiles release by default).
 
 ## 3. BrokerProbe (L3, F-27)
 
@@ -167,7 +166,7 @@ powershell -File build/build.ps1
 | Two buys and two sells, Risk Free at once: status `Risk-free on EURUSD: n moved …` with n = the SLs that changed, every position listed with its reason, no SL loosened | T-16 (skips), F-11 AC2/AC4 |
 | Waits (≤ 180 s) until both positions of one side would be moved with a margin, sets the second one's SL by hand a few ticks (or one spread) beyond break-even, so a spread that widens before the click does not move it again, Risk Free: 1 moved with SL = open ± (spread + commission distance) at the click, 1 already protected, the other side not in profit / not enough profit, amber, screenshot `_riskfree_<ticket>`; again: the moved one is already protected (or tightened if the spread widened), never loosened. When the market does not move enough in 180 s an INFO line says so | T-16, 04 §9 |
 | 3 × min lot buy and (hedging) a min lot sell: `InpConfirmHalfClose` answered No → nothing changes, dialog names what is closed and what stays; Yes → the buy keeps the 04 §10 rest of 3 × min (2 × min, Q23) with its SL (a new MT4 ticket is named), the sell is skipped "cannot be split" (amber), screenshot `_half_<ticket>`. On a whole-contract CFD (min 1) this is T-17's "1 lot" case | T-17, F-12, F-28, BC-16 |
-| RiskDesk buy + sell, a manual buy on the chart symbol, a RiskDesk buy on a second symbol: tool scope → the two RiskDesk ones closed, `Closed 2 of 2 RiskDesk positions on EURUSD · P/L x` with x = the history's P/L of those exits; all on the symbol, `InpConfirmChartClose` No → kept, Yes → the manual one closed; the other symbol untouched; nothing left → amber `Chart Close: no positions on EURUSD` | T-18, F-13, F-28 |
+| RiskDesk buy + sell, a manual buy on the chart symbol, a RiskDesk buy on a second symbol: tool scope → the two RiskDesk ones closed, `Closed 2 of 2 Risk Desk positions on EURUSD · P/L x` with x = the history's P/L of those exits; all on the symbol, `InpConfirmChartClose` No → kept, Yes → the manual one closed; the other symbol untouched; nothing left → amber `Chart Close: no positions on EURUSD` | T-18, F-13, F-28 |
 | RiskDesk positions on the chart symbol and up to two other symbols, a far Buy Limit: the open-risk readout = their risk at SL (+ the order) in % of the balance | T-32 (one chart; the readout is account-wide, so a second chart shows the same) |
 | `InpConfirmFullClose` No → everything kept, dialog `Close 3 positions on 3 symbols? … Also delete 1 pending order.`; Yes with `InpFullCloseAlsoPending` → every position closed and the order deleted, `Closing 3/3...` shown on the way, `Closed 3 of 3 positions on 3 symbols · P/L x · deleted 1 of 1 pending order`; nothing left → amber `Full Close: no positions on this account …` | T-19, F-14, F-28 |
 | Netting account only: two buys of 2 × min lot merge at the averaged open; Half Close leaves half on the same position and open price; Risk Free (after the same wait) sets SL = averaged open + spread, or skips with its reason; Chart Close closes it | T-30 (half close, Risk Free; the merge confirmation and the opposite refusal are §3e) |
@@ -223,6 +222,29 @@ powershell -File build/build.ps1
 
 Result 2026-11-13: 19 passed, 0 failed on A1–A6 (EURUSD). The suite's three objects carry the names MT4 gives a closed trade (Q24: `#<ticket> <open> -> <close>`, `#<ticket> sell 0.05 EURAUD at <open>`, `… close at <close>`); MetaTrader drawing them itself is not covered. Not covered either: a real cent account (A7, none in the matrix): T-31 on A7 stays a manual check.
 
+## 3j. Safety suite (`build/run-uitest.ps1 -Suite safety`, debug build, ADR-031)
+
+The three paths a healthy demo server never takes, driven through the real Buy button with a fault armed in the gateway (`EGwFault`, §2 test hooks; `App/UiSelfTestSafety.mqh`). Same runner, debug build and safety rules as §3e (demo only, R13; magic 772288; about 2.5 × the risk of the minimum lot; every test position closed again). The evidence is the position count, the status bar and the daily log file (`Files/RiskDesk/Logs`) read from where it ended before the click. **The market of the chart symbol must be open** (on a weekend use a crypto CFD): with it closed every case fails with `Market closed`, which says nothing about the paths. One run per account.
+
+```
+powershell -File build/build.ps1 -Debug
+powershell -File build/run-uitest.ps1 -Platform mt5 -Login <login> -Server ICMarketsEU-Demo -Symbol EURUSD -Suite safety
+powershell -File build/build.ps1
+```
+
+| Case | Fault | Passes when | Covers |
+|---|---|---|---|
+| T-29 SL fails, position closed | `GWFAULT_SL_ATTACH`: the open carries no SL/TP and every SL/TP modify is refused | no position left; red `Buy failed: SL could not be attached - position closed (…)`; log has the `has no valid SL` line and the close request (G-04) | T-29, rule R7, BC-11 |
+| T-29 SL fails, kept open | same, `InpCloseIfStopFails` off | one position without SL; red `Position #… is open WITHOUT a valid SL - set it now (…)` | rule R7 (the opt-out is loud) |
+| T-35 reply lost, executed | `GWFAULT_REPLY_LOST`: the open is sent and executes, the reply is dropped | one position; green status naming it; ONE request sent; log `the request WAS executed - not resending` | T-35, rule R9, BC-14 |
+| T-35 request lost, resent once | `GWFAULT_SEND_LOST`: the open never reaches the server | one position; TWO requests (the first never sent); log `not executed - sending once more` | BC-14 |
+| T-35 never answered | `GWFAULT_NEVER_ANSWERED` | no position; red `No answer from the server and the request was not found - check the Trade tab before trying again`; exactly two requests, no third | BC-14, rule R8 |
+| T-35 earlier trade not adopted | a normal Buy, then at once `GWFAULT_NEVER_ANSWERED` | still one position; red `No answer …` that does not name the first ticket (before ADR-031 the status said done and named it) | BC-14 (ADR-031) |
+| BC-06 fill rejected, next policy (MT5) | `GWFAULT_BAD_FILL`: the ladder starts with a policy the symbol's flags do not allow | the server really answers `retcode=10030`, the log shows `-> next fill=`, one position; INFO instead when the server accepts the policy anyway | T-22, BC-06 |
+| BC-06 policy cached (MT5) | none | the next Buy sends one request with the policy that worked | BC-06 |
+
+Result 2026-11-14 (BTCUSD, the only symbol open on a Saturday): A2 IC Markets EU MT4 6 passed; A3 IC Markets EU MT5 8 passed (10030 answered for FOK, IOC worked); A4 Dukascopy MT4 6 passed; A5 Dukascopy MT5 8 passed. A first run found the BC-14 defect of ADR-031 on A2 and A3 (case "earlier trade not adopted", and the earlier case's deal taken for the lost request on MT5); both pass after the fix. A1 IG MT4 (BTCUSD closed on weekends) and A6 MetaQuotes netting (BTC closed) wait for an open market.
+
 ## 4. Account and symbol matrix (L4)
 
 | Account | Platform | Notes |
@@ -236,6 +258,25 @@ Result 2026-11-13: 19 passed, 0 failed on A1–A6 (EURUSD). The suite's three ob
 | A7 any cent demo (optional) | MT4/MT5 | T-31 |
 
 Symbols per account (owner's list, Q14; use the broker's names from the probe): EURUSD, USDJPY, EURGBP (cross), XAUUSD, US30, Nasdaq 100, BTCUSD, and on Dukascopy one whole-contract CFD (min lot ≥ 1).
+
+Result 2026-11-14 (a Saturday: FX, gold and indices closed, so only BTCUSD could trade; build `1.8.0-rc.1` debug, MT5 build 6320, MT4 build 1492): every suite on A2 IC Markets EU MT4, A3 IC Markets EU MT5, A4 Dukascopy MT4 and A5 Dukascopy MT5.
+
+| Suite | A2 MT4 | A3 MT5 | A4 MT4 | A5 MT5 |
+|---|---|---|---|---|
+| panel | 66 passed | 66 passed | 65 passed | 65 passed |
+| trade | 34 passed | 34 passed (1) | 34 passed | 34 passed (1) |
+| pending | 37 passed | 37 passed | 37 passed | 37 passed |
+| manage | 13 passed | 13 passed | 11 passed (2) | 11 passed (2) |
+| half | 16 passed | 9 passed (3) | 16 passed | 16 passed |
+| extras | 19 passed | 19 passed (4) | 19 passed | 19 passed (4) |
+| safety (§3j) | 6 passed | 8 passed | 6 passed | 8 passed |
+
+1. T-12 "reduce to margin" failed on the first run on both MT5 accounts: the test left usable margin at exactly half of what 0.02 lot (2 × the minimum) needs, which is the margin of 0.01 lot, and BTCUSD ticked between the test's reading and the click, so 0.01 no longer fitted and the refusal was right. The test now leaves room for half the lots plus half a step; both accounts pass.
+2. T-16 "moved": in 180 s the positions did not get far enough in profit, so that part is not checked (INFO).
+3. H-5 and H-10 skipped: 0.10 and 0.25 lot would need more margin than A3 has free (INFO).
+4. T-33 on W1 failed once on both MT5 accounts (label 10 to 58 px left of bar 0) and passed on the rerun. Probable cause: BTCUSD's W1 history was synced for the first time, so bar 0 moved after the label was placed; not reproduced, not proven.
+
+Not run yet: A1 IG MT4 (BTCUSD is closed on weekends) and A6 MetaQuotes netting (BTC closed), the FX, gold and index symbols, so T-01 to T-28 are covered on a crypto CFD only, and T-30 (netting) and T-31 (cent) are open.
 
 ## 5. Test cases (L4)
 
@@ -271,13 +312,13 @@ Format: **ID — goal** · steps · expected. "Status" means the panel status ba
 | T-26 | Permissions | Toolbar Algo/AutoTrading off; EA "allow trading" off | Specific red message for each; nothing sent |
 | T-27 | Market closed | Weekend, click Buy on FX | "Market closed" message (or stale-quote hint) |
 | T-28 | Risk accuracy | EUR account, XAUUSD, small SL; let SL hit (or close at SL price) | Realized loss within ±5 % of displayed risk (+commission, slippage) |
-| T-29 | SL safety | Debug build, `InpTestFailSlAttach=true` | Position closed, red "SL could not be attached – position closed" |
+| T-29 | SL safety | Debug build, `-Suite safety` (§3j): the SL cannot be attached | Position closed, red "Buy failed: SL could not be attached - position closed (…)"; with `InpCloseIfStopFails` off the position stays and the red message says it has no SL |
 | T-30 | Netting (A6) | Buy, Buy again, Sell, Half Close, Risk Free | Merge confirm; opposite refused by default; half close reduces; RF on averaged price |
 | T-31 | Cent (A7) | Buy with 1 % | Lots correct; labels show USC and $ |
 | T-32 | Multi-chart | RiskDesk on 2 charts, trades on both | Open risk counts both; Full Close from one closes all |
 | T-33 | Chart extras | Close a few trades with `CTO_REMOVE`, then `CTO_KEEP`; toggle Candle Time; place 2 pending orders with overlay on, move one with MetaTrader's own trade level, delete one | Closed-trade arrows removed/kept (user drawings untouched); countdown correct at M1 (`mm:ss`), H4 (`hh:mm:ss`), W1 (`Nd hh:mm:ss`), gold, red in the last `InpCandleTimeWarnPct` (10) % of the candle (M5: from `00:30`, H1: from `06:00`) and at `00:00` when the market is closed, keeps running between ticks; overlay follows orders exactly; no lag |
 | T-34 | Screenshot naming | Several actions + camera button | Files named per F-19 |
-| T-35 | Ambiguous result | Debug build, `InpTestForceAmbiguous=true` | Log shows check-before-resend; exactly one position |
+| T-35 | Ambiguous result | Debug build, `-Suite safety` (§3j): reply lost after executing, request not sent, never answered, an earlier trade of the seconds before | Log shows check-before-resend; exactly one position (or none and a red "No answer from the server …"); an earlier trade is never taken for the lost request |
 | T-36 | Silent-failure regressions | On every account: Add Line, Buy with RiskDesk on EURUSD, XAUUSD and an index | Each click opens the trade or shows a red reason with a log line; never nothing (R8) |
 | T-37 | Auto-fit panel | `InpScale=1.6`, `InpAutoFitPanel=true`; shrink the chart window step by step, then enlarge | Panel always fully visible, never larger than scale 1.6, text readable; with auto-fit off it keeps its size. `InpPanelColumns=Auto`: two columns once one column would fall below 85 % of 1.6, one column again when the window grows |
 | T-39 | Drag a pending order | Buy Stop placed by RiskDesk: drag its SL farther (risk still under the caps), drag its TP, drag its entry up, drag its entry below Ask, drag the SL so the risk exceeds 10 %; select an overlay line and press Delete | SL/TP modified, labels and open risk updated, amber note when risk > panel %; entry up: SL and TP move by the same distance, risk unchanged; entry below Ask refused and snapped back; over-cap move refused with numbers and snapped back; deleted line redrawn, order intact |
@@ -301,3 +342,23 @@ Expected: <what you expected>
 - [ ] T-01…T-28 pass on A1–A5; T-30 on A6; T-31 if available.
 - [ ] CHANGELOG updated, version bumped, `README` user section updated.
 - [ ] Release zip: `RiskDesk.ex4`, `RiskDesk.ex5`, `BrokerProbe.ex4/.ex5`, short user guide (PDF/MD). Built and published by `.github/workflows/build.yml` on the push to `main` that bumps the version (ADR-030); `build/package-release.ps1` makes the same zip locally.
+
+## 8. Gateway review against 03 §6 (1.8.0)
+
+Read through on 2026-11-14: `Platform/TradeGatewayBase.mqh`, `TradeGatewayMT5.mqh`, `TradeGatewayMT5Send.mqh`, `TradeGatewayMT5Manage.mqh` (G-03, G-04, G-08), `TradeGatewayMT4.mqh`, `TradeGatewayMT4Send.mqh`, `TradeErrors.mqh`, the margin check in `App/CommandsTrade.mqh`. Not re-read line by line: the remaining G-05/G-06/G-07 listing and delete code and `TradeGatewayMT4Manage.mqh` beyond G-03; they were exercised by the pending and manage suites.
+
+| 03 §6 item | Result | Evidence |
+|---|---|---|
+| No literal 0.01, lot/price digits, 100000, currency or symbol suffix in trade code | pass | search of `Platform/TradeGateway*`, `TradeErrors`, `App/Commands*` and `Domain/` for those literals: no hit; every value comes from `SymbolSpec`/`AccountSpec` |
+| Prices to tick size; volumes floored to step and checked against min/max/limit | pass | `RdNormalizePrice` in G-01/G-02/G-03/G-08; `CheckOpen` → `RdIsValidVolume`; `CloseVolume` floors and never exceeds the position (a netting reversal is impossible); `SYMBOL_VOLUME_LIMIT` in `CommandsTrade` |
+| Filling and expiration ladders exercised (T-22, T-23) | pass | filling: the safety suite got the real `10030` and the next policy on A3 and A5 and the policy cached (§3j); expiration: T-23 in the pending suite |
+| Stops/freeze checks with readable refusal messages | pass | `CValidators` before every send, the distances used in the message (`StopsDistances`), `INVALID_STOPS` detail with the stops level |
+| Margin pre-check with numbers | pass | `CCommands::CheckMargin`: "needs X margin for N lot, Y free (Z % kept unused) - max about M lot"; `NO_MONEY` detail from the gateway |
+| Netting path implemented or refused with a message | pass | G-01 refuses an opposite deal on a netting account; the same side merges with a note; G-04 floors to the position. T-30 on the netting account: manage suite (A6), needs an open market |
+| SL verified after open; close-on-failure path tested | pass (was untested) | T-29 both ways in the safety suite on A2–A5 |
+| Every result code produces a status message and a log line | pass | each send logs its request and answer (`LogRequest`/`LogResult`, MT4 `ok ticket=` / `error=`); `Failed()`/`Refuse()` log; a code with no entry in `TradeErrors` becomes fatal with its number in the message (`RETCODE_n`, `ERROR_n`) |
+
+Findings:
+1. **BC-14 could adopt an earlier trade** (fixed, ADR-031). After a lost reply the gateway looked for a trade with the same symbol, magic, side and volume opened within 5 s before the request; a trade of the seconds before (a second click) matched, so the panel said done and named the old ticket. Found by the safety suite's "earlier trade not adopted" case on A2 and A3; the gateway now ignores what existed before the first send.
+2. **The documented test hooks did not exist** (`InpTestFailSlAttach`, `InpTestForceAmbiguous`, `InpTestForceFill` were described in §2 but never built). Replaced by the gateway fault injection of ADR-031.
+3. Not a defect, a limit: a fault test shows what Risk Desk does with a lost reply, not how a broker's server behaves when it really times out; no demo server can be made to do that on demand.

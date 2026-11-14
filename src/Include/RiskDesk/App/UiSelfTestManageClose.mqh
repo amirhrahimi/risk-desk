@@ -108,7 +108,7 @@ void CUiSelfTest::MgT18()
    bool otherKept = (o1 == 0) || m_gw.SelectPosition(o1, p);
    int found = 0;
    double pl = MgClosedPl(tools, from, found);
-   string want = "Closed " + IntegerToString(nt) + " of " + IntegerToString(nt) + " RiskDesk position" + (nt == 1 ? "" : "s") +
+   string want = "Closed " + IntegerToString(nt) + " of " + IntegerToString(nt) + " Risk Desk position" + (nt == 1 ? "" : "s") +
                  " on " + _Symbol;
    bool plOk = found >= nt && HasMoney(st, acc, pl);
    bool shot = !m_cfg.autoScreenshot || (m_state.lastShot != "" && FileIsExist(m_state.lastShot) &&

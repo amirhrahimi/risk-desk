@@ -43,6 +43,10 @@ bool CTradeGateway::ModifyPositionSLTP(const ulong ticket, const double sl, cons
       RD_LOG_INFO("[" + op + "] " + symbol + " " + who + " SL/TP already " + Px(s, nsl) + "/" + Px(s, ntp));
       return RdOk(r, "Already set");
      }
+#ifdef RD_TEST_HOOKS
+   if(FaultIs(GWFAULT_SL_ATTACH))
+      return Failed(op, symbol, r, "TEST FAULT: the server refuses to set SL/TP", RD_GW_TEST_FAULT_CODE);
+#endif
    if(slChange && nsl > 0.0 && !RdSymbolAcceptsSl(s))
       return Refuse(op, symbol, r, "Broker does not accept SL on " + symbol);
    if(tpChange && ntp > 0.0 && !RdSymbolAcceptsTp(s))
@@ -81,7 +85,7 @@ bool CTradeGateway::ModifyPending(const ulong ticket, const double price, const 
    if(!OrderSelect(ticket) || !ReadSelectedOrder(o, stopLimit))
       return Refuse(op, who, r, "Order " + who + " no longer exists");
    if(stopLimit)
-      return Refuse(op, o.symbol, r, "Order " + who + " is a stop-limit order - RiskDesk does not modify those");
+      return Refuse(op, o.symbol, r, "Order " + who + " is a stop-limit order - Risk Desk does not modify those");
    ENUM_ORDER_TYPE_TIME typeTime = (ENUM_ORDER_TYPE_TIME)OrderGetInteger(ORDER_TYPE_TIME);
    datetime expiration = (datetime)OrderGetInteger(ORDER_TIME_EXPIRATION);
    SSymbolSpec s;

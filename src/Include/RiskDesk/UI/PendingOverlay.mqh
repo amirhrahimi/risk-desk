@@ -230,12 +230,12 @@ string CPendingOverlay::Tooltip(const ELineRole role, const SOrder &o) const
   {
    string order = RdOrderText(o.side, o.kind) + " " + RdTicketText(o.ticket);
    if(role == LINEROLE_ENTRY)
-      return "RiskDesk overlay: " + order + " " + RdNum(o.volume) + " lot @ " + DoubleToString(o.price, _Digits) +
+      return "Risk Desk overlay: " + order + " " + RdNum(o.volume) + " lot @ " + DoubleToString(o.price, _Digits) +
              (o.expiration > 0 ? " (expires " + TimeToString(o.expiration, TIME_DATE | TIME_MINUTES) + " server time)" : "") +
              " - drag to move the whole order (SL and TP move with it)";
    if(role == LINEROLE_SL)
-      return "RiskDesk overlay: SL " + DoubleToString(o.sl, _Digits) + " of " + order + " - drag to change the order's SL";
-   return "RiskDesk overlay: TP " + DoubleToString(o.tp, _Digits) + " of " + order + " - drag to change the order's TP";
+      return "Risk Desk overlay: SL " + DoubleToString(o.sl, _Digits) + " of " + order + " - drag to change the order's SL";
+   return "Risk Desk overlay: TP " + DoubleToString(o.tp, _Digits) + " of " + order + " - drag to change the order's TP";
   }
 
 //+------------------------------------------------------------------+

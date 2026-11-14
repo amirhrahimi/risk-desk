@@ -56,7 +56,7 @@ void CController::SyncLines()
      {
       CLines::DeleteAll();
       mode = LINES_NONE;
-      note = "SL line deleted from the chart - RiskDesk's lines removed";
+      note = "SL line deleted from the chart - Risk Desk's lines removed";
      }
    else
       if(mode == LINES_PENDING && (!m_lines.Exists(LINEROLE_ENTRY) || !m_lines.Exists(LINEROLE_SL)))
@@ -64,7 +64,7 @@ void CController::SyncLines()
          string gone = m_lines.Exists(LINEROLE_ENTRY) ? "SL" : "Entry";
          CLines::DeleteAll();
          mode = LINES_NONE;
-         note = gone + " line deleted from the chart - RiskDesk's lines removed";
+         note = gone + " line deleted from the chart - Risk Desk's lines removed";
         }
       else
          if(mode != LINES_NONE && m_tpWas && !m_lines.Exists(LINEROLE_TP))

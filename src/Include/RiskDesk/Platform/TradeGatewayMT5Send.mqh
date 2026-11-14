@@ -34,7 +34,10 @@ bool CTradeGateway::Send(const string op, const EGwAction act, MqlTradeRequest &
    bool usesFill = isDeal || act == GWACT_PENDING;
    bool pending = (act == GWACT_PENDING);
    if(c.requestTime == 0)
+     {
       c.requestTime = RdServerTime();
+      Baseline(act, req, c);
+     }
 
    while(!IsStopped())
      {
@@ -51,7 +54,19 @@ bool CTradeGateway::Send(const string op, const EGwAction act, MqlTradeRequest &
       LogRequest(op, act, req, s, c);
       ZeroMemory(res);
       ResetLastError();
+#ifdef RD_TEST_HOOKS
+      EGwSendFault fault = SendFault(act, c.sends);
+      bool sent = (fault == GWSEND_SWALLOW) ? false : OrderSend(req, res);
+      if(fault != GWSEND_NONE)
+        {
+         ZeroMemory(res);   // no reply reaches the terminal: the ambiguous case of BC-14
+         sent = false;
+         RD_LOG_WARN("[" + op + "] TEST FAULT: " + (fault == GWSEND_SWALLOW ? "request not sent" : "request sent, reply dropped") +
+                     " (attempt " + IntegerToString(c.sends) + ")");
+        }
+#else
       bool sent = OrderSend(req, res);
+#endif
       int lastError = GetLastError();
       int rc = (int)res.retcode;
       STradeCode tc;
@@ -188,6 +203,44 @@ bool CTradeGateway::FreshPrice(MqlTradeRequest &req, const SSymbolSpec &s, SSend
   }
 
 //+------------------------------------------------------------------+
+//| BC-14: the deals, positions and orders of ours (same symbol and  |
+//| magic) that exist BEFORE the first send. A trade of the seconds  |
+//| before (a second click, a test case) matches symbol, side and    |
+//| volume just as well as the request's own effect would; only what |
+//| is not in this list can be the effect.                           |
+//+------------------------------------------------------------------+
+void CTradeGateway::Baseline(const EGwAction act, const MqlTradeRequest &req, SSendCtx &c) const
+  {
+   c.knownDealCount = 0;
+   c.knownPositionCount = 0;
+   c.knownOrderCount = 0;
+   if(act == GWACT_OPEN)
+     {
+      if(HistorySelect(c.requestTime - RD_GW_AMBIGUOUS_WINDOW_S - 60, c.requestTime + 60))
+         for(int i = HistoryDealsTotal() - 1; i >= 0 && c.knownDealCount < RD_GW_KNOWN_MAX; i--)
+           {
+            ulong deal = HistoryDealGetTicket(i);
+            if(deal > 0 && HistoryDealGetString(deal, DEAL_SYMBOL) == req.symbol &&
+               HistoryDealGetInteger(deal, DEAL_MAGIC) == (long)req.magic)
+               c.knownDeals[c.knownDealCount++] = deal;
+           }
+      for(int j = PositionsTotal() - 1; j >= 0 && c.knownPositionCount < RD_GW_KNOWN_MAX; j--)
+        {
+         ulong t = PositionGetTicket(j);
+         if(t > 0 && PositionGetString(POSITION_SYMBOL) == req.symbol && PositionGetInteger(POSITION_MAGIC) == (long)req.magic)
+            c.knownPositions[c.knownPositionCount++] = t;
+        }
+     }
+   if(act == GWACT_PENDING)
+      for(int k = OrdersTotal() - 1; k >= 0 && c.knownOrderCount < RD_GW_KNOWN_MAX; k--)
+        {
+         ulong o = OrderGetTicket(k);
+         if(o > 0 && OrderGetString(ORDER_SYMBOL) == req.symbol && OrderGetInteger(ORDER_MAGIC) == (long)req.magic)
+            c.knownOrders[c.knownOrderCount++] = o;
+        }
+  }
+
+//+------------------------------------------------------------------+
 //| BC-14: did the ambiguous request take effect?                    |
 //+------------------------------------------------------------------+
 bool CTradeGateway::Executed(const EGwAction act, const MqlTradeRequest &req, const SSymbolSpec &s, SSendCtx &c,
@@ -229,6 +282,8 @@ bool CTradeGateway::FindOpenDeal(const MqlTradeRequest &req, SSendCtx &c, MqlTra
          ulong deal = HistoryDealGetTicket(i);
          if(deal == 0 || HistoryDealGetString(deal, DEAL_SYMBOL) != req.symbol)
             continue;
+         if(RdGwKnown(c.knownDeals, c.knownDealCount, deal))
+            continue;   // older than the request
          if(HistoryDealGetInteger(deal, DEAL_MAGIC) != (long)req.magic || HistoryDealGetInteger(deal, DEAL_TYPE) != dealType)
             continue;
          long entry = HistoryDealGetInteger(deal, DEAL_ENTRY);
@@ -257,6 +312,8 @@ bool CTradeGateway::FindOpenDeal(const MqlTradeRequest &req, SSendCtx &c, MqlTra
       ulong t = PositionGetTicket(j);
       if(t == 0 || PositionGetString(POSITION_SYMBOL) != req.symbol || PositionGetInteger(POSITION_MAGIC) != (long)req.magic)
          continue;
+      if(RdGwKnown(c.knownPositions, c.knownPositionCount, t))
+         continue;   // older than the request
       if(PositionGetInteger(POSITION_TYPE) != posType || !RdVolEq(PositionGetDouble(POSITION_VOLUME), req.volume))
          continue;
       if((datetime)PositionGetInteger(POSITION_TIME) < from)
@@ -280,6 +337,8 @@ bool CTradeGateway::FindPlacedOrder(const MqlTradeRequest &req, const SSymbolSpe
       ulong t = OrderGetTicket(i);
       if(t == 0 || OrderGetString(ORDER_SYMBOL) != req.symbol || OrderGetInteger(ORDER_MAGIC) != (long)req.magic)
          continue;
+      if(RdGwKnown(c.knownOrders, c.knownOrderCount, t))
+         continue;   // older than the request
       if(OrderGetInteger(ORDER_TYPE) != (long)req.type || !RdPriceEq(s, OrderGetDouble(ORDER_PRICE_OPEN), req.price))
          continue;
       if(!RdVolEq(OrderGetDouble(ORDER_VOLUME_INITIAL), req.volume) || (datetime)OrderGetInteger(ORDER_TIME_SETUP) < from)
@@ -349,7 +408,40 @@ void CTradeGateway::DealFillings(const SSymbolSpec &s, SSendCtx &c)
    AddFill(c, ORDER_FILLING_FOK);     // last resorts: some servers report flags that do not
    AddFill(c, ORDER_FILLING_IOC);     // match what they accept
    AddFill(c, ORDER_FILLING_RETURN);
+#ifdef RD_TEST_HOOKS
+   if(FaultIs(GWFAULT_BAD_FILL))
+      BadFillFirst(s, c);
+#endif
   }
+
+#ifdef RD_TEST_HOOKS
+//+------------------------------------------------------------------+
+//| GWFAULT_BAD_FILL: a policy the symbol's flags do not allow goes  |
+//| first (FOK, else IOC, else RETURN, which a market-execution      |
+//| server does not take for deals), so the REAL rejection (10030)   |
+//| and the ladder's next step are exercised.                        |
+//+------------------------------------------------------------------+
+void CTradeGateway::BadFillFirst(const SSymbolSpec &s, SSendCtx &c)
+  {
+   int old[RD_GW_FILLS_MAX];
+   int n = c.fillCount;
+   for(int i = 0; i < n; i++)
+      old[i] = c.fills[i];
+   int bad = ORDER_FILLING_RETURN;
+   if((s.fillingFlags & SYMBOL_FILLING_FOK) == 0)
+      bad = ORDER_FILLING_FOK;
+   else
+      if((s.fillingFlags & SYMBOL_FILLING_IOC) == 0)
+         bad = ORDER_FILLING_IOC;
+   c.fillCount = 0;
+   c.fillIndex = 0;
+   AddFill(c, bad);
+   for(int j = 0; j < n; j++)
+      AddFill(c, old[j]);
+   RD_LOG_WARN("[G-01] " + s.name + " TEST FAULT: the ladder starts with fill=" + FillName(bad) + " (symbol flags " +
+               IntegerToString(s.fillingFlags) + ")");
+  }
+#endif
 
 void CTradeGateway::PendingFillings(const SSymbolSpec &s, SSendCtx &c)
   {

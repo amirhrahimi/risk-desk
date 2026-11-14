@@ -220,7 +220,11 @@ void CUiSelfTest::TradeT12a()
       Line("INFO T-12: margin of " + m_pvLots + " lot unknown (" + mr.message + ")");
       return;
      }
-   m_cfg.marginBufferPct = (1.0 - 0.5 * need / acc.freeMargin) * 100.0;
+   // Room for half the lots (in grid steps) plus half a step: "exactly half" sits on the margin of
+   // the next smaller lot, and a tick between this reading and the click (crypto) tips it under.
+   double steps = MathRound(lots / m_ts.volStep);
+   double keep = (steps >= 2.0) ? (MathFloor(steps / 2.0) + 0.5) / steps : 0.5;
+   m_cfg.marginBufferPct = (1.0 - keep * need / acc.freeMargin) * 100.0;
    SPosition arr[];
    int before = TestPositions(arr);
    ClickButton(PB_BUY);
