@@ -2,15 +2,12 @@
 
 This page lists **plans, not commitments**. Order and scope can change; nothing here has a date. Suggestions are welcome as [feature requests](https://github.com/amirhrahimi/risk-desk/issues/new?template=feature_request.yml).
 
-## 1.8.0: first stable release
+## Test work left over from 1.8.0
 
-The hardening work that turns the 1.8.0 release candidates into a release line:
+1.8.0 is the first stable release. Its hardening (see the [CHANGELOG](CHANGELOG.md)) is done: the three safety paths are tested on demo servers with injected faults (T-29, T-35, MT5 filling fallback; ADR-031), the trade gateway is reviewed against the compatibility checklist (one BC-14 defect found and fixed), and messages and dialogs say "Risk Desk". It was released before this test work, which is still open:
 
-- **Force the untested safety paths in debug builds** and run them on demo accounts: closing a position whose stop-loss cannot be attached (T-29, rule R7) and an ambiguous result without blind resend (T-35, rule R9). Add a test for the MT5 filling-policy fallback after a real rejection.
-- **Run the full demo test matrix** (T-01 to T-28 on the IG, IC Markets EU and Dukascopy accounts, T-30 on a netting account, T-31 on a cent account if available) and fix what it finds, with a regression test for every fix in the risk logic ([docs/design/08-testing.md](docs/design/08-testing.md)).
-- **Review the trade gateway** against the compatibility checklist ([docs/design/03-broker-compatibility.md §6](docs/design/03-broker-compatibility.md#6-compatibility-checklist-definition-of-done-for-every-trade-feature)).
-- Refresh the BrokerProbe and GatewaySmoke reports with the release build.
-- Show the product name as "Risk Desk" in the panel title, dialogs and messages (code identifiers, file names and log file names stay `RiskDesk`).
+- **Finish the full demo test matrix on open markets** ([docs/design/08-testing.md](docs/design/08-testing.md)): T-01 to T-28 on EURUSD, XAUUSD and an index on the IG, IC Markets EU and Dukascopy accounts, and T-30 on a netting account. A weekend run covered the panel, trade, pending, manage, half and extras suites on BTCUSD (the only symbol open) on four accounts. T-31 needs a cent account (none available). Fix what it finds, with a regression test for every fix in the risk logic.
+- **Refresh the BrokerProbe and GatewaySmoke reports with the release build**, on a weekday: on a closed market IG reports every symbol as trade-disabled.
 
 ## Broader broker coverage
 

@@ -447,7 +447,7 @@ bool CCommands::DeleteLine(SResult &r)
    int n = CLines::DeleteAll();
    m_state.lineMode = LINES_NONE;
    if(n == 0)
-      return RdWarn(r, "No RiskDesk lines on this chart");
+      return RdWarn(r, "No Risk Desk lines on this chart");
    return RdOk(r, "Lines removed");
   }
 
@@ -493,7 +493,7 @@ bool CCommands::Confirm(const string caption, const string text)
          RD_LOG_INFO("Strategy Tester: no dialog - answered Yes");
         }
       else
-         yes = (MessageBox(text, RD_PRODUCT + " - " + caption, MB_YESNO | MB_ICONQUESTION) == IDYES);
+         yes = (MessageBox(text, RD_PRODUCT_NAME + " - " + caption, MB_YESNO | MB_ICONQUESTION) == IDYES);
    RD_LOG_INFO("Confirmation answer: " + (yes ? "Yes" : "No"));
    return yes;
   }
@@ -541,14 +541,14 @@ bool CCommands::Implemented(const EPanelButton b)
 string CCommands::Tooltip(const EPanelButton b, const string symbol) const
   {
    bool toolOnly = (m_cfg.scopeChartOps == SCOPE_TOOL_ON_SYMBOL);
-   string onSymbol = toolOnly ? "every RiskDesk " : "every ";
+   string onSymbol = toolOnly ? "every Risk Desk " : "every ";
    switch(b)
      {
       case PB_ADDLINE:
          return "Draw the SL line" + (m_cfg.tpMode == TPMODE_MANUAL_LINE ? " and the TP line" : "") +
                 " for a market order on " + symbol;
       case PB_DELLINE:
-         return "Remove RiskDesk's planning lines from this chart (no order is touched)";
+         return "Remove Risk Desk's planning lines from this chart (no order is touched)";
       case PB_BUY:
          return "Buy " + symbol + " at market: lots from Risk % and the SL line" +
                 (m_cfg.tpMode == TPMODE_AUTO_RR ? ", TP at R/R " + RdNum(m_cfg.tpRR, 2) : "");
@@ -571,7 +571,7 @@ string CCommands::Tooltip(const EPanelButton b, const string symbol) const
       case PB_CHARTCLOSE:
          return "Close " + onSymbol + "position on " + symbol + " (pending orders stay)";
       case PB_FULLCLOSE:
-         return "Close " + (m_cfg.scopeFullClose == SCOPE_TOOL_ACCOUNT ? "every RiskDesk" : "every") +
+         return "Close " + (m_cfg.scopeFullClose == SCOPE_TOOL_ACCOUNT ? "every Risk Desk" : "every") +
                 " position on every symbol of this account" +
                 (m_cfg.fullCloseAlsoPending ? " and delete the pending orders" : " (pending orders stay)");
       default:

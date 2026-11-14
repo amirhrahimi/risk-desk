@@ -215,7 +215,7 @@ bool CCommands::DelPending(SResult &r)
    if(!m_gw.ListPending(f, ord, lr))
       return RdFail(r, name + " failed: " + lr.message);
    int n = ArraySize(ord);
-   string which = (toolOnly ? "RiskDesk " : "") + "pending order";
+   string which = (toolOnly ? "Risk Desk " : "") + "pending order";
    if(n == 0)
       return RdWarn(r, "No " + which + "s on " + _Symbol);
    ulong tickets[];

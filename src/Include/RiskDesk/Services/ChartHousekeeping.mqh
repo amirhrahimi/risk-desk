@@ -56,7 +56,7 @@ public:
    // number of objects deleted (the caller redraws).
    int               Run(const bool force);
    // RiskDesk leaves the chart: the user's "Show trade history" back (MT5).
-   void              Leave() { HistoryRestore("RiskDesk removed from the chart"); }
+   void              Leave() { HistoryRestore("Risk Desk removed from the chart"); }
    int               Removed() const { return m_removed; }
    // F-20 AC1/AC3: one of MetaTrader's objects of a closed trade of this chart's symbol.
    static bool       IsClosedTradeObject(const string name);
@@ -148,7 +148,7 @@ void CChartHousekeeping::HistoryOff()
       return;
    if(RdSetChartTradeHistory(false))
       RD_LOG_INFO("Show trade history switched off on this chart (Closed Trade History Objects = Remove); "
-                  "it is switched on again when RiskDesk leaves the chart");
+                  "it is switched on again when Risk Desk leaves the chart");
    else
       RD_LOG_WARN("Show trade history could not be switched off (error " + IntegerToString(GetLastError()) + ")");
   }

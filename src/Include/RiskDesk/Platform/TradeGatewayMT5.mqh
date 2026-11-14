@@ -47,9 +47,19 @@ struct SSendCtx
    double            tpRR;          // G-01: > 0 = TP follows the fresh entry (Auto R/R)
    double            preVolume;     // G-01 netting / G-04: position volume before the request
    ulong             foundPosition; // position found for the request (BC-14)
+   //--- BC-14: what existed before the first send; the ambiguity check must not take it for the request's effect
+   ulong             knownDeals[RD_GW_KNOWN_MAX];
+   int               knownDealCount;
+   ulong             knownPositions[RD_GW_KNOWN_MAX];
+   int               knownPositionCount;
+   ulong             knownOrders[RD_GW_KNOWN_MAX];
+   int               knownOrderCount;
 
    void              Reset()
      {
+      knownDealCount = 0;
+      knownPositionCount = 0;
+      knownOrderCount = 0;
       for(int i = 0; i < RD_GW_FILLS_MAX; i++)
          fills[i] = ORDER_FILLING_FOK;
       for(int j = 0; j < RD_GW_TIMES_MAX; j++)
@@ -97,10 +107,14 @@ private:
    bool              FreshPrice(MqlTradeRequest &req, const SSymbolSpec &s, SSendCtx &c);
    bool              Executed(const EGwAction act, const MqlTradeRequest &req, const SSymbolSpec &s, SSendCtx &c,
                               MqlTradeResult &res);
+   void              Baseline(const EGwAction act, const MqlTradeRequest &req, SSendCtx &c) const;
    bool              FindOpenDeal(const MqlTradeRequest &req, SSendCtx &c, MqlTradeResult &res);
    bool              FindPlacedOrder(const MqlTradeRequest &req, const SSymbolSpec &s, SSendCtx &c, MqlTradeResult &res);
    bool              CloseTookEffect(const MqlTradeRequest &req, SSendCtx &c, MqlTradeResult &res);
    void              DealFillings(const SSymbolSpec &s, SSendCtx &c);
+#ifdef RD_TEST_HOOKS
+   void              BadFillFirst(const SSymbolSpec &s, SSendCtx &c);
+#endif
    void              PendingFillings(const SSymbolSpec &s, SSendCtx &c);
    void              ExpirationRungs(const SSymbolSpec &s, SSendCtx &c);
    void              AddFill(SSendCtx &c, const int fill) const;
@@ -217,6 +231,13 @@ bool CTradeGateway::OpenMarket(const string symbol, const ESide side, const doub
      }
 
    bool attach = WantStopsWithOrder(symbol);
+#ifdef RD_TEST_HOOKS
+   if(FaultIs(GWFAULT_SL_ATTACH))
+     {
+      attach = false;
+      RD_LOG_WARN("[" + op + "] " + symbol + " TEST FAULT: the open carries no SL/TP and later SL/TP modifies are refused");
+     }
+#endif
    MqlTradeRequest req;
    BaseRequest(req, symbol);
    req.action = TRADE_ACTION_DEAL;

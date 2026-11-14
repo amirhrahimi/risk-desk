@@ -4,6 +4,19 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-11-14
+
+First stable release. Changes since 1.8.0-rc.1; the trading logic is otherwise as in 1.7.0 and 1.8.0-rc.1. Tested on demo accounts only; not yet tested on live accounts. See the README for known limitations.
+
+### Fixed
+- After an unclear result (a timeout or no reply) the check for "did the request execute?" could take a trade of the seconds before for it: a second click with the same symbol, side and volume, then a lost reply, made the panel report success and name the old ticket although nothing had been opened (MT5: "executed but the position was not found"). The gateway now records the trades that exist before the first send and ignores them (BC-14, ADR-031). Found by the new safety tests on IC Markets EU MT4 and MT5.
+
+### Added
+- Debug builds only: fault injection in the gateway and a `safety` suite for `build/run-uitest.ps1` that runs the three safety paths against real demo servers: closing a position whose SL cannot be attached (T-29, rule R7), the lost-reply cases without a blind resend (T-35, rule R9) and the MT5 filling-policy fallback after a real rejection (BC-06). They pass on IC Markets EU and Dukascopy, MT4 and MT5 (ADR-031, `docs/design/08-testing.md` §3j). Release builds contain none of it.
+
+### Changed
+- The name in messages, dialogs and tooltips reads "Risk Desk" (status bar, confirmation dialogs, line and overlay tooltips, refusals). Code identifiers, file names, log names and the order comment stay `RiskDesk`.
+
 ## [1.8.0-rc.1] - 2026-11-13
 
 Release candidate for 1.8.0, the first stable release, published as a pre-release for testing. The trading code is the same as in 1.7.0. Tested on demo accounts only; not yet tested on live accounts. The hardening work planned before 1.8.0 (tests that force the untested safety paths, the full demo test matrix, a review of the trade gateway) is still open; see the ROADMAP and the README's known limitations.
@@ -52,6 +65,7 @@ Internal versions, not published. The BrokerProbe and GatewaySmoke reports in `b
 | 0.1.0 | 2026-11-12 | P1: domain layer and unit tests |
 | 0.0.1 | 2026-11-12 | P0: build tooling and BrokerProbe |
 
-[Unreleased]: https://github.com/amirhrahimi/risk-desk/compare/v1.8.0-rc.1...HEAD
+[Unreleased]: https://github.com/amirhrahimi/risk-desk/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/amirhrahimi/risk-desk/compare/v1.8.0-rc.1...v1.8.0
 [1.8.0-rc.1]: https://github.com/amirhrahimi/risk-desk/compare/v1.7.0...v1.8.0-rc.1
 [1.7.0]: https://github.com/amirhrahimi/risk-desk/releases/tag/v1.7.0
