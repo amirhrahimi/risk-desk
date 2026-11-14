@@ -23,6 +23,9 @@
     the terminal NOT already running (a running instance would ignore the
     startup configuration).
 
+    On macOS and Linux (PowerShell 7) the terminal runs under Wine; MT4's
+    window is closed with Wine's taskkill (build/host.ps1, ADR-032).
+
 .PARAMETER Target
     mt4, mt5 or all (default).
 
@@ -35,6 +38,7 @@
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File build/run-tests.ps1
     powershell -ExecutionPolicy Bypass -File build/run-tests.ps1 -Target mt4 -Symbol EURUSD.a
+    pwsh build/run-tests.ps1 -Target mt5      (macOS / Linux)
 #>
 param(
     [ValidateSet('mt4', 'mt5', 'all')]
@@ -48,6 +52,7 @@ Set-StrictMode -Version 2.0
 
 $PathsFile = Join-Path $PSScriptRoot 'paths.local.ps1'
 
+. (Join-Path $PSScriptRoot 'host.ps1')
 . (Join-Path $PSScriptRoot 'profile-guard.ps1')
 
 function Write-Status([string]$status, [string]$text) {
@@ -59,43 +64,40 @@ function Write-Status([string]$status, [string]$text) {
     Write-Host $text
 }
 
-function Get-Running([string]$exe) {
-    return @(Get-Process -ErrorAction SilentlyContinue | Where-Object {
-        try { $_.Path -and ($_.Path -ieq $exe) } catch { $false }
-    })
-}
-
 # Runs the tests in one terminal; returns $true when the report says 0 failed.
 function Invoke-TerminalTests($t) {
     $name = [string]$t.Name
     $platform = ([string]$t.Platform).ToLowerInvariant()
-    $data = [string]$t.DataPath
+    $data = Expand-RdHome ([string]$t.DataPath)
     $mql = 'MQL5'; $exeName = 'terminal64.exe'; $ext = '.ex5'; $tag = 'MT5'
     if ($platform -eq 'mt4') { $mql = 'MQL4'; $exeName = 'terminal.exe'; $ext = '.ex4'; $tag = 'MT4' }
 
-    $origin = Join-Path $data 'origin.txt'
-    if (-not (Test-Path -LiteralPath $origin)) { Write-Status 'FAIL' "$name  no origin.txt in $data (is DataPath right?)"; return $false }
-    $install = (Get-Content -LiteralPath $origin -TotalCount 1).Trim()
-    $exe = Join-Path $install $exeName
-    if (-not (Test-Path -LiteralPath $exe)) { Write-Status 'FAIL' "$name  $exe not found"; return $false }
-    $script = Join-Path $data "$mql\Scripts\RiskDesk\RiskDeskTests$ext"
+    $exe = Find-RdTerminalExe $data $exeName
+    if (-not $exe) { Write-Status 'FAIL' "$name  $exeName not found through $data (no origin.txt naming its install folder, and not in the folder itself): is DataPath right?"; return $false }
+    $wine = $null
+    if (-not $RdOnWindows) {
+        $wine = Find-RdWine $platform (Get-RdWineSetting $t $platform $Wine4 $Wine5)
+        if (-not $wine) { Write-Status 'FAIL' "$name  $(Get-RdWineHint $platform)"; return $false }
+    }
+    $script = Join-RdPath $data "$mql/Scripts/RiskDesk/RiskDeskTests$ext"
     if (-not (Test-Path -LiteralPath $script)) {
-        Write-Status 'FAIL' "$name  $mql\Scripts\RiskDesk\RiskDeskTests$ext missing: run build.ps1 and install-junctions.ps1 first"
+        Write-Status 'FAIL' "$name  $mql/Scripts/RiskDesk/RiskDeskTests$ext missing: run build.ps1 and install-junctions.ps1 first"
         return $false
     }
-    if (@(Get-Running $exe).Count -gt 0) {
+    if (@(Get-RdProgramProcesses $exe).Count -gt 0) {
         Write-Status 'FAIL' "$name  the terminal is running; close it first (a running instance ignores the startup configuration)"
         return $false
     }
 
-    $report = Join-Path $data "$mql\Files\RiskDesk\tests_$tag.txt"
-    $ini = Join-Path $env:TEMP "RiskDesk-run-tests-$tag-$PID.ini"
+    $report = Join-RdPath $data "$mql/Files/RiskDesk/tests_$tag.txt"
+    $ini = Join-Path (Get-RdTempDir) "RiskDesk-run-tests-$tag-$PID.ini"
+    $iniArg = ConvertTo-RdWinPath $ini (Get-RdWinePrefix $exe)
     if ($platform -eq 'mt5') {
         $lines = @('[StartUp]', 'Script=RiskDesk\RiskDeskTests', "Symbol=$Symbol", 'Period=H1', 'ShutdownTerminal=1')
-        $arguments = @("/config:`"$ini`"")
+        $arguments = @((Format-RdPathArg '/config:' $iniArg))
     } else {
         $lines = @('Script=RiskDesk\RiskDeskTests', "Symbol=$Symbol", 'Period=H1')
-        $arguments = @("`"$ini`"")
+        $arguments = @((Format-RdPathArg '' $iniArg))
     }
     [IO.File]::WriteAllText($ini, (($lines -join "`r`n") + "`r`n"), [Text.Encoding]::ASCII)
 
@@ -104,7 +106,7 @@ function Invoke-TerminalTests($t) {
     $profileSnap = Save-ChartProfile $data $platform
     $proc = $null
     try {
-        $proc = Start-Process -FilePath $exe -ArgumentList $arguments -PassThru
+        $proc = Start-RdProgram $exe $arguments $wine
         $fresh = $false
         $deadline = $started.AddSeconds($TimeoutSec)
         while ((Get-Date) -lt $deadline) {
@@ -112,18 +114,18 @@ function Invoke-TerminalTests($t) {
                 $fresh = $true
                 break
             }
-            if ($proc.HasExited) { break }
+            if (-not (Test-RdProgramRunning $proc $exe)) { break }
             Start-Sleep -Milliseconds 500
         }
         # MT5 closes itself; MT4 (or a slow MT5) is asked to close its window.
-        if (-not $proc.WaitForExit(15000)) {
-            $null = $proc.CloseMainWindow()
-            if (-not $proc.WaitForExit(20000)) {
+        if (-not (Wait-RdProgramExit $proc $exe 15000)) {
+            Close-RdProgram $proc $exe $wine
+            if (-not (Wait-RdProgramExit $proc $exe 20000)) {
                 Write-Status 'WARN' "$name  terminal (pid $($proc.Id)) did not close; close it by hand"
             }
         }
     } finally {
-        if ($proc -and -not $proc.HasExited) { $null = $proc.WaitForExit(30000) }
+        if ($proc) { $null = Wait-RdProgramExit $proc $exe 30000 }
         Restore-ChartProfile $profileSnap
         Remove-Item -LiteralPath $ini -Force -ErrorAction SilentlyContinue
     }
@@ -132,7 +134,7 @@ function Invoke-TerminalTests($t) {
         $fresh = $true
     }
     if (-not $fresh) {
-        Write-Status 'FAIL' "$name  no fresh report within $TimeoutSec s. Does symbol '$Symbol' exist on this server? See $mql\Logs in $data"
+        Write-Status 'FAIL' "$name  no fresh report within $TimeoutSec s. Does symbol '$Symbol' exist on this server? See $mql/Logs in $data"
         return $false
     }
 
@@ -156,6 +158,8 @@ if (-not (Test-Path -LiteralPath $PathsFile)) {
     Write-Status 'FAIL' 'build/paths.local.ps1 not found (copy build/paths.example.ps1 and fill it in).'
     exit 1
 }
+$Wine4 = $null
+$Wine5 = $null
 $Terminals = @()
 . $PathsFile
 $selected = @(@($Terminals) | Where-Object { $Target -eq 'all' -or ([string]$_.Platform).ToLowerInvariant() -eq $Target })

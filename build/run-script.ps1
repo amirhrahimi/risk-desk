@@ -28,6 +28,9 @@
     GatewaySmoke sends real orders: the script itself refuses non-demo
     accounts (rule R13). Pass InpConfirm=false to run it unattended.
 
+    On macOS and Linux (PowerShell 7) the terminal runs under Wine; MT4's
+    window is closed with Wine's taskkill (build/host.ps1, ADR-032).
+
 .EXAMPLE
     powershell -File build/run-script.ps1 -Platform mt5 -Login <login> -Server MetaQuotes-Demo `
         -Script BrokerProbe -Symbol EURUSD -Report 'probe_*_<login>_*.txt'
@@ -49,23 +52,31 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2.0
 
+. (Join-Path $PSScriptRoot 'host.ps1')
+
 $PathsFile = Join-Path $PSScriptRoot 'paths.local.ps1'
 if (-not (Test-Path -LiteralPath $PathsFile)) { Write-Host 'FAIL  build/paths.local.ps1 not found'; exit 1 }
+$Wine4 = $null
+$Wine5 = $null
 $Terminals = @()
 . $PathsFile
 $t = @(@($Terminals) | Where-Object { ([string]$_.Platform).ToLowerInvariant() -eq $Platform }) | Select-Object -First 1
 if (-not $t) { Write-Host "FAIL  no $Platform terminal in build/paths.local.ps1"; exit 1 }
 
-$data = [string]$t.DataPath
+$data = Expand-RdHome ([string]$t.DataPath)
 $mql = 'MQL5'; $exeName = 'terminal64.exe'; $ext = '.ex5'
 if ($Platform -eq 'mt4') { $mql = 'MQL4'; $exeName = 'terminal.exe'; $ext = '.ex4' }
-$install = (Get-Content -LiteralPath (Join-Path $data 'origin.txt') -TotalCount 1).Trim()
-$exe = Join-Path $install $exeName
-if (-not (Test-Path -LiteralPath (Join-Path $data "$mql\Scripts\RiskDesk\$Script$ext"))) {
-    Write-Host "FAIL  $mql\Scripts\RiskDesk\$Script$ext missing: run build.ps1 and install-junctions.ps1"; exit 1
+$exe = Find-RdTerminalExe $data $exeName
+if (-not $exe) { Write-Host "FAIL  $exeName not found through $data (no origin.txt naming its install folder, and not in the folder itself): is DataPath right?"; exit 1 }
+$wine = $null
+if (-not $RdOnWindows) {
+    $wine = Find-RdWine $Platform (Get-RdWineSetting $t $Platform $Wine4 $Wine5)
+    if (-not $wine) { Write-Host "FAIL  $(Get-RdWineHint $Platform)"; exit 1 }
 }
-$running = @(Get-Process -ErrorAction SilentlyContinue | Where-Object { try { $_.Path -and ($_.Path -ieq $exe) } catch { $false } })
-if ($running.Count -gt 0) { Write-Host "FAIL  $exe is running; close it first"; exit 1 }
+if (-not (Test-Path -LiteralPath (Join-RdPath $data "$mql/Scripts/RiskDesk/$Script$ext"))) {
+    Write-Host "FAIL  $mql/Scripts/RiskDesk/$Script$ext missing: run build.ps1 and install-junctions.ps1"; exit 1
+}
+if (@(Get-RdProgramProcesses $exe).Count -gt 0) { Write-Host "FAIL  $exe is running; close it first"; exit 1 }
 
 #--- script inputs: a .set file in the Presets folder
 $setName = ''
@@ -74,8 +85,8 @@ if ($Inputs -ne '') {
     $setName = "RiskDesk-run-$PID.set"
     $setLines = @($Inputs -split ';' | Where-Object { $_.Trim() -ne '' } | ForEach-Object { $_.Trim() })
     $setText = ($setLines -join "`r`n") + "`r`n"
-    $dirs = @(Join-Path $data "$mql\Presets")
-    if ($Platform -eq 'mt4') { $dirs += (Join-Path $data 'presets') }
+    $dirs = @(Join-RdPath $data "$mql/Presets")
+    if ($Platform -eq 'mt4') { $dirs += (Join-RdPath $data 'presets') }
     foreach ($d in $dirs) {
         if (-not (Test-Path -LiteralPath $d)) { New-Item -ItemType Directory -Path $d -Force | Out-Null }
         $f = Join-Path $d $setName
@@ -86,22 +97,23 @@ if ($Inputs -ne '') {
 }
 
 #--- startup configuration (no password: the terminal's saved one is used)
-$ini = Join-Path $env:TEMP "RiskDesk-run-script-$PID.ini"
+$ini = Join-Path (Get-RdTempDir) "RiskDesk-run-script-$PID.ini"
+$iniArg = ConvertTo-RdWinPath $ini (Get-RdWinePrefix $exe)
 if ($Platform -eq 'mt5') {
     $lines = @('[Common]', "Login=$Login", "Server=$Server",
                '[Experts]', 'AllowLiveTrading=1', 'AllowDllImport=0', 'Enabled=1',
                '[StartUp]', "Script=RiskDesk\$Script", "Symbol=$Symbol", "Period=$Period", 'ShutdownTerminal=1')
     if ($setName -ne '') { $lines += "ScriptParameters=$setName" }
-    $arguments = @("/config:`"$ini`"")
+    $arguments = @((Format-RdPathArg '/config:' $iniArg))
 } else {
     $lines = @("Login=$Login", "Server=$Server", 'ExpertsEnable=true', 'ExpertsTrades=true', 'ExpertsDllImport=false',
                "Script=RiskDesk\$Script", "Symbol=$Symbol", "Period=$Period")
     if ($setName -ne '') { $lines += "ScriptParameters=$setName" }
-    $arguments = @("`"$ini`"")
+    $arguments = @((Format-RdPathArg '' $iniArg))
 }
 [IO.File]::WriteAllText($ini, (($lines -join "`r`n") + "`r`n"), [Text.Encoding]::ASCII)
 
-$filesDir = Join-Path $data "$mql\Files\RiskDesk"
+$filesDir = Join-RdPath $data "$mql/Files/RiskDesk"
 function Get-FreshReport([datetime]$since) {
     if (-not (Test-Path -LiteralPath $filesDir)) { return $null }
     return Get-ChildItem -LiteralPath $filesDir -Filter $Report -File -ErrorAction SilentlyContinue |
@@ -116,7 +128,7 @@ $started = (Get-Date).AddSeconds(-1)
 $found = $null
 $proc = $null
 try {
-    $proc = Start-Process -FilePath $exe -ArgumentList $arguments -PassThru
+    $proc = Start-RdProgram $exe $arguments $wine
     $deadline = (Get-Date).AddSeconds($TimeoutSec)
     $lastSize = -1
     while ((Get-Date) -lt $deadline) {
@@ -126,25 +138,25 @@ try {
             if ($found.Length -eq $lastSize) { break }
             $lastSize = $found.Length
         }
-        if ($proc.HasExited) { $found = Get-FreshReport $started; break }
+        if (-not (Test-RdProgramRunning $proc $exe)) { $found = Get-FreshReport $started; break }
         Start-Sleep -Milliseconds 1500
     }
-    if (-not $proc.WaitForExit(15000)) {
-        $null = $proc.CloseMainWindow()
-        if (-not $proc.WaitForExit(30000)) {
+    if (-not (Wait-RdProgramExit $proc $exe 15000)) {
+        Close-RdProgram $proc $exe $wine
+        if (-not (Wait-RdProgramExit $proc $exe 30000)) {
             Write-Host "WARN  terminal (pid $($proc.Id)) did not close; stopping it"
-            Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+            Stop-RdProgram $proc $exe $wine
         }
     }
 } finally {
-    if ($proc -and -not $proc.HasExited) { $null = $proc.WaitForExit(30000) }
+    if ($proc) { $null = Wait-RdProgramExit $proc $exe 30000 }
     Restore-ChartProfile $profileSnap
     Remove-Item -LiteralPath $ini -Force -ErrorAction SilentlyContinue
     foreach ($f in $setFiles) { Remove-Item -LiteralPath $f -Force -ErrorAction SilentlyContinue }
 }
 
 if (-not $found) {
-    Write-Host "FAIL  no fresh $Report within $TimeoutSec s. Check the login (saved password?), the symbol name, and $mql\Logs in $data"
+    Write-Host "FAIL  no fresh $Report within $TimeoutSec s. Check the login (saved password?), the symbol name, and $mql/Logs in $data"
     exit 1
 }
 Write-Host "OK    report: $($found.FullName)"

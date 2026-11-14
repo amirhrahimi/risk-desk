@@ -1,4 +1,4 @@
-# Builds Risk Desk for MetaTrader 4 and 5 on a GitHub-hosted Windows runner and publishes it.
+# Builds Risk Desk for MetaTrader 4 and 5 on a GitHub-hosted Linux runner and publishes it.
 #
 #   Pull request to main: compiles the eight targets (0 errors, 0 warnings, rule R11) and attaches
 #                         the package to the run. No release: the code is not merged yet.
@@ -13,9 +13,12 @@
 # set in Build.mqh on the runner only): 1.7.0+dev.abc1234 on main, 1.7.0+pr.12.abc1234 for a
 # pull request. Released builds report the plain version.
 #
-# The package is made by build/package-release.ps1, the same script as a local release.
-# MetaEditor comes from MetaQuotes' public installers (mt4setup.exe, mt5setup.exe).
-# First verified 2026-11-13: 8 of 8 targets, 0 errors, 0 warnings, about 2 minutes.
+# MetaEditor comes from MetaQuotes' public installers (mt4setup.exe, mt5setup.exe) and runs under
+# Wine (ADR-033): build/install-metatrader-wine.sh installs Wine (WINE_VERSION below, pinned: MetaTrader
+# refuses some Wine versions) and both terminals; build/build.ps1 compiles, the same script as a local
+# build. The package is made by build/package-release.ps1, the same script as a local release.
+# Windows runner first verified 2026-11-13 (ADR-030). Linux runner verified 2026-11-14 on an Ubuntu
+# 24.04 runner image: 8 of 8 targets, 0 errors, 0 warnings, about 4 minutes.
 name: build
 
 on:
@@ -34,8 +37,13 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      # WineHQ development version. Change it only after build.ps1 compiled all eight targets with
+      # the new one (ADR-033): with Ubuntu's Wine 9.0 and WineHQ 10.0 MetaEditor stops at
+      # "A debugger has been found running in your system".
+      WINE_VERSION: '11.21'
     outputs:
       version: ${{ steps.version.outputs.version }}
       build_version: ${{ steps.version.outputs.build_version }}
@@ -80,50 +88,15 @@ jobs:
           "build_version=$stamp" >> $env:GITHUB_OUTPUT
           "kind=$kind" >> $env:GITHUB_OUTPUT
 
-      - name: Install MetaTrader 4 and 5 (for MetaEditor)
-        shell: pwsh
-        run: |
-          foreach ($p in 'mt4', 'mt5') {
-            $setup = Join-Path $env:RUNNER_TEMP "$($p)setup.exe"
-            Invoke-WebRequest -Uri "https://download.mql5.com/cdn/web/metaquotes.software.corp/$p/$($p)setup.exe" -OutFile $setup
-            Start-Process -FilePath $setup -ArgumentList '/auto' -Wait
-          }
-          $found = @(Get-ChildItem 'C:\Program Files', 'C:\Program Files (x86)' -Recurse -Depth 2 -Filter 'metaeditor*.exe' -ErrorAction SilentlyContinue)
-          $found | ForEach-Object { '{0}  {1}' -f $_.FullName, $_.VersionInfo.FileVersion }
-          $me4 = $found | Where-Object Name -eq 'metaeditor.exe' | Select-Object -First 1
-          $me5 = $found | Where-Object Name -eq 'metaeditor64.exe' | Select-Object -First 1
-          if (-not $me4) { throw 'MetaEditor 4 (metaeditor.exe) not found after installing MetaTrader 4' }
-          if (-not $me5) { throw 'MetaEditor 5 (metaeditor64.exe) not found after installing MetaTrader 5' }
-          "ME4=$($me4.FullName)" >> $env:GITHUB_ENV
-          "ME5=$($me5.FullName)" >> $env:GITHUB_ENV
+      - name: Install Wine and MetaTrader 4 and 5 (for MetaEditor)
+        shell: bash
+        run: bash build/install-metatrader-wine.sh --install-wine --wine-version "$WINE_VERSION" --paths-file "$RUNNER_TEMP/paths.ci.ps1"
 
+      # build.ps1 compiles every .mq4/.mq5 under src/Experts and src/Scripts (the eight targets) and
+      # fails on any error or warning, or when no new .ex4/.ex5 was written. MetaEditor needs a display.
       - name: Compile and check for 0 errors, 0 warnings
-        shell: pwsh
-        run: |
-          $targets = 'src\Experts\RiskDesk.mq4', 'src\Scripts\RiskDesk\BrokerProbe.mq4',
-                     'src\Scripts\RiskDesk\GatewaySmoke.mq4', 'src\Scripts\RiskDesk\RiskDeskTests.mq4',
-                     'src\Experts\RiskDesk.mq5', 'src\Scripts\RiskDesk\BrokerProbe.mq5',
-                     'src\Scripts\RiskDesk\GatewaySmoke.mq5', 'src\Scripts\RiskDesk\RiskDeskTests.mq5'
-          $failed = 0
-          foreach ($t in $targets) {
-            $file = (Resolve-Path $t).Path
-            $mt4 = $file.EndsWith('.mq4')
-            $editor = if ($mt4) { $env:ME4 } else { $env:ME5 }
-            $out = [IO.Path]::ChangeExtension($file, $(if ($mt4) { '.ex4' } else { '.ex5' }))
-            $log = [IO.Path]::ChangeExtension($file, '.log')
-            foreach ($f in $out, $log) { if (Test-Path -LiteralPath $f) { Remove-Item -LiteralPath $f } }
-            $proc = Start-Process -FilePath $editor -ArgumentList @("/compile:`"$file`"", '/log') -PassThru -WindowStyle Hidden
-            if (-not $proc.WaitForExit(300000)) { $proc.Kill(); Write-Host "FAIL $t : MetaEditor did not finish in 300 s"; $failed++; continue }
-            if (-not (Test-Path -LiteralPath $log)) { Write-Host "FAIL $t : no log"; $failed++; continue }
-            $text = Get-Content -LiteralPath $log -Raw   # BOM-aware (the log is often UTF-16)
-            $m = [regex]::Matches($text, '(\d+)\s+errors?(?:\(s\))?\s*,\s*(\d+)\s+warnings?(?:\(s\))?', 'IgnoreCase')
-            if ($m.Count -eq 0) { Write-Host "FAIL $t : no result line"; $text; $failed++; continue }
-            $e = [int]$m[$m.Count - 1].Groups[1].Value; $w = [int]$m[$m.Count - 1].Groups[2].Value
-            $ok = ($e + $w -eq 0) -and (Test-Path -LiteralPath $out)
-            Write-Host ("{0} {1} : {2} errors, {3} warnings{4}" -f $(if ($ok) { 'PASS' } else { 'FAIL' }), $t, $e, $w, $(if (Test-Path -LiteralPath $out) { '' } else { ', no output file' }))
-            if (-not $ok) { $text -split "`r?`n" | Where-Object { $_ -match ':\s*(error|warning)\s+\d+\s*:' }; $failed++ }
-          }
-          if ($failed -gt 0) { exit 1 }
+        shell: bash
+        run: xvfb-run -a pwsh -NoProfile -File build/build.ps1 -PathsFile "$RUNNER_TEMP/paths.ci.ps1" -TimeoutSec 300
 
       - name: Package
         shell: pwsh

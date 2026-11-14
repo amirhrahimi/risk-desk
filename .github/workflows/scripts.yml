@@ -1,0 +1,45 @@
+# Checks the build scripts on Linux, macOS and Windows (ADR-032): build/test-build-scripts.ps1 with
+# PowerShell 7 on each system and with Windows PowerShell 5.1. No MetaTrader is installed here, so
+# nothing is compiled; build.yml builds and releases on Windows. Releases nothing.
+name: scripts
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'build/**'
+      - 'broker-profiles/**'
+      - 'docs/*.md'
+      - 'src/Include/RiskDesk/Build.mqh'
+      - '.github/workflows/scripts.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'build/**'
+      - 'broker-profiles/**'
+      - 'docs/*.md'
+      - 'src/Include/RiskDesk/Build.mqh'
+      - '.github/workflows/scripts.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  scripts:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build scripts, PowerShell 7
+        shell: pwsh
+        run: ./build/test-build-scripts.ps1 -FakeBinaries
+
+      - name: Build scripts, Windows PowerShell 5.1
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: ./build/test-build-scripts.ps1 -FakeBinaries
