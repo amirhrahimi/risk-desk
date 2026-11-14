@@ -21,3 +21,4 @@
   - **Not verified on GitHub itself** until the first pull request with this workflow. Two things can only be seen there: the `i386` packages on the real runner image (preinstalled packages can conflict), and the download speed of MetaQuotes' servers. The pull request runs no release, so the first run is safe.
   - **Releases depend on Wine.** If a MetaTrader update stops passing under the pinned Wine, the build fails, and it never publishes a broken build: the job stops before packaging. The fallback is the Windows job of ADR-030 from git history, a self-contained set of steps.
   - `.github/workflows/scripts.yml` keeps its Windows and macOS runs. They test the build scripts where contributors use them (ADR-032), not the release build.
+- **Superseded in part:** since ADR-034 the release is built on `windows-latest` again. This job stays as a second build (`linux`, pinned to `ubuntu-24.04`) whose files are not published; the Wine pin and its check stand.
