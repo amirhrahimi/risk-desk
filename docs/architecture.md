@@ -84,3 +84,4 @@ Risk Desk marks its orders with a magic number (`InpMagic`). The total open-risk
 | Panel | debug-build self-test suites that click the real panel on demo accounts (`build/run-uitest.ps1`) |
 
 See [design/08-testing.md](design/08-testing.md) and [CONTRIBUTING.md](../CONTRIBUTING.md).
+
