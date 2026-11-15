@@ -8,7 +8,7 @@ Please read the [Code of Conduct](CODE_OF_CONDUCT.md) first. Risk Desk sends rea
 
 - **Broker test reports:** run Risk Desk with your broker on a demo account and open a [broker test report](https://github.com/amirhrahimi/risk-desk/issues/new?template=broker_test_report.yml). See [docs/broker-compatibility.md](docs/broker-compatibility.md#add-your-broker).
 - **Bug reports:** use the [bug report](https://github.com/amirhrahimi/risk-desk/issues/new?template=bug_report.yml) template. The status-bar text and the Experts-tab lines are the most useful information.
-- **Documentation:** corrections and clarifications are always welcome.
+- **Documentation:** corrections and clarifications are always welcome. Edit `README.md` or the file in `docs/`, not the [wiki](https://github.com/amirhrahimi/risk-desk/wiki): the wiki is generated from them when a change is merged, and edits made there are overwritten ([ADR-035](docs/design/adr/ADR-035-wiki-generated-from-the-docs.md)).
 - **Code:** pick an issue, or propose one first. [ROADMAP.md](ROADMAP.md) lists planned work.
 
 ## Development setup

@@ -33,7 +33,7 @@ The project is public and MIT-licensed (`LICENSE`, ADR-029). 1.7.0 was the first
 | 10 | `docs/design/10-decisions.md` | Index of the ADRs (one file each in `docs/design/adr/`): why things are the way they are |
 | 11 | `docs/design/11-open-questions.md` | Open questions, the owner's answers as decisions (Q-xx), assumed details (D-xx) |
 | - | `broker-profiles/SUMMARY.md` | Account and test-symbol properties of every demo account, generated from the BrokerProbe/GatewaySmoke reports beside it |
-| - | `README.md`, `docs/*.md` | User documentation, written from the design docs. Update it when behaviour, inputs or defaults change |
+| - | `README.md`, `docs/*.md` | User documentation, written from the design docs. Update it when behaviour, inputs or defaults change. The GitHub wiki is generated from it on every push to `main` (ADR-035): never edit the wiki; a new `docs/*.md` needs a row in `$Pages` of `build/publish-wiki.ps1` |
 
 This table is a map, not a reading list: read only what the task names (§8).
 
@@ -62,7 +62,7 @@ When docs conflict, precedence is: 03 > 04 > 06 > 01 > the rest. Report every co
 /
 ├─ CLAUDE.md  README.md  CHANGELOG.md  ROADMAP.md  LICENSE  NOTICE.md
 ├─ CONTRIBUTING.md  CODE_OF_CONDUCT.md  SECURITY.md  SUPPORT.md
-├─ .github/                    issue templates, PR template, workflows (MT4+MT5 build and releases, docs link check)
+├─ .github/                    issue templates, PR template, workflows (MT4+MT5 build and releases, docs link check, wiki)
 ├─ docs/                       user documentation (installation, user guide, configuration, ...)
 │  └─ design/                  specifications 01-08, 10, 11 (see rule R12)
 │     └─ adr/                  one file per ADR, indexed by 10-decisions.md
@@ -80,6 +80,7 @@ When docs conflict, precedence is: 03 > 04 > 06 > 01 > the rest. Report every co
 │  ├─ run-uitest.ps1           debug panel/trade/pending self-test on one demo account
 │  ├─ profile-guard.ps1        chart-profile snapshot/restore used by the runners
 │  ├─ redact-report.ps1        removes the login and the data path from a report
+│  ├─ publish-wiki.ps1         builds the GitHub wiki from README.md, docs/*.md, ROADMAP.md (CI: wiki.yml, ADR-035)
 │  ├─ summarize-profiles.ps1   regenerates broker-profiles/SUMMARY.md
 │  ├─ paths.example.ps1        template (committed)
 │  └─ paths.local.ps1          real paths (git-ignored)

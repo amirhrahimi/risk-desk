@@ -10,6 +10,8 @@ on:
       - 'build/**'
       - 'broker-profiles/**'
       - 'docs/*.md'
+      - 'README.md'
+      - 'ROADMAP.md'
       - 'src/Include/RiskDesk/Build.mqh'
       - '.github/workflows/scripts.yml'
   push:
@@ -18,6 +20,8 @@ on:
       - 'build/**'
       - 'broker-profiles/**'
       - 'docs/*.md'
+      - 'README.md'
+      - 'ROADMAP.md'
       - 'src/Include/RiskDesk/Build.mqh'
       - '.github/workflows/scripts.yml'
 
